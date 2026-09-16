@@ -1,0 +1,122 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../views/**/*.blade.php';
+
+@theme {
+    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: "SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    
+    --color-apple-canvas: #F5F5F7;
+    --color-apple-canvas-dark: #121214;
+    --color-apple-card: #FFFFFF;
+    --color-apple-card-dark: #1C1C1E;
+    --color-apple-card-elevated: #2C2C2E;
+    --color-apple-border: #E5E5EA;
+    --color-apple-border-dark: #2C2C2E;
+    --color-apple-text: #1D1D1F;
+    --color-apple-text-dark: #F5F5F7;
+    --color-apple-muted: #86868B;
+    --color-apple-muted-dark: #98989D;
+    --color-apple-blue: #0071E3;
+    --color-apple-blue-dark: #0A84FF;
+}
+
+/* Custom Apple Glass & Surface Utilities */
+.apple-glass {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background-color: rgba(255, 255, 255, 0.85);
+    border-color: rgba(229, 229, 234, 0.8);
+}
+
+.dark .apple-glass {
+    background-color: rgba(28, 28, 30, 0.85);
+    border-color: rgba(44, 44, 46, 0.8);
+}
+
+/* Apple Pro Scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(134, 134, 139, 0.3);
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(134, 134, 139, 0.5);
+}
+
+/* Status Badges */
+.badge-available {
+    background-color: #E8F5E9;
+    color: #2E7D32;
+    border: 1px solid rgba(46, 125, 50, 0.15);
+}
+.dark .badge-available {
+    background-color: rgba(46, 125, 50, 0.2);
+    color: #4ADE80;
+    border: 1px solid rgba(74, 222, 128, 0.25);
+}
+
+.badge-reserved {
+    background-color: #FFF8E1;
+    color: #B45309;
+    border: 1px solid rgba(245, 127, 23, 0.2);
+}
+.dark .badge-reserved {
+    background-color: rgba(245, 127, 23, 0.2);
+    color: #FBBF24;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.badge-repair {
+    background-color: #FBE9E7;
+    color: #C2410C;
+    border: 1px solid rgba(216, 67, 21, 0.2);
+}
+.dark .badge-repair {
+    background-color: rgba(216, 67, 21, 0.2);
+    color: #FB923C;
+    border: 1px solid rgba(251, 146, 60, 0.3);
+}
+
+.badge-sold {
+    background-color: #ECEFF1;
+    color: #455A64;
+    border: 1px solid rgba(69, 90, 100, 0.15);
+}
+.dark .badge-sold {
+    background-color: rgba(69, 90, 100, 0.25);
+    color: #94A3B8;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.badge-washing {
+    background-color: #E0F2FE;
+    color: #0369A1;
+    border: 1px solid rgba(3, 105, 161, 0.2);
+}
+.dark .badge-washing {
+    background-color: rgba(3, 105, 161, 0.2);
+    color: #38BDF8;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+/* Subtle focus ring */
+.apple-focus-ring:focus {
+    outline: none;
+    border-color: #0071E3;
+    box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.18);
+}
+.dark .apple-focus-ring:focus {
+    border-color: #0A84FF;
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.25);
+}
