@@ -27,14 +27,8 @@ Homestead.yaml
 Thumbs.db
 
 # Personal Notes & Planning Specs (Head Programmer)
-/*.md
-PROJECT_CONTEXT.md
-ROADMAP.md
-UIUX_DESIGN_GUIDE.md
-PAPERSUMMARY.md
-AGENTS.md
-CLAUDE.md
-README.md
+*.md
+
 
 # Local SQLite databases
 /database/*.sqlite
