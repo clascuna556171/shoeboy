@@ -15,126 +15,142 @@
             <p class="text-xs text-neutral-500 mt-0.5">Real-time consolidated profitability, batch unit margins, and staff oversight.</p>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2 text-xs">
+        <div class="flex flex-wrap items-center gap-2">
             <a href="{{ route('reports.index') }}"
-               class="px-4 py-2 rounded-xl bg-[#0071E3] hover:bg-[#0077ED] text-white font-semibold flex items-center gap-1.5 shadow-sm transition-all">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+               title="Open the full financial and profitability reports"
+               class="group inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0071E3] hover:bg-[#0077ED] active:bg-[#006EDB] text-white text-xs font-semibold shadow-sm hover:shadow transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0071E3]/50 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-[#1C1C1E]">
+                <svg class="w-4 h-4 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                 <span>Full Reports</span>
             </a>
             <a href="{{ route('reports.export') }}"
-               class="px-4 py-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 text-neutral-800 dark:text-neutral-200 font-semibold flex items-center gap-1.5 transition-all">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+               title="Download the current financial report as a CSV file"
+               class="group inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700/60 hover:border-neutral-300 dark:hover:border-neutral-600 text-neutral-700 dark:text-neutral-200 text-xs font-semibold shadow-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400/50 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-[#1C1C1E]">
+                <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 transition-transform group-hover:translate-y-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 <span>Export CSV</span>
             </a>
             <a href="{{ route('staff.index') }}"
-               class="px-4 py-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 text-neutral-800 dark:text-neutral-200 font-semibold flex items-center gap-1.5 transition-all">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+               title="Manage staff accounts and access"
+               class="group inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-700/60 hover:border-neutral-300 dark:hover:border-neutral-600 text-neutral-700 dark:text-neutral-200 text-xs font-semibold shadow-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400/50 focus-visible:ring-offset-1 dark:focus-visible:ring-offset-[#1C1C1E]">
+                <svg class="w-4 h-4 text-purple-500 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                 <span>Manage Staff</span>
             </a>
         </div>
     </div>
 
-    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 lg:gap-4">
-        
-        <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-2xl p-4 shadow-sm">
-            <div class="flex items-center justify-between">
-                <span class="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">Gross Sales</span>
-                <div class="w-6 h-6 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-[#0071E3] dark:text-[#0A84FF] flex items-center justify-center">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                </div>
+    @php
+        $net = $metrics['net_operating_balance'];
+        $netPositive = $net >= 0;
+    @endphp
+
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-5">
+
+        {{-- The single most important number, with plain-language context --}}
+        <div class="lg:col-span-3 rounded-3xl p-6 lg:p-7 shadow-sm border {{ $netPositive ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200/70 dark:border-emerald-900/50' : 'bg-amber-50/60 dark:bg-amber-950/20 border-amber-200/70 dark:border-amber-900/50' }}">
+            <div class="flex items-center justify-between gap-3">
+                <span class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">Net Store Balance</span>
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $netPositive ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' }}">
+                    {{ $netPositive ? 'In profit' : 'Still recovering costs' }}
+                </span>
             </div>
-            <div class="text-lg lg:text-xl font-bold font-mono text-[#1D1D1F] dark:text-white mt-1">₱{{ number_format($metrics['total_revenue'], 2) }}</div>
-            <div class="text-[11px] text-neutral-400 mt-0.5">{{ $metrics['sold_inventory'] }} sold pairs</div>
+
+            <div class="mt-3 text-3xl lg:text-4xl font-bold font-mono tracking-tight {{ $netPositive ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300' }}">
+                {{ $net < 0 ? '−' : '' }}₱{{ number_format(abs($net), 2) }}
+            </div>
+
+            <p class="mt-2 text-sm text-neutral-600 dark:text-neutral-400 max-w-xl">
+                What the shop keeps after paying for the shoes it sold and covering running costs.
+                @if(! $netPositive)
+                    A negative balance usually means unsold stock and setup costs are still being carried, not that the pairs you sold lost money.
+                @endif
+            </p>
+
+            <div class="mt-5 flex flex-wrap items-center gap-x-2.5 gap-y-2 text-xs">
+                <span class="font-mono font-semibold text-neutral-800 dark:text-neutral-200">₱{{ number_format($metrics['total_revenue'], 2) }}</span>
+                <span class="text-neutral-400">sales</span>
+                <span class="text-neutral-300 dark:text-neutral-600">−</span>
+                <span class="font-mono font-semibold text-neutral-800 dark:text-neutral-200">₱{{ number_format($metrics['total_cogs'], 2) }}</span>
+                <span class="text-neutral-400">cost of shoes sold</span>
+                <span class="text-neutral-300 dark:text-neutral-600">−</span>
+                <span class="font-mono font-semibold text-neutral-800 dark:text-neutral-200">₱{{ number_format($metrics['total_expenses'], 2) }}</span>
+                <span class="text-neutral-400">shop expenses</span>
+            </div>
         </div>
 
-        <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-2xl p-4 shadow-sm">
-            <div class="flex items-center justify-between">
-                <span class="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">Unit Cost (COGS)</span>
-                <div class="w-6 h-6 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-500 flex items-center justify-center">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        {{-- Same numbers, ordered top to bottom so the arithmetic is obvious --}}
+        <div class="lg:col-span-2 rounded-3xl p-5 shadow-sm bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800">
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-neutral-500">How the money moved</h3>
+            <dl class="mt-3 space-y-2.5 text-sm">
+                <div class="flex items-center justify-between">
+                    <dt class="text-neutral-500">Sales collected</dt>
+                    <dd class="font-mono font-semibold text-neutral-800 dark:text-neutral-200">₱{{ number_format($metrics['total_revenue'], 2) }}</dd>
                 </div>
-            </div>
-            <div class="text-lg lg:text-xl font-bold font-mono text-neutral-800 dark:text-neutral-200 mt-1">₱{{ number_format($metrics['total_cogs'], 2) }}</div>
-            <div class="text-[11px] text-neutral-400 mt-0.5">Allocated batch base + repairs</div>
-        </div>
-
-        <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-2xl p-4 shadow-sm">
-            <div class="flex items-center justify-between">
-                <span class="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">Total Expenses</span>
-                <div class="w-6 h-6 rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-500 flex items-center justify-center">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m0 0l-6-6m6 6H3"/></svg>
+                <div class="flex items-center justify-between">
+                    <dt class="text-neutral-500">Cost of shoes sold</dt>
+                    <dd class="font-mono text-neutral-500">−₱{{ number_format($metrics['total_cogs'], 2) }}</dd>
                 </div>
-            </div>
-            <div class="text-lg lg:text-xl font-bold font-mono text-rose-600 dark:text-rose-400 mt-1">₱{{ number_format($metrics['total_expenses'], 2) }}</div>
-            <div class="text-[11px] text-neutral-400 mt-0.5">Sacks, freight, supplies & shop</div>
-        </div>
-
-        <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-2xl p-4 shadow-sm">
-            <div class="flex items-center justify-between">
-                <span class="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">Gross Profit (Sales)</span>
-                <div class="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                <div class="flex items-center justify-between pt-2 border-t border-neutral-100 dark:border-neutral-800">
+                    <dt class="font-semibold text-neutral-700 dark:text-neutral-300">Profit on sales</dt>
+                    <dd class="font-mono font-bold text-emerald-600 dark:text-emerald-400">₱{{ number_format($metrics['gross_profit'], 2) }}</dd>
                 </div>
-            </div>
-            <div class="text-lg lg:text-xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-1">₱{{ number_format($metrics['gross_profit'], 2) }}</div>
-            <div class="text-[11px] text-neutral-400 mt-0.5">Gross Sales minus COGS</div>
-        </div>
-
-        <div class="col-span-2 lg:col-span-1 bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-2xl p-4 shadow-sm">
-            <div class="flex items-center justify-between">
-                <span class="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">Net Store Balance</span>
-                <div class="w-6 h-6 rounded-lg bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                <div class="flex items-center justify-between">
+                    <dt class="text-neutral-500">Shop expenses</dt>
+                    <dd class="font-mono text-neutral-500">−₱{{ number_format($metrics['total_expenses'], 2) }}</dd>
                 </div>
-            </div>
-            <div class="text-lg lg:text-xl font-bold font-mono mt-1 {{ $metrics['net_operating_balance'] >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
-                ₱{{ number_format($metrics['net_operating_balance'], 2) }}
-            </div>
-            <div class="text-[11px] text-neutral-400 mt-0.5">Realized net cashflow</div>
+                <div class="flex items-center justify-between pt-2 border-t border-neutral-100 dark:border-neutral-800">
+                    <dt class="font-semibold text-neutral-700 dark:text-neutral-300">Net balance</dt>
+                    <dd class="font-mono font-bold {{ $netPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400' }}">{{ $net < 0 ? '−' : '' }}₱{{ number_format(abs($net), 2) }}</dd>
+                </div>
+            </dl>
         </div>
 
     </div>
 
-    <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div class="flex flex-wrap items-center gap-6 text-xs">
-            <div class="flex items-center gap-2">
-                <div class="p-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+
+        <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-2xl p-4 shadow-sm">
+            <div class="flex items-center gap-2.5">
+                <div class="p-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                 </div>
-                <div>
-                    <span class="text-neutral-400 block text-[10px] uppercase font-medium">Cash in Drawer</span>
-                    <span class="font-mono font-bold text-sm text-neutral-800 dark:text-neutral-200">₱{{ number_format($metrics['cash_total'], 2) }}</span>
-                </div>
+                <span class="text-[11px] uppercase tracking-wider font-medium text-neutral-500">Cash in Drawer</span>
             </div>
+            <div class="mt-2 text-lg font-bold font-mono text-neutral-800 dark:text-neutral-100">₱{{ number_format($metrics['cash_total'], 2) }}</div>
+            <div class="text-[11px] text-neutral-400 mt-0.5">Physical cash collected</div>
+        </div>
 
-            <div class="h-8 w-px bg-neutral-200 dark:bg-neutral-800 hidden sm:block"></div>
-
-            <div class="flex items-center gap-2">
-                <div class="p-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-[#0071E3] dark:text-[#0A84FF]">
+        <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-2xl p-4 shadow-sm">
+            <div class="flex items-center gap-2.5">
+                <div class="p-2 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-[#0071E3] dark:text-[#0A84FF] shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                 </div>
-                <div>
-                    <span class="text-neutral-400 block text-[10px] uppercase font-medium">GCash Settled</span>
-                    <span class="font-mono font-bold text-sm text-[#0071E3] dark:text-[#0A84FF]">₱{{ number_format($metrics['gcash_total'], 2) }}</span>
-                </div>
+                <span class="text-[11px] uppercase tracking-wider font-medium text-neutral-500">GCash Settled</span>
             </div>
+            <div class="mt-2 text-lg font-bold font-mono text-[#0071E3] dark:text-[#0A84FF]">₱{{ number_format($metrics['gcash_total'], 2) }}</div>
+            <div class="text-[11px] text-neutral-400 mt-0.5">Verified digital payments</div>
+        </div>
 
-            <div class="h-8 w-px bg-neutral-200 dark:bg-neutral-800 hidden sm:block"></div>
-
-            <div class="flex items-center gap-2">
-                <div class="p-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-amber-500">
+        <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-2xl p-4 shadow-sm">
+            <div class="flex items-center gap-2.5">
+                <div class="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-500 shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
-                <div>
-                    <span class="text-neutral-400 block text-[10px] uppercase font-medium">Active Reservations</span>
-                    <span class="font-mono font-bold text-sm text-amber-600 dark:text-amber-400">{{ $metrics['reserved_inventory'] }} pairs</span>
-                </div>
+                <span class="text-[11px] uppercase tracking-wider font-medium text-neutral-500">Active Reservations</span>
             </div>
+            <div class="mt-2 text-lg font-bold font-mono text-amber-600 dark:text-amber-400">{{ $metrics['reserved_inventory'] }} <span class="text-xs font-semibold">pairs</span></div>
+            <div class="text-[11px] text-neutral-400 mt-0.5">Awaiting payment</div>
         </div>
 
-        <div class="text-xs text-neutral-400">
-            Available Floor Stock: <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">{{ $metrics['available_inventory'] }}</span> / {{ $metrics['total_inventory'] }} pairs
+        <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-2xl p-4 shadow-sm">
+            <div class="flex items-center gap-2.5">
+                <div class="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                </div>
+                <span class="text-[11px] uppercase tracking-wider font-medium text-neutral-500">Available Floor Stock</span>
+            </div>
+            <div class="mt-2 text-lg font-bold font-mono text-emerald-600 dark:text-emerald-400">{{ $metrics['available_inventory'] }} <span class="text-xs font-semibold text-neutral-400">/ {{ $metrics['total_inventory'] }} pairs</span></div>
+            <div class="text-[11px] text-neutral-400 mt-0.5">Ready to sell</div>
         </div>
+
     </div>
 
     <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 shadow-sm space-y-4">
