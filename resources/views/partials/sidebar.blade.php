@@ -1,5 +1,4 @@
 @auth
-{{-- Mobile overlay, shown only when sidebar is open on small screens --}}
 <div x-show="sidebarOpen"
      x-cloak
      @click="toggleSidebar()"
@@ -11,7 +10,6 @@
      x-transition:leave-end="opacity-0"
      class="fixed inset-0 z-40 bg-black/40 md:hidden"></div>
 
-{{-- Sidebar --}}
 <aside
     x-cloak
     @mouseenter="sidebarHoverCapable && !sidebarOpen && (sidebarHovering = true)"
