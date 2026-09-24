@@ -5,7 +5,7 @@
 @section('content')
 <div class="space-y-6">
 
-    <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div class="bg-white dark:bg-[#1C1C1E] border border-gray-200 dark:border-neutral-800 rounded-3xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
             <div class="flex items-center gap-2">
                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300">Owner Command Center</span>
@@ -36,7 +36,7 @@
 
     <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 lg:gap-4">
         
-        <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-2xl p-4 shadow-sm">
+        <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-2xl p-4">
             <div class="flex items-center justify-between">
                 <span class="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">Gross Sales</span>
                 <div class="w-6 h-6 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-[#0071E3] dark:text-[#0A84FF] flex items-center justify-center">
@@ -47,7 +47,7 @@
             <div class="text-[11px] text-neutral-400 mt-0.5">{{ $metrics['sold_inventory'] }} sold pairs</div>
         </div>
 
-        <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-2xl p-4 shadow-sm">
+        <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-2xl p-4">
             <div class="flex items-center justify-between">
                 <span class="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">Unit Cost (COGS)</span>
                 <div class="w-6 h-6 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-500 flex items-center justify-center">
@@ -58,7 +58,7 @@
             <div class="text-[11px] text-neutral-400 mt-0.5">Allocated batch base + repairs</div>
         </div>
 
-        <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-2xl p-4 shadow-sm">
+        <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-2xl p-4">
             <div class="flex items-center justify-between">
                 <span class="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">Total Expenses</span>
                 <div class="w-6 h-6 rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-500 flex items-center justify-center">
@@ -69,7 +69,7 @@
             <div class="text-[11px] text-neutral-400 mt-0.5">Sacks, freight, supplies & shop</div>
         </div>
 
-        <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-2xl p-4 shadow-sm">
+        <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-2xl p-4">
             <div class="flex items-center justify-between">
                 <span class="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">Gross Profit (Sales)</span>
                 <div class="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
@@ -80,7 +80,7 @@
             <div class="text-[11px] text-neutral-400 mt-0.5">Gross Sales minus COGS</div>
         </div>
 
-        <div class="col-span-2 lg:col-span-1 bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-2xl p-4 shadow-sm">
+        <div class="col-span-2 lg:col-span-1 bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-2xl p-4">
             <div class="flex items-center justify-between">
                 <span class="text-[11px] font-medium text-neutral-500 uppercase tracking-wider">Net Store Balance</span>
                 <div class="w-6 h-6 rounded-lg bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center">
@@ -95,7 +95,7 @@
 
     </div>
 
-    <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div class="flex flex-wrap items-center gap-6 text-xs">
             <div class="flex items-center gap-2">
                 <div class="p-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">
@@ -137,7 +137,7 @@
         </div>
     </div>
 
-    <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 shadow-sm space-y-4">
+    <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 space-y-4">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-neutral-200/80 dark:border-neutral-800">
             <div>
                 <h3 class="font-bold text-sm text-[#1D1D1F] dark:text-white">Batch Unit Cost & Profitability Matrix</h3>
@@ -206,7 +206,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         <div class="lg:col-span-7 space-y-4">
-            <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 shadow-sm space-y-4">
+            <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 space-y-4">
                 <div class="flex items-center justify-between pb-3 border-b border-neutral-200/80 dark:border-neutral-800">
                     <h3 class="font-bold text-sm text-[#1D1D1F] dark:text-white">Recent Settled Sales</h3>
                     <a href="{{ route('orders.index') }}" class="text-xs text-[#0071E3] dark:text-[#0A84FF] hover:underline">All Orders</a>
@@ -245,7 +245,7 @@
         </div>
 
         <div class="lg:col-span-5 space-y-4">
-            <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 shadow-sm space-y-4">
+            <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 space-y-4">
                 <div class="flex items-center justify-between pb-3 border-b border-neutral-200/80 dark:border-neutral-800">
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
