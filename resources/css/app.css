@@ -120,3 +120,95 @@
     border-color: #0A84FF;
     box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.25);
 }
+
+/* Alpine: hide until initialised */
+[x-cloak] { display: none !important; }
+
+/* ---- Shared surface helpers ---------------------------------------- */
+.app-card {
+    background-color: var(--color-apple-card);
+    border: 1px solid var(--color-apple-border);
+    border-radius: 1.5rem;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+.dark .app-card {
+    background-color: var(--color-apple-card-dark);
+    border-color: var(--color-apple-border-dark);
+}
+.app-card-hover:hover {
+    box-shadow: 0 16px 40px -20px rgba(0, 0, 0, 0.22);
+    border-color: rgba(0, 113, 227, 0.35);
+    transform: translateY(-2px);
+}
+
+/* Table rows */
+.app-row {
+    transition: background-color 0.15s ease;
+}
+
+/* ---- Unified badge ------------------------------------------------ */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    line-height: 1.25;
+    white-space: nowrap;
+    border: 1px solid transparent;
+}
+.badge-neutral  { background-color: #ECEFF1; color: #455A64; border-color: rgba(69,90,100,.15); }
+.badge-blue     { background-color: #E3F0FF; color: #0058B8; border-color: rgba(0,113,227,.18); }
+.badge-paid     { background-color: #E3F0FF; color: #0058B8; border-color: rgba(0,113,227,.18); }
+.badge-fulfilled{ background-color: #E7F7EE; color: #1B7A45; border-color: rgba(27,122,69,.18); }
+.badge-pending  { background-color: #FFF7E6; color: #B45309; border-color: rgba(245,127,23,.22); }
+.badge-shipped  { background-color: #E5F3FB; color: #0369A1; border-color: rgba(3,105,161,.2); }
+.badge-cancelled{ background-color: #FDEAEA; color: #B42318; border-color: rgba(180,35,24,.18); }
+.badge-owner    { background-color: #FFF4D6; color: #92510A; border-color: rgba(245,158,11,.25); }
+.badge-staff    { background-color: #E3F0FF; color: #0058B8; border-color: rgba(0,113,227,.18); }
+.dark .badge-neutral  { background-color: rgba(69,90,100,.3); color: #CBD5E1; border-color: rgba(148,163,184,.2); }
+.dark .badge-blue,
+.dark .badge-paid     { background-color: rgba(10,132,255,.18); color: #7CB8FF; border-color: rgba(10,132,255,.28); }
+.dark .badge-fulfilled{ background-color: rgba(27,122,69,.25); color: #6EE7A8; border-color: rgba(110,231,168,.25); }
+.dark .badge-pending  { background-color: rgba(245,127,23,.2); color: #FBBF24; border-color: rgba(251,191,36,.3); }
+.dark .badge-shipped  { background-color: rgba(3,105,161,.25); color: #7DD3FC; border-color: rgba(125,211,252,.3); }
+.dark .badge-cancelled{ background-color: rgba(180,35,24,.25); color: #FCA5A5; border-color: rgba(252,165,165,.25); }
+.dark .badge-owner    { background-color: rgba(245,158,11,.2); color: #FCD34D; border-color: rgba(252,211,77,.3); }
+.dark .badge-staff    { background-color: rgba(10,132,255,.18); color: #7CB8FF; border-color: rgba(10,132,255,.28); }
+
+/* ---- Modal motion -------------------------------------------------- */
+@keyframes app-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+@keyframes app-pop-in {
+    from { opacity: 0; transform: translateY(10px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.app-modal-backdrop { animation: app-fade-in 0.15s ease-out; }
+.app-modal-panel    { animation: app-pop-in 0.22s cubic-bezier(0.2, 0.8, 0.3, 1); }
+
+/* ---- Empty state --------------------------------------------------- */
+.app-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 3rem 1.5rem;
+    text-align: center;
+    color: #86868B;
+}
+.dark .app-empty { color: #98989D; }
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        transition-duration: 0.001ms !important;
+    }
+}

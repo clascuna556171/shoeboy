@@ -2,139 +2,191 @@
 
 @section('title', 'Deliveries & Fulfillment')
 
+@php
+    $statusBadge = [
+        'pending'   => 'badge-pending',
+        'shipped'   => 'badge-shipped',
+        'completed' => 'badge-fulfilled',
+    ];
+@endphp
+
 @section('content')
 <div class="space-y-6">
 
-
-    <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-            <div class="flex items-center gap-2">
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sky-100 text-sky-800 dark:bg-sky-950/60 dark:text-sky-300">Fulfillment Pipeline</span>
-                <span class="text-xs text-neutral-400">J&T Express & Counter Pickup Logistics</span>
-            </div>
-            <h1 class="text-xl md:text-2xl font-bold text-[#1D1D1F] dark:text-white mt-1">Delivery & Parcel Dispatch</h1>
-            <p class="text-xs text-neutral-500 mt-0.5">Track parcel preparation, waybill tracking numbers, and completion timestamps.</p>
+    {{-- Page header --}}
+    <div class="app-card p-5 lg:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="min-w-0">
+            <div>
+                <div class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">Fulfillment Pipeline</div>
+                <h1 class="text-xl md:text-2xl font-bold tracking-tight text-[#1D1D1F] dark:text-white mt-0.5">Delivery &amp; Parcel Dispatch</h1>
+                </div>
         </div>
 
-
-        <div class="flex items-center gap-3 text-xs">
-            <div class="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 text-amber-800 dark:text-amber-300 font-mono">
-                <span class="font-bold">{{ $pendingCount }}</span> Pending
+        <div class="flex items-center gap-2 text-xs">
+            <div class="px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-300">
+                <span class="font-mono font-bold">{{ $pendingCount }}</span> Pending
             </div>
-            <div class="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 text-blue-800 dark:text-blue-300 font-mono">
-                <span class="font-bold">{{ $shippedCount }}</span> Shipped
+            <div class="px-3 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 text-blue-800 dark:text-blue-300">
+                <span class="font-mono font-bold">{{ $shippedCount }}</span> Shipped
             </div>
-            <div class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 text-emerald-800 dark:text-emerald-300 font-mono">
-                <span class="font-bold">{{ $completedCount }}</span> Completed
+            <div class="px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 text-emerald-800 dark:text-emerald-300">
+                <span class="font-mono font-bold">{{ $completedCount }}</span> Completed
             </div>
         </div>
     </div>
 
+    {{-- Filters --}}
+    <div class="app-card p-4 flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <div class="flex flex-wrap items-center gap-1.5">
+                <span class="text-neutral-500 font-medium text-xs mr-0.5">Status:</span>
+                @php
+                    $statusTabs = [
+                        ['label' => 'All',       'value' => null,        'active' => 'bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F]'],
+                        ['label' => 'Pending',   'value' => 'pending',   'active' => 'bg-amber-500 text-white'],
+                        ['label' => 'Shipped',   'value' => 'shipped',   'active' => 'bg-blue-500 text-white'],
+                        ['label' => 'Completed', 'value' => 'completed', 'active' => 'bg-emerald-600 text-white'],
+                    ];
+                @endphp
+                @foreach($statusTabs as $tab)
+                    <a href="{{ route('deliveries.index', array_merge(request()->query(), ['status' => $tab['value']])) }}"
+                       class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors {{ request('status') === $tab['value'] || ($tab['value'] === null && !request('status')) ? $tab['active'] : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200/70 dark:hover:bg-neutral-700' }}">
+                        {{ $tab['label'] }}
+                    </a>
+                @endforeach
+            </div>
 
-    <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-2xl p-4 shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div class="flex flex-wrap items-center gap-2">
-            <span class="text-neutral-400 font-medium">Status:</span>
-            <a href="{{ route('deliveries.index', array_merge(request()->query(), ['status' => null])) }}"
-               class="px-2.5 py-1 rounded-lg {{ !request('status') ? 'bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] font-bold' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300' }}">All</a>
-            <a href="{{ route('deliveries.index', array_merge(request()->query(), ['status' => 'pending'])) }}"
-               class="px-2.5 py-1 rounded-lg {{ request('status') === 'pending' ? 'bg-amber-500 text-white font-bold' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300' }}">Pending</a>
-            <a href="{{ route('deliveries.index', array_merge(request()->query(), ['status' => 'shipped'])) }}"
-               class="px-2.5 py-1 rounded-lg {{ request('status') === 'shipped' ? 'bg-blue-500 text-white font-bold' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300' }}">Shipped</a>
-            <a href="{{ route('deliveries.index', array_merge(request()->query(), ['status' => 'completed'])) }}"
-               class="px-2.5 py-1 rounded-lg {{ request('status') === 'completed' ? 'bg-emerald-600 text-white font-bold' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300' }}">Completed</a>
+            <div class="flex flex-wrap items-center gap-1.5">
+                <span class="text-neutral-500 font-medium text-xs mr-0.5">Method:</span>
+                @php
+                    $methodTabs = [
+                        ['label' => 'All',      'value' => null,           'active' => 'bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F]'],
+                        ['label' => 'Pickup',   'value' => 'pickup',       'active' => 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'],
+                        ['label' => 'J&T',      'value' => 'jnt_delivery', 'active' => 'bg-rose-500 text-white'],
+                    ];
+                @endphp
+                @foreach($methodTabs as $tab)
+                    <a href="{{ route('deliveries.index', array_merge(request()->query(), ['method' => $tab['value']])) }}"
+                       class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors {{ request('method') === $tab['value'] || ($tab['value'] === null && !request('method')) ? $tab['active'] : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200/70 dark:hover:bg-neutral-700' }}">
+                        {{ $tab['label'] }}
+                    </a>
+                @endforeach
+            </div>
         </div>
-
-        <div class="flex items-center gap-2">
-            <span class="text-neutral-400 font-medium">Method:</span>
-            <a href="{{ route('deliveries.index', array_merge(request()->query(), ['method' => null])) }}"
-               class="px-2.5 py-1 rounded-lg {{ !request('method') ? 'bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] font-bold' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300' }}">All</a>
-            <a href="{{ route('deliveries.index', array_merge(request()->query(), ['method' => 'pickup'])) }}"
-               class="px-2.5 py-1 rounded-lg {{ request('method') === 'pickup' ? 'bg-[#0071E3] text-white font-bold' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300' }}">Pickup</a>
-            <a href="{{ route('deliveries.index', array_merge(request()->query(), ['method' => 'jnt_delivery'])) }}"
-               class="px-2.5 py-1 rounded-lg {{ request('method') === 'jnt_delivery' ? 'bg-rose-500 text-white font-bold' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300' }}">J&T Express</a>
-        </div>
+        <span class="badge badge-neutral self-start xl:self-auto">{{ $deliveries->total() }} parcels</span>
     </div>
 
-
-    <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-6 shadow-sm space-y-4">
+    {{-- Table --}}
+    <div class="app-card overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-                <thead class="text-[11px] text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800 pb-2">
-                    <tr>
-                        <th class="py-2.5 px-3">Order & Shoe Specs</th>
-                        <th class="py-2.5 px-3">Recipient Customer</th>
-                        <th class="py-2.5 px-3 text-center">Fulfillment Method</th>
-                        <th class="py-2.5 px-3">Tracking / Waybill</th>
-                        <th class="py-2.5 px-3 text-center">Status</th>
-                        <th class="py-2.5 px-3 text-right">Update Status</th>
+            <table class="w-full text-left text-sm">
+                <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
+                    <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
+                        <th class="py-3 px-4 font-semibold">Order &amp; Shoe Specs</th>
+                        <th class="py-3 px-4 font-semibold">Recipient Customer</th>
+                        <th class="py-3 px-4 font-semibold text-center">Method</th>
+                        <th class="py-3 px-4 font-semibold">Tracking / Waybill</th>
+                        <th class="py-3 px-4 font-semibold text-center">Status</th>
+                        <th class="py-3 px-4 font-semibold text-right">Update</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800/60 font-sans">
+                <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800/60">
                     @forelse($deliveries as $del)
-                    <tr class="hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30">
-                        <td class="py-3.5 px-3">
+                    <tr x-data="{
+                            orig: { method: @js($del->method), tracking: @js($del->tracking_number), status: @js($del->status) },
+                            method: @js($del->method),
+                            tracking: @js($del->tracking_number),
+                            status: @js($del->status),
+                            get changed() {
+                                return this.method !== this.orig.method
+                                    || this.tracking !== this.orig.tracking
+                                    || this.status !== this.orig.status;
+                            }
+                        }"
+                        :class="changed ? 'bg-amber-50/50 dark:bg-amber-950/10' : ''"
+                        class="app-row hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30 transition-colors">
+                        <td class="py-3.5 px-4">
                             <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF] block">{{ $del->order->order_number }}</span>
                             <span class="font-semibold text-neutral-800 dark:text-neutral-200 block">{{ $del->order->item->brand }} {{ $del->order->item->model }}</span>
-                            <span class="text-[10px] text-neutral-400 font-mono">{{ $del->order->item->sku }} • Size {{ $del->order->item->size }}</span>
+                            <span class="text-xs text-neutral-500 font-mono">{{ $del->order->item->sku }} • Size {{ $del->order->item->size }}</span>
                         </td>
-                        <td class="py-3.5 px-3">
+                        <td class="py-3.5 px-4">
                             <div class="font-semibold text-neutral-800 dark:text-neutral-200">{{ $del->order->customer->name }}</div>
-                            <div class="text-[10px] text-neutral-400 font-mono">{{ $del->order->customer->messenger_contact }}</div>
+                            <div class="text-xs text-neutral-500 font-mono">{{ $del->order->customer->messenger_contact }}</div>
                             @if($del->order->customer->shipping_address)
-                                <div class="text-[10px] text-neutral-500 truncate max-w-xs">{{ $del->order->customer->shipping_address }}</div>
+                                <div class="text-xs text-neutral-500 truncate max-w-xs">{{ $del->order->customer->shipping_address }}</div>
                             @endif
                         </td>
-                        <td class="py-3.5 px-3 text-center">
-                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase {{ $del->method === 'pickup' ? 'bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300' : 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400' }}">
+                        <td class="py-3.5 px-4 text-center">
+                            <span class="badge {{ $del->method === 'pickup' ? 'badge-neutral' : 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400' }}">
                                 {{ $del->method === 'pickup' ? 'Store Pickup' : 'J&T Express' }}
                             </span>
                         </td>
-                        <td class="py-3.5 px-3 font-mono">
-                            {{ $del->tracking_number ?? 'Not assigned' }}
+                        <td class="py-3.5 px-4 font-mono text-neutral-600 dark:text-neutral-300">
+                            {{ $del->tracking_number ?? '—' }}
                         </td>
-                        <td class="py-3.5 px-3 text-center">
-                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase
-                                {{ $del->status === 'completed' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300' :
-                                  ($del->status === 'shipped' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300' :
-                                  'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300') }}">
-                                {{ $del->status }}
-                            </span>
+                        <td class="py-3.5 px-4 text-center">
+                            <span class="badge {{ $statusBadge[$del->status] ?? 'badge-neutral' }}">{{ $del->status }}</span>
                             @if($del->date_completed)
-                                <span class="block text-[9px] text-neutral-400 mt-0.5">{{ $del->date_completed->format('M d, H:i') }}</span>
+                                <span class="block text-[11px] text-neutral-500 mt-1">{{ $del->date_completed->format('M d, H:i') }}</span>
                             @endif
                         </td>
-                        <td class="py-3.5 px-3 text-right">
-                            <form action="{{ route('deliveries.update', $del->id) }}" method="POST" class="inline-flex items-center gap-1.5">
+                        <td class="py-3.5 px-4">
+                            <form action="{{ route('deliveries.update', $del->id) }}" method="POST" class="flex items-center justify-end gap-2">
                                 @csrf
                                 @method('PUT')
-                                <select name="method" class="px-2 py-1 bg-neutral-100 dark:bg-neutral-800 border rounded-lg text-xs">
-                                    <option value="pickup" {{ $del->method === 'pickup' ? 'selected' : '' }}>Pickup</option>
-                                    <option value="jnt_delivery" {{ $del->method === 'jnt_delivery' ? 'selected' : '' }}>J&T</option>
-                                </select>
-                                <input type="text" name="tracking_number" value="{{ $del->tracking_number }}" placeholder="Tracking #" class="w-24 px-2 py-1 bg-neutral-100 dark:bg-neutral-800 border rounded-lg text-xs font-mono">
-                                <select name="status" class="px-2 py-1 bg-neutral-100 dark:bg-neutral-800 border rounded-lg text-xs font-semibold">
-                                    <option value="pending" {{ $del->status === 'pending' ? 'selected' : '' }}>Pending</option>
-                                    <option value="shipped" {{ $del->status === 'shipped' ? 'selected' : '' }}>Shipped</option>
-                                    <option value="completed" {{ $del->status === 'completed' ? 'selected' : '' }}>Completed</option>
-                                </select>
-                                <button type="submit" class="px-2.5 py-1 bg-[#0071E3] text-white rounded-lg font-semibold hover:bg-[#0077ED] transition-colors">
-                                    Save
-                                </button>
+                                <div class="flex items-center gap-1.5 rounded-xl border p-1.5 transition-colors"
+                                     :class="changed
+                                         ? 'border-amber-300 dark:border-amber-900/60 bg-amber-50/40 dark:bg-amber-950/10'
+                                         : 'border-neutral-200 dark:border-neutral-700 bg-neutral-50/60 dark:bg-neutral-900/40'">
+                                    <select name="method" x-model="method"
+                                            class="px-2.5 py-2 bg-white dark:bg-[#1C1C1E] border border-neutral-200 dark:border-neutral-700 rounded-lg text-sm apple-focus-ring">
+                                        <option value="pickup" {{ $del->method === 'pickup' ? 'selected' : '' }}>Pickup</option>
+                                        <option value="jnt_delivery" {{ $del->method === 'jnt_delivery' ? 'selected' : '' }}>J&amp;T</option>
+                                    </select>
+                                    <input type="text" name="tracking_number" x-model="tracking" placeholder="Tracking #"
+                                           class="w-32 px-2.5 py-2 bg-white dark:bg-[#1C1C1E] border border-neutral-200 dark:border-neutral-700 rounded-lg text-sm font-mono apple-focus-ring">
+                                    <select name="status" x-model="status"
+                                            class="px-2.5 py-2 bg-white dark:bg-[#1C1C1E] border border-neutral-200 dark:border-neutral-700 rounded-lg text-sm apple-focus-ring">
+                                        <option value="pending" {{ $del->status === 'pending' ? 'selected' : '' }}>Pending</option>
+                                        <option value="shipped" {{ $del->status === 'shipped' ? 'selected' : '' }}>Shipped</option>
+                                        <option value="completed" {{ $del->status === 'completed' ? 'selected' : '' }}>Completed</option>
+                                    </select>
+                                </div>
+
+                                <div class="flex flex-col items-end gap-0.5">
+                                    <button type="submit" :disabled="!changed"
+                                            :class="changed
+                                                ? 'bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200'
+                                                : 'border border-neutral-200 dark:border-neutral-700 text-neutral-500 dark:text-neutral-500 cursor-not-allowed'"
+                                            class="px-3 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition-colors">
+                                        Save
+                                    </button>
+                                    <span x-show="changed" x-cloak
+                                          class="text-[11px] font-medium text-amber-600 dark:text-amber-400">Unsaved</span>
+                                </div>
                             </form>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="text-center py-12 text-neutral-400">No deliveries found.</td>
+                        <td colspan="6">
+                            <div class="app-empty">
+                                <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9"/></svg>
+                                <span class="text-xs font-medium">No deliveries found.</span>
+                            </div>
+                        </td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
 
-        <div class="pt-3 border-t border-neutral-100 dark:border-neutral-800">
+        @if($deliveries->hasPages())
+        <div class="px-4 py-3 border-t border-neutral-100 dark:border-neutral-800">
             {{ $deliveries->links() }}
         </div>
+        @endif
     </div>
 
 </div>
