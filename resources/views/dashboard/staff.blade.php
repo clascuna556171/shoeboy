@@ -85,7 +85,7 @@
      }">
 
      {{-- Header ug selector --}}
-    <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 shadow-sm space-y-4">
+    <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 shadow-sm flex flex-col gap-4">
         <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div class="min-w-0">
             <div class="flex flex-wrap items-center gap-2">
