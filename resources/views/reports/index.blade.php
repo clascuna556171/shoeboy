@@ -122,7 +122,6 @@
                             <th class="py-3 px-4 font-semibold">Supplier</th>
                             <th class="py-3 px-4 font-semibold text-center">Pairs (S/R/A)</th>
                             <th class="py-3 px-4 font-semibold text-right">Batch Cost</th>
-                            <th class="py-3 px-4 font-semibold text-right">Avg Unit Cost</th>
                             <th class="py-3 px-4 font-semibold text-right">Realized Sales</th>
                             <th class="py-3 px-4 font-semibold text-right">Order Profit</th>
                             <th class="py-3 px-4 font-semibold text-right">Expenses</th>
@@ -143,7 +142,6 @@
                                 <span class="text-emerald-600">{{ $b['available_pairs'] }}</span>
                             </td>
                             <td class="py-3.5 px-4 text-right font-mono text-neutral-600 dark:text-neutral-400">₱{{ number_format($b['total_cost'], 2) }}</td>
-                            <td class="py-3.5 px-4 text-right font-mono font-bold text-neutral-900 dark:text-white">₱{{ number_format($b['average_item_cost'], 2) }}</td>
                             <td class="py-3.5 px-4 text-right font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">₱{{ number_format($b['realized_revenue'], 2) }}</td>
                             <td class="py-3.5 px-4 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">+₱{{ number_format($b['order_profit_sum'], 2) }}</td>
                             <td class="py-3.5 px-4 text-right font-mono text-rose-500">₱{{ number_format($b['batch_expenses'], 2) }}</td>
@@ -207,7 +205,6 @@
                             <th class="py-3 px-4 font-semibold text-right">Gross Sales</th>
                             <th class="py-3 px-4 font-semibold text-right">Allocated COGS</th>
                             <th class="py-3 px-4 font-semibold text-right">Net Profit</th>
-                            <th class="py-3 px-4 font-semibold text-right">Gross Margin</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800/60">
@@ -218,7 +215,6 @@
                             <td class="py-3.5 px-4 text-right font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">₱{{ number_format($t['total_revenue'], 2) }}</td>
                             <td class="py-3.5 px-4 text-right font-mono text-neutral-500">₱{{ number_format($t['total_cogs'], 2) }}</td>
                             <td class="py-3.5 px-4 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">+₱{{ number_format($t['net_profit'], 2) }}</td>
-                            <td class="py-3.5 px-4 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">{{ $t['margin_percent'] }}%</td>
                         </tr>
                         @endforeach
                     </tbody>

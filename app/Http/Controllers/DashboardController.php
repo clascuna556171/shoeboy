@@ -35,7 +35,7 @@ class DashboardController extends Controller
         $metrics = $this->reportingService->getOverallFinancialMetrics();
         $batchSummaries = $this->reportingService->getBatchProfitSummary();
         $recentAuditLogs = AuditLog::with('user')->latest()->take(10)->get();
-        $recentTransactions = Order::with(['item.batch', 'customer', 'staff', 'payment'])
+        $recentTransactions = Order::with(['items.batch', 'customer', 'staff', 'payment'])
             ->whereIn('status', ['paid', 'fulfilled'])
             ->latest('date_awarded')
             ->take(8)
@@ -65,7 +65,7 @@ class DashboardController extends Controller
             ->when($activeBatch, fn ($q) => $q->where('batch_id', $activeBatch->id))
             ->get();
 
-        $activeClaims = Order::with(['item', 'customer', 'staff', 'payment'])
+        $activeClaims = Order::with(['items', 'customer', 'staff', 'payment'])
             ->whereIn('status', ['reserved', 'paid'])
             ->latest('date_awarded')
             ->get();
@@ -76,7 +76,7 @@ class DashboardController extends Controller
             ->get();
 
         $expenses = Expense::with('batch')->latest('date')->take(10)->get();
-        $pendingDeliveries = Delivery::with(['order.item', 'order.customer'])
+        $pendingDeliveries = Delivery::with(['order.items', 'order.customer'])
             ->where('status', 'pending')
             ->latest()
             ->take(5)

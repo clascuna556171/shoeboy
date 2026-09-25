@@ -149,8 +149,12 @@ class ShoeBoySystemTest extends TestCase
         $response->assertSessionHas('success');
 
         $this->assertDatabaseHas('orders', [
-            'item_id' => $this->item->id,
             'status' => 'reserved',
+            'awarded_price' => 4500.00,
+        ]);
+
+        $this->assertDatabaseHas('order_items', [
+            'item_id' => $this->item->id,
             'awarded_price' => 4500.00,
         ]);
 
@@ -158,6 +162,38 @@ class ShoeBoySystemTest extends TestCase
             'id' => $this->item->id,
             'status' => 'reserved',
         ]);
+    }
+
+    public function test_staff_can_bulk_award_multiple_items_in_one_order(): void
+    {
+        $secondItem = Item::create([
+            'batch_id' => $this->batch->id,
+            'sku' => 'B04-002',
+            'brand' => 'Anta',
+            'model' => 'KT 8',
+            'price_tier' => 'Tier 2',
+            'listed_price' => 3200.00,
+            'condition' => 'Good',
+            'size' => 'US 9.0',
+            'status' => 'available',
+            'repair_cost' => 0.00,
+        ]);
+
+        $response = $this->actingAs($this->staff)->post('/orders/award', [
+            'item_ids' => [$this->item->id, $secondItem->id],
+            'prices' => [4500.00, 3200.00],
+            'customer_name' => 'Bulk Buyer',
+            'messenger_contact' => '@bulk_buyer',
+            'order_type' => 'live_stream',
+        ]);
+
+        $response->assertSessionHas('success');
+
+        $order = Order::latest('id')->first();
+        $this->assertCount(2, $order->fresh()->items);
+        $this->assertEquals(7700.00, (float) $order->awarded_price);
+        $this->assertDatabaseHas('items', ['id' => $this->item->id, 'status' => 'reserved']);
+        $this->assertDatabaseHas('items', ['id' => $secondItem->id, 'status' => 'reserved']);
     }
 
     public function test_cannot_award_already_reserved_or_sold_item(): void
@@ -181,6 +217,60 @@ class ShoeBoySystemTest extends TestCase
             staff: $this->staff,
             awardedPrice: 4500.00
         );
+    }
+
+    public function test_pos_checkout_creates_one_order_for_multiple_items(): void
+    {
+        $secondItem = Item::create([
+            'batch_id' => $this->batch->id,
+            'sku' => 'B04-003',
+            'brand' => 'Peak',
+            'model' => 'Taichi Flash',
+            'price_tier' => 'Tier 2',
+            'listed_price' => 2800.00,
+            'condition' => 'Good',
+            'size' => 'US 10.0',
+            'status' => 'available',
+            'repair_cost' => 0.00,
+        ]);
+
+        $response = $this->actingAs($this->staff)->post('/orders/pos-checkout', [
+            'item_ids' => [$this->item->id, $secondItem->id],
+            'payment_method' => 'cash',
+            'cash_tendered' => 10000.00,
+        ]);
+
+        $response->assertSessionHas('success');
+
+        $order = Order::latest('id')->first();
+        $this->assertCount(2, $order->fresh()->items);
+        $this->assertEquals('walkin_pos', $order->order_type);
+        $this->assertEquals('paid', $order->status);
+
+        // One order, one payment, one delivery for the whole ticket.
+        $this->assertSame(1, Order::where('id', $order->id)->count());
+        $this->assertSame(1, Payment::where('order_id', $order->id)->count());
+        $this->assertSame(1, Delivery::where('order_id', $order->id)->count());
+        $this->assertDatabaseHas('items', ['id' => $this->item->id, 'status' => 'sold']);
+        $this->assertDatabaseHas('items', ['id' => $secondItem->id, 'status' => 'sold']);
+    }
+
+    public function test_expense_records_optional_reference_number(): void
+    {
+        $response = $this->actingAs($this->owner)->post('/expenses', [
+            'category' => 'Store Utilities',
+            'description' => 'Internet bill for the month',
+            'reference_no' => 'OR-2026-00123',
+            'amount' => 1699.00,
+            'date' => now()->format('Y-m-d'),
+        ]);
+
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('expenses', [
+            'description' => 'Internet bill for the month',
+            'reference_no' => 'OR-2026-00123',
+            'amount' => 1699.00,
+        ]);
     }
 
     public function test_payment_verification_transitions_order_and_item_status(): void

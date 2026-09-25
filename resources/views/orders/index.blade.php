@@ -74,7 +74,9 @@
                 </thead>
                 <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800/60">
                     @forelse($orders as $ord)
-                    <tr class="app-row hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30">
+                    @php($isFocused = $focus && $focus === $ord->order_number)
+                    <tr id="order-{{ $ord->order_number }}"
+                        class="app-row hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30 {{ $isFocused ? 'ring-2 ring-inset ring-[#0071E3] bg-[#0071E3]/5 dark:bg-[#0A84FF]/10' : '' }}">
                         <td class="py-3.5 px-4">
                             <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF] block">{{ $ord->order_number }}</span>
                             <span class="text-xs text-neutral-500 font-mono">{{ $ord->date_awarded->format('M d, Y H:i') }}</span>
@@ -83,8 +85,12 @@
                             </span>
                         </td>
                         <td class="py-3.5 px-4">
-                            <div class="font-semibold text-neutral-800 dark:text-neutral-200">{{ $ord->item->brand }} {{ $ord->item->model }}</div>
-                            <span class="text-xs text-neutral-500 font-mono">{{ $ord->item->sku }} • Size {{ $ord->item->size }}</span>
+                            @php($firstPair = $ord->items->first())
+                            <div class="font-semibold text-neutral-800 dark:text-neutral-200">{{ $firstPair?->brand }} {{ $firstPair?->model }}</div>
+                            <span class="text-xs text-neutral-500 font-mono">{{ $firstPair?->sku }} • Size {{ $firstPair?->size }}</span>
+                            @if($ord->items->count() > 1)
+                                <span class="badge badge-neutral mt-1">+{{ $ord->items->count() - 1 }} more pair(s)</span>
+                            @endif
                         </td>
                         <td class="py-3.5 px-4">
                             <div class="font-semibold text-neutral-800 dark:text-neutral-200">{{ $ord->customer->name }}</div>
@@ -130,4 +136,13 @@
     </div>
 
 </div>
+
+@if($focus)
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var el = document.getElementById('order-' + {{ Js::from($focus) }});
+        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    });
+</script>
+@endif
 @endsection

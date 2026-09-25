@@ -14,7 +14,7 @@ class ReportingService
     // Ginansya kada batch (allocated cost + repairs + expenses)
     public function getBatchProfitSummary(): array
     {
-        $batches = Batch::with(['supplier', 'items.orders.payment'])->get();
+        $batches = Batch::with(['supplier', 'items.orderItems.order'])->get();
 
         $report = [];
         foreach ($batches as $batch) {
@@ -32,9 +32,11 @@ class ReportingService
             $totalRepairs = (float) $items->sum('repair_cost');
 
             foreach ($soldItems as $item) {
-                $order = $item->orders->whereIn('status', ['paid', 'fulfilled'])->first();
-                if ($order) {
-                    $awarded = (float) $order->awarded_price;
+                $line = $item->orderItems->first(
+                    fn ($oi) => in_array($oi->order?->status, ['paid', 'fulfilled'], true)
+                );
+                if ($line) {
+                    $awarded = (float) $line->awarded_price;
                     $realizedRevenue += $awarded;
                     $realizedProfit += ($awarded - $avgCost - (float) $item->repair_cost);
                 }
@@ -51,7 +53,6 @@ class ReportingService
                 'total_sacks' => $batch->total_sacks,
                 'total_pairs' => $totalPairs,
                 'total_cost' => $batchCost,
-                'average_item_cost' => $avgCost,
                 'available_pairs' => $availableItems->count(),
                 'reserved_pairs' => $reservedItems->count(),
                 'sold_pairs' => $soldItems->count(),
@@ -74,7 +75,7 @@ class ReportingService
 
         $report = [];
         foreach ($tiers as $tier) {
-            $items = Item::with(['batch', 'orders' => function ($q) {
+            $items = Item::with(['batch', 'orderItems.order' => function ($q) {
                 $q->whereIn('status', ['paid', 'fulfilled']);
             }])->where('price_tier', $tier)->get();
 
@@ -84,17 +85,16 @@ class ReportingService
             $totalCost = 0.0;
 
             foreach ($items as $item) {
-                $paidOrder = $item->orders->first();
-                if ($paidOrder) {
+                $line = $item->orderItems->first();
+                if ($line) {
                     $soldCount++;
-                    $totalRevenue += (float) $paidOrder->awarded_price;
+                    $totalRevenue += (float) $line->awarded_price;
                     $avgCost = $item->batch?->average_item_cost ?? 0;
                     $totalCost += ($avgCost + (float) $item->repair_cost);
                 }
             }
 
             $profit = $totalRevenue - $totalCost;
-            $marginPercent = $totalRevenue > 0 ? round(($profit / $totalRevenue) * 100, 1) : 0;
 
             $report[] = [
                 'tier' => $tier,
@@ -103,7 +103,6 @@ class ReportingService
                 'total_revenue' => round($totalRevenue, 2),
                 'total_cogs' => round($totalCost, 2),
                 'net_profit' => round($profit, 2),
-                'margin_percent' => $marginPercent,
             ];
         }
 
@@ -113,7 +112,7 @@ class ReportingService
     // Halin ug ginansya kada adlaw / live session
     public function getSessionSummary(?string $startDate = null, ?string $endDate = null): array
     {
-        $query = Order::with(['item.batch', 'payment', 'customer', 'staff'])
+        $query = Order::with(['items.batch', 'payment', 'customer', 'staff'])
             ->whereIn('status', ['paid', 'fulfilled']);
 
         if ($startDate) {
@@ -137,17 +136,20 @@ class ReportingService
             $cashTotal = 0.0;
 
             foreach ($dayOrders as $ord) {
-                $awarded = (float) $ord->awarded_price;
-                $avgCost = $ord->item?->batch?->average_item_cost ?? 0;
-                $repair = (float) ($ord->item?->repair_cost ?? 0);
+                foreach ($ord->items as $item) {
+                    $awarded = (float) ($item->pivot->awarded_price ?? 0);
+                    $avgCost = $item->batch?->average_item_cost ?? 0;
+                    $repair = (float) $item->repair_cost;
 
-                $totalSales += $awarded;
-                $totalProfit += ($awarded - $avgCost - $repair);
+                    $totalSales += $awarded;
+                    $totalProfit += ($awarded - $avgCost - $repair);
+                }
 
+                $orderTotal = (float) $ord->awarded_price;
                 if ($ord->payment?->method === 'gcash') {
-                    $gcashTotal += $awarded;
+                    $gcashTotal += $orderTotal;
                 } else {
-                    $cashTotal += $awarded;
+                    $cashTotal += $orderTotal;
                 }
             }
 
@@ -167,15 +169,18 @@ class ReportingService
     // Kinatibuk-ang financial status (Sales, COGS, Gasto, Net)
     public function getOverallFinancialMetrics(): array
     {
-        $paidOrders = Order::with('item.batch')->whereIn('status', ['paid', 'fulfilled'])->get();
+        $paidOrders = Order::with('items.batch')->whereIn('status', ['paid', 'fulfilled'])->get();
 
         $totalRevenue = 0.0;
         $totalCogs = 0.0;
 
         foreach ($paidOrders as $ord) {
             $totalRevenue += (float) $ord->awarded_price;
-            $avgCost = $ord->item?->batch?->average_item_cost ?? 0;
-            $totalCogs += ($avgCost + (float) ($ord->item?->repair_cost ?? 0));
+
+            foreach ($ord->items as $item) {
+                $avgCost = $item->batch?->average_item_cost ?? 0;
+                $totalCogs += ($avgCost + (float) $item->repair_cost);
+            }
         }
 
         $grossProfit = $totalRevenue - $totalCogs;
@@ -206,7 +211,7 @@ class ReportingService
         $now = Carbon::now();
         $metrics = $this->getOverallFinancialMetrics();
         $batchReport = $this->getBatchProfitSummary();
-        $paidOrders = Order::with(['item.batch', 'customer', 'staff', 'payment'])
+        $paidOrders = Order::with(['items.batch', 'customer', 'staff', 'payment'])
             ->whereIn('status', ['paid', 'fulfilled'])
             ->orderByDesc('date_awarded')
             ->get();
@@ -229,32 +234,36 @@ class ReportingService
 
         // 2. Batch Profit Summary
         $csv .= "BATCH PROFITABILITY REPORT\r\n";
-        $csv .= "Batch Code,Supplier,Date Acquired,Total Sacks,Total Pairs,Batch Cost (PHP),Avg Item Cost (PHP),Sold Pairs,Realized Revenue (PHP),Order Profit Sum (PHP),Expenses (PHP),Net Proceeds (PHP)\r\n";
+        $csv .= "Batch Code,Supplier,Date Acquired,Total Sacks,Total Pairs,Batch Cost (PHP),Sold Pairs,Realized Revenue (PHP),Order Profit Sum (PHP),Expenses (PHP),Net Proceeds (PHP)\r\n";
         foreach ($batchReport as $b) {
-            $csv .= "\"{$b['batch_code']}\",\"{$b['supplier_name']}\",\"{$b['date_acquired']}\",{$b['total_sacks']},{$b['total_pairs']},{$b['total_cost']},{$b['average_item_cost']},{$b['sold_pairs']},{$b['realized_revenue']},{$b['order_profit_sum']},{$b['batch_expenses']},{$b['net_proceeds']}\r\n";
+            $csv .= "\"{$b['batch_code']}\",\"{$b['supplier_name']}\",\"{$b['date_acquired']}\",{$b['total_sacks']},{$b['total_pairs']},{$b['total_cost']},{$b['sold_pairs']},{$b['realized_revenue']},{$b['order_profit_sum']},{$b['batch_expenses']},{$b['net_proceeds']}\r\n";
         }
         $csv .= "\r\n";
 
         // 3. Transactions Ledger
         $csv .= "COMPLETED SALES TRANSACTIONS\r\n";
-        $csv .= "Order No,Date,Channel,SKU,Brand & Model,Size,Condition,Awarded Price (PHP),Avg Base Cost (PHP),Repair Cost (PHP),Unit Profit (PHP),Customer,Payment Method,Payment Ref,Staff\r\n";
+        $csv .= "Order No,Date,Channel,SKU,Brand & Model,Size,Condition,Awarded Price (PHP),Repair Cost (PHP),Unit Profit (PHP),Customer,Payment Method,Payment Ref,Staff\r\n";
         foreach ($paidOrders as $o) {
-            $avgCost = $o->item?->batch?->average_item_cost ?? 0;
-            $repair = (float) ($o->item?->repair_cost ?? 0);
-            $unitProfit = (float) $o->awarded_price - $avgCost - $repair;
-            $title = str_replace('"', '""', ($o->item?->brand ?? '') . ' ' . ($o->item?->model ?? ''));
+            foreach ($o->items as $item) {
+                $awarded = (float) ($item->pivot->awarded_price ?? 0);
+                $avgCost = $item->batch?->average_item_cost ?? 0;
+                $repair = (float) $item->repair_cost;
+                $unitProfit = $awarded - $avgCost - $repair;
+                $title = str_replace('"', '""', ($item->brand ?? '') . ' ' . ($item->model ?? ''));
 
-            $csv .= "\"{$o->order_number}\",\"{$o->date_awarded}\",\"{$o->order_type}\",\"{$o->item?->sku}\",\"{$title}\",\"{$o->item?->size}\",\"{$o->item?->condition}\",{$o->awarded_price},{$avgCost},{$repair},{$unitProfit},\"{$o->customer?->name}\",\"{$o->payment?->method}\",\"{$o->payment?->reference_no}\",\"{$o->staff?->name}\"\r\n";
+                $csv .= "\"{$o->order_number}\",\"{$o->date_awarded}\",\"{$o->order_type}\",\"{$item->sku}\",\"{$title}\",\"{$item->size}\",\"{$item->condition}\",{$awarded},{$repair},{$unitProfit},\"{$o->customer?->name}\",\"{$o->payment?->method}\",\"{$o->payment?->reference_no}\",\"{$o->staff?->name}\"\r\n";
+            }
         }
         $csv .= "\r\n";
 
         // 4. Operating Expenses
         $csv .= "OPERATING EXPENSES\r\n";
-        $csv .= "Date,Category,Description,Batch,Amount (PHP)\r\n";
+        $csv .= "Date,Category,Description,Reference No,Batch,Amount (PHP)\r\n";
         foreach ($expenses as $e) {
             $desc = str_replace('"', '""', $e->description);
+            $ref = str_replace('"', '""', (string) ($e->reference_no ?? ''));
             $bCode = $e->batch?->batch_code ?? 'General';
-            $csv .= "\"{$e->date}\",\"{$e->category}\",\"{$desc}\",\"{$bCode}\",{$e->amount}\r\n";
+            $csv .= "\"{$e->date}\",\"{$e->category}\",\"{$desc}\",\"{$ref}\",\"{$bCode}\",{$e->amount}\r\n";
         }
 
         return $csv;

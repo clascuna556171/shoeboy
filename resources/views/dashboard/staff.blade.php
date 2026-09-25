@@ -13,6 +13,8 @@
          buyerName: '',
          buyerHandle: '',
          selectedClaimShoe: null,
+         claimCart: [],
+         claimReservation: '120',
          shoes: {{ Js::from($items) }},
          
          // POS State
@@ -41,6 +43,17 @@
              this.selectedClaimShoe = this.shoes.find(s => s.sku.toUpperCase() === q) ||
                                      this.shoes.find(s => s.sku.toUpperCase().includes(q)) ||
                                      this.shoes.find(s => `${s.brand} ${s.model}`.toUpperCase().includes(q)) || null;
+         },
+
+         addToClaim(shoe) {
+             if (this.claimCart.some(i => i.id === shoe.id)) return;
+             this.claimCart.push({ id: shoe.id, sku: shoe.sku, brand: shoe.brand, model: shoe.model, size: shoe.size, price: shoe.listed_price });
+         },
+         removeFromClaim(id) {
+             this.claimCart = this.claimCart.filter(i => i.id !== id);
+         },
+         get claimTotal() {
+             return this.claimCart.reduce((acc, i) => acc + (parseFloat(i.price) || 0), 0);
          },
 
          addToPos(shoe) {
@@ -112,6 +125,25 @@
                 <span>Triage Table</span>
             </button>
         </div>
+        </div>
+
+        {{-- Live Claims how-to (steps inside header) --}}
+        <div x-show="activeTab === 'claims'" x-cloak
+             class="flex flex-wrap items-center gap-x-3 gap-y-2 pt-3 border-t border-neutral-100 dark:border-neutral-800 text-sm">
+            <span class="flex items-center gap-2 text-neutral-600 dark:text-neutral-300">
+                <span class="w-5 h-5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 ring-1 ring-inset ring-neutral-200 dark:ring-neutral-700 text-[11px] font-bold flex items-center justify-center">1</span>
+                Search or scan a shoe short code
+            </span>
+            <span class="text-neutral-300 dark:text-neutral-600">→</span>
+            <span class="flex items-center gap-2 text-neutral-600 dark:text-neutral-300">
+                <span class="w-5 h-5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 ring-1 ring-inset ring-neutral-200 dark:ring-neutral-700 text-[11px] font-bold flex items-center justify-center">2</span>
+                Add the pairs to the claim ticket
+            </span>
+            <span class="text-neutral-300 dark:text-neutral-600">→</span>
+            <span class="flex items-center gap-2 text-neutral-600 dark:text-neutral-300">
+                <span class="w-5 h-5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 ring-1 ring-inset ring-neutral-200 dark:ring-neutral-700 text-[11px] font-bold flex items-center justify-center">3</span>
+                Enter buyer details &amp; lock the reservation
+            </span>
         </div>
 
         {{-- POS how-to (steps inside header) --}}
@@ -210,58 +242,18 @@
                             </div>
                         </div>
 
-                        {{-- I-award sa customer --}}
+                        {{-- Idugang sa claim ticket (bulk) --}}
                         <template x-if="selectedClaimShoe.status === 'available'">
-                            <form action="{{ route('orders.award') }}" method="POST" class="space-y-4 pt-1">
-                                @csrf
-                                <input type="hidden" name="item_id" :value="selectedClaimShoe.id">
-                                <input type="hidden" name="order_type" value="live_stream">
-
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                                    <div class="space-y-1">
-                                        <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Buyer FB Handle:</label>
-                                        <input type="text"
-                                               name="messenger_contact"
-                                               required
-                                               placeholder="@username (e.g. @ken_hoops23)"
-                                               class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-sm apple-focus-ring">
-                                    </div>
-                                    <div class="space-y-1">
-                                        <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Customer Full Name:</label>
-                                        <input type="text"
-                                               name="customer_name"
-                                               required
-                                               placeholder="e.g. Ken Hoops"
-                                               class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-sm apple-focus-ring">
-                                    </div>
-                                </div>
-
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                                    <div class="space-y-1">
-                                        <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Awarded Price (₱):</label>
-                                        <input type="number"
-                                               step="0.01"
-                                               name="awarded_price"
-                                               required
-                                               :value="selectedClaimShoe.listed_price"
-                                               class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-mono text-sm apple-focus-ring">
-                                    </div>
-                                    <div class="space-y-1">
-                                        <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Reservation Window:</label>
-                                        <select name="reservation_minutes" class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-sm apple-focus-ring">
-                                            <option value="120">2 Hours (Standard Live Window)</option>
-                                            <option value="60">1 Hour (Flash Claim)</option>
-                                            <option value="1440">24 Hours (Next Day Settlement)</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <button type="submit"
-                                        class="w-full py-3 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-bold text-sm shadow-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                                    <span>Lock Live Reservation</span>
-                                </button>
-                            </form>
+                            <button type="button"
+                                    @click="addToClaim(selectedClaimShoe)"
+                                    :disabled="claimCart.some(i => i.id === selectedClaimShoe.id)"
+                                    :class="claimCart.some(i => i.id === selectedClaimShoe.id)
+                                        ? 'border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] text-neutral-500 cursor-not-allowed'
+                                        : 'border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200'"
+                                    class="w-full py-3 rounded-2xl font-bold text-sm shadow-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                <span x-text="claimCart.some(i => i.id === selectedClaimShoe.id) ? 'Added to Claim Ticket' : 'Add to Claim Ticket'"></span>
+                            </button>
                         </template>
 
                         {{-- Naka-reserve pa --}}
@@ -297,8 +289,92 @@
 
             </div>
 
-            {{-- Mga naka-reserve nga claims --}}
             <div class="lg:col-span-5 space-y-4">
+
+                {{-- Live Claim Ticket (bulk) --}}
+                <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between pb-2 border-b border-neutral-200/80 dark:border-neutral-800">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-[#0071E3]"></span>
+                            <h3 class="font-bold text-base text-[#1D1D1F] dark:text-white">Live Claim Ticket</h3>
+                        </div>
+                        <template x-if="claimCart.length > 0">
+                            <button @click="claimCart = []" type="button" class="text-xs text-rose-500 hover:underline">Clear Ticket</button>
+                        </template>
+                    </div>
+
+                    <form action="{{ route('orders.award') }}" method="POST" class="space-y-4 text-sm">
+                        @csrf
+                        <input type="hidden" name="order_type" value="live_stream">
+                        <template x-for="item in claimCart" :key="item.id">
+                            <span>
+                                <input type="hidden" name="item_ids[]" :value="item.id">
+                                <input type="hidden" name="prices[]" :value="item.price">
+                            </span>
+                        </template>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div class="space-y-1">
+                                <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Buyer FB Handle:</label>
+                                <input type="text" name="messenger_contact" x-model="buyerHandle" required placeholder="@username (e.g. @ken_hoops23)" class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-sm apple-focus-ring">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Customer Full Name:</label>
+                                <input type="text" name="customer_name" x-model="buyerName" required placeholder="e.g. Ken Hoops" class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-sm apple-focus-ring">
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Pairs (<span x-text="claimCart.length"></span>)</div>
+                            <div class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                                <template x-for="item in claimCart" :key="item.id">
+                                    <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/60">
+                                        <div class="min-w-0">
+                                            <div class="font-semibold text-neutral-800 dark:text-neutral-200 truncate text-xs" x-text="item.brand + ' ' + item.model"></div>
+                                            <div class="text-[11px] text-neutral-500 font-mono" x-text="item.sku + ' • ' + item.size"></div>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <input type="number" step="0.01" min="0" x-model="item.price" class="w-24 px-2 py-1 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg font-mono text-xs text-right">
+                                            <button type="button" @click="removeFromClaim(item.id)" class="text-neutral-500 hover:text-rose-500">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template x-if="claimCart.length === 0">
+                                    <div class="text-center py-6 text-neutral-500 text-xs">Ticket is empty. Search a short code, then tap <strong>Add to Claim Ticket</strong>.</div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div class="flex items-end justify-between gap-3 pt-2 border-t border-neutral-100 dark:border-neutral-800">
+                            <div>
+                                <span class="text-xs text-neutral-500 block">Reservation Window:</span>
+                                <select name="reservation_minutes" x-model="claimReservation" class="mt-1 px-3 py-2 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-sm apple-focus-ring">
+                                    <option value="120">2 Hours (Standard Live Window)</option>
+                                    <option value="60">1 Hour (Flash Claim)</option>
+                                    <option value="1440">24 Hours (Next Day Settlement)</option>
+                                </select>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs text-neutral-500 block">Ticket Total</span>
+                                <span class="font-mono font-bold text-lg text-[#1D1D1F] dark:text-white" x-text="'₱' + claimTotal.toLocaleString()"></span>
+                            </div>
+                        </div>
+
+                        <button type="submit"
+                                :disabled="claimCart.length === 0"
+                                :class="claimCart.length === 0
+                                    ? 'border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] text-neutral-500 cursor-not-allowed'
+                                    : 'border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200'"
+                                class="w-full py-3 rounded-2xl font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                            <span x-text="claimCart.length === 0 ? 'Add a pair to start' : 'Lock Reservation · ' + claimCart.length + ' pair(s)'"></span>
+                        </button>
+                    </form>
+                </div>
+
+                {{-- Mga naka-reserve nga claims --}}
                 <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 shadow-sm space-y-4">
                     <div class="flex items-center justify-between pb-2 border-b border-neutral-200/80 dark:border-neutral-800">
                         <div class="flex items-center gap-2">
@@ -314,14 +390,18 @@
                             
                             <div class="flex items-start justify-between gap-2 text-sm">
                                 <div class="min-w-0">
+                                    @php($claimFirst = $claim->items->first())
                                     <div class="flex items-center gap-1.5">
-                                        <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $claim->item->sku }}</span>
+                                        <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $claimFirst?->sku }}</span>
                                         <span class="text-neutral-500">•</span>
-                                        <span class="font-semibold text-neutral-800 dark:text-neutral-200 truncate">{{ $claim->item->brand }} {{ $claim->item->model }}</span>
+                                        <span class="font-semibold text-neutral-800 dark:text-neutral-200 truncate">{{ $claimFirst?->brand }} {{ $claimFirst?->model }}</span>
+                                        @if($claim->items->count() > 1)
+                                            <span class="badge badge-neutral">+{{ $claim->items->count() - 1 }}</span>
+                                        @endif
                                     </div>
                                     <div class="flex items-center gap-2 mt-0.5 text-xs">
                                         <span class="font-semibold text-amber-700 dark:text-amber-400">{{ $claim->customer->messenger_contact }}</span>
-                                        <span class="text-neutral-500">Size {{ $claim->item->size }}</span>
+                                        <span class="text-neutral-500">Size {{ $claimFirst?->size }}</span>
                                     </div>
                                 </div>
                                 <div class="text-right shrink-0">
@@ -364,7 +444,6 @@
                         </div>
                         @endforelse
                     </div>
-
                 </div>
             </div>
 

@@ -145,7 +145,6 @@ class DatabaseSeeder extends Seeder
         // A. Kobe 6 Protro (Sold online via live stream to Adrian Sole, Paid GCash, Shipped via J&T)
         $orderKobe = Order::create([
             'order_number' => 'ORD-20260316-KB008',
-            'item_id' => $createdItems['B04-008']->id,
             'customer_id' => $customer1->id,
             'staff_id' => $staff->id,
             'awarded_price' => 6500.00,
@@ -155,6 +154,7 @@ class DatabaseSeeder extends Seeder
             'expires_at' => null,
             'notes' => 'Awarded on FB Live Stream Session 1',
         ]);
+        $orderKobe->items()->attach($createdItems['B04-008']->id, ['awarded_price' => 6500.00]);
 
         Payment::create([
             'order_id' => $orderKobe->id,
@@ -176,7 +176,6 @@ class DatabaseSeeder extends Seeder
         // B. Ja 1 Day One (Sold in-store walk-in POS, Paid Cash, Pickup completed)
         $orderJa = Order::create([
             'order_number' => 'ORD-20260316-JA014',
-            'item_id' => $createdItems['B04-014']->id,
             'customer_id' => $walkinCustomer->id,
             'staff_id' => $staff->id,
             'awarded_price' => 3800.00,
@@ -186,6 +185,7 @@ class DatabaseSeeder extends Seeder
             'expires_at' => null,
             'notes' => 'Walk-in cash sale at storefront counter',
         ]);
+        $orderJa->items()->attach($createdItems['B04-014']->id, ['awarded_price' => 3800.00]);
 
         Payment::create([
             'order_id' => $orderJa->id,
@@ -205,9 +205,8 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // C. KT 8 (Active Reservation for Ken Hoops, pending GCash payment)
-        Order::create([
+        $orderKt = Order::create([
             'order_number' => 'ORD-' . date('Ymd') . '-KT002',
-            'item_id' => $createdItems['B04-002']->id,
             'customer_id' => $customer2->id,
             'staff_id' => $staff->id,
             'awarded_price' => 3200.00,
@@ -217,11 +216,11 @@ class DatabaseSeeder extends Seeder
             'expires_at' => Carbon::now()->addMinutes(85),
             'notes' => 'Claimed during current live stream session. Awaiting GCash transfer.',
         ]);
+        $orderKt->items()->attach($createdItems['B04-002']->id, ['awarded_price' => 3200.00]);
 
         // D. Jordan 1 Lost & Found (Active Reservation for Davao Sneakerhead, pending GCash payment)
-        Order::create([
+        $orderAj = Order::create([
             'order_number' => 'ORD-' . date('Ymd') . '-AJ005',
-            'item_id' => $createdItems['B04-005']->id,
             'customer_id' => $customer3->id,
             'staff_id' => $staff->id,
             'awarded_price' => 5800.00,
@@ -231,6 +230,7 @@ class DatabaseSeeder extends Seeder
             'expires_at' => Carbon::now()->addMinutes(20),
             'notes' => 'Claimed on FB Live stream. Timer expires in 20 minutes.',
         ]);
+        $orderAj->items()->attach($createdItems['B04-005']->id, ['awarded_price' => 5800.00]);
 
         // 7. Store Operating Expenses
         Expense::create([

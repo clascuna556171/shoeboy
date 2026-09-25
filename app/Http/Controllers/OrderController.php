@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class OrderController extends Controller
@@ -26,8 +27,9 @@ class OrderController extends Controller
         $status = $request->query('status');
         $type = $request->query('type');
         $search = $request->query('search');
+        $focus = $request->query('focus');
 
-        $query = Order::with(['item.batch', 'customer', 'staff', 'payment', 'delivery'])
+        $query = Order::with(['items.batch', 'customer', 'staff', 'payment', 'delivery'])
             ->latest('date_awarded');
 
         if ($status) {
@@ -41,30 +43,67 @@ class OrderController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('order_number', 'like', "%{$search}%")
-                    ->orWhereHas('item', fn ($iq) => $iq->where('sku', 'like', "%{$search}%"))
+                    ->orWhereHas('items', fn ($iq) => $iq->where('sku', 'like', "%{$search}%"))
                     ->orWhereHas('customer', fn ($cq) => $cq->where('name', 'like', "%{$search}%")->orWhere('messenger_contact', 'like', "%{$search}%"));
             });
         }
 
+        // Bring a specifically requested order to the top of the list for highlighting.
+        if ($focus) {
+            $query->reorder()
+                ->orderByRaw('CASE WHEN order_number = ? THEN 0 ELSE 1 END', [$focus])
+                ->orderByDesc('date_awarded');
+        }
+
         $orders = $query->paginate(20)->withQueryString();
 
-        return view('orders.index', compact('orders', 'status', 'type'));
+        return view('orders.index', compact('orders', 'status', 'type', 'focus'));
     }
 
-    // I-award ang sapatos sa nakadaog / nipalit
+    // I-award ang usa o daghan ka sapatos sa nakadaog / nipalit
     public function award(Request $request): JsonResponse|RedirectResponse
     {
         $validated = $request->validate([
-            'item_id' => ['required', 'exists:items,id'],
+            'item_ids' => ['nullable', 'array'],
+            'item_ids.*' => ['required', 'exists:items,id'],
+            'item_id' => ['nullable', 'exists:items,id'],
+            'prices' => ['nullable', 'array'],
+            'prices.*' => ['nullable', 'numeric', 'min:0'],
+            'awarded_price' => ['nullable', 'numeric', 'min:0'],
             'customer_name' => ['required', 'string', 'max:255'],
             'messenger_contact' => ['required', 'string', 'max:255'],
-            'awarded_price' => ['required', 'numeric', 'min:0'],
             'order_type' => ['nullable', 'in:live_stream,walkin_pos'],
             'reservation_minutes' => ['nullable', 'integer', 'min:5', 'max:1440'],
             'notes' => ['nullable', 'string'],
         ]);
 
-        $item = Item::findOrFail($validated['item_id']);
+        // Normalize to a unique list of item ids (accepts legacy single item_id too)
+        $itemIds = $validated['item_ids'] ?? [];
+        if (! empty($validated['item_id'])) {
+            $itemIds[] = $validated['item_id'];
+        }
+        $itemIds = array_values(array_unique($itemIds));
+
+        if (empty($itemIds)) {
+            throw ValidationException::withMessages([
+                'item_ids' => ['Please select at least one pair to award.'],
+            ]);
+        }
+
+        $items = Item::whereIn('id', $itemIds)->get()->keyBy('id');
+        $itemModels = array_map(fn ($id) => $items[$id], $itemIds);
+
+        // Resolve per-pair prices
+        $prices = [];
+        foreach ($itemIds as $index => $id) {
+            if (! empty($validated['prices'])) {
+                $prices[] = (float) ($validated['prices'][$index] ?? $items[$id]->listed_price);
+            } elseif (isset($validated['awarded_price']) && count($itemIds) === 1) {
+                $prices[] = (float) $validated['awarded_price'];
+            } else {
+                $prices[] = (float) $items[$id]->listed_price;
+            }
+        }
 
         // Pangitaon or himuon bag-ong customer
         $customer = Customer::firstOrCreate(
@@ -72,11 +111,11 @@ class OrderController extends Controller
             ['name' => trim($validated['customer_name'])]
         );
 
-        $order = $this->orderService->awardItem(
-            item: $item,
+        $order = $this->orderService->awardItems(
+            items: $itemModels,
+            prices: $prices,
             customer: $customer,
             staff: $request->user(),
-            awardedPrice: (float) $validated['awarded_price'],
             orderType: $validated['order_type'] ?? 'live_stream',
             reservationMinutes: $validated['reservation_minutes'] ?? 120,
             notes: $validated['notes'] ?? null
@@ -85,15 +124,15 @@ class OrderController extends Controller
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => "Item {$item->sku} successfully reserved for {$customer->name}.",
-                'order' => $order->load(['item', 'customer', 'staff']),
+                'message' => "Reserved {$order->items->count()} pair(s) for {$customer->name}.",
+                'order' => $order->load(['items', 'customer', 'staff']),
             ]);
         }
 
-        return back()->with('success', "Item {$item->sku} awarded to {$customer->name}. 2-hour reservation active.");
+        return back()->with('success', "Reserved {$order->items->count()} pair(s) for {$customer->name}. Reservation active.");
     }
 
-    // Walk-in POS checkout (daghang sapatos + discount)
+    // Walk-in POS checkout (usa ka order, daghang sapatos + discount)
     public function posCheckout(Request $request): JsonResponse|RedirectResponse
     {
         $validated = $request->validate([
@@ -108,7 +147,7 @@ class OrderController extends Controller
 
         $staff = $request->user();
         $discount = (float) ($validated['discount'] ?? 0);
-        $itemIds = $validated['item_ids'];
+        $itemIds = array_values(array_unique($validated['item_ids']));
         $itemsCount = count($itemIds);
 
         // Default walk-in customer record
@@ -117,50 +156,58 @@ class OrderController extends Controller
             ['name' => 'Walk-In Store Customer']
         );
 
-        $completedOrders = [];
+        $items = Item::whereIn('id', $itemIds)->get()->keyBy('id');
+        $allocatedDiscountPerItem = $itemsCount > 0 ? ($discount / $itemsCount) : 0;
 
-        DB::transaction(function () use ($itemIds, $walkinCustomer, $staff, $discount, $itemsCount, $validated, &$completedOrders) {
-            $allocatedDiscountPerItem = $itemsCount > 0 ? ($discount / $itemsCount) : 0;
+        $prices = [];
+        $itemModels = [];
+        foreach ($itemIds as $id) {
+            $itemModels[] = $items[$id];
+            $prices[] = round(max(0, (float) $items[$id]->listed_price - $allocatedDiscountPerItem), 2);
+        }
 
-            foreach ($itemIds as $itemId) {
-                $item = Item::where('id', $itemId)->lockForUpdate()->firstOrFail();
-                $awardedPrice = max(0, (float) $item->listed_price - $allocatedDiscountPerItem);
+        $discountNote = $validated['discount_note'] ?? null;
+        $paymentMethod = $validated['payment_method'];
+        $gcashRef = $validated['gcash_ref'] ?? null;
 
-                $order = $this->orderService->awardItem(
-                    item: $item,
-                    customer: $walkinCustomer,
-                    staff: $staff,
-                    awardedPrice: $awardedPrice,
-                    orderType: 'walkin_pos',
-                    reservationMinutes: null,
-                    notes: $validated['discount_note'] ? "POS Sale. Discount note: {$validated['discount_note']}" : "POS Walk-In Sale"
-                );
+        $order = DB::transaction(function () use ($itemModels, $prices, $walkinCustomer, $staff, $discountNote, $paymentMethod, $gcashRef) {
+            $order = $this->orderService->awardItems(
+                items: $itemModels,
+                prices: $prices,
+                customer: $walkinCustomer,
+                staff: $staff,
+                orderType: 'walkin_pos',
+                reservationMinutes: null,
+                notes: $discountNote ? "POS Sale. Discount note: {$discountNote}" : "POS Walk-In Sale"
+            );
 
-                $refNo = $validated['payment_method'] === 'gcash'
-                    ? $validated['gcash_ref']
-                    : 'CASH-' . $order->order_number;
+            $total = (float) $order->awarded_price;
 
-                $this->paymentService->recordPayment(
-                    order: $order,
-                    amount: $awardedPrice,
-                    method: $validated['payment_method'],
-                    referenceNo: $refNo,
-                    verifier: $staff
-                );
+            $refNo = $paymentMethod === 'gcash'
+                ? $gcashRef
+                : 'CASH-' . $order->order_number;
 
-                $completedOrders[] = $order;
-            }
+            $this->paymentService->recordPayment(
+                order: $order,
+                amount: $total,
+                method: $paymentMethod,
+                referenceNo: $refNo,
+                verifier: $staff
+            );
+
+            return $order;
         });
 
         if ($request->wantsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => 'POS sale completed successfully.',
-                'orders_count' => count($completedOrders),
+                'order_number' => $order->order_number,
+                'items_count' => $order->items->count(),
             ]);
         }
 
-        return back()->with('success', 'POS sale completed and inventory updated.');
+        return back()->with('success', "POS sale completed ({$order->items->count()} pair(s)) and inventory updated.");
     }
 
     // Kansela ang order

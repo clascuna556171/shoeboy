@@ -25,6 +25,7 @@ class ExpenseController extends Controller
         $validated = $request->validate([
             'category' => ['required', 'string', 'max:100'],
             'description' => ['required', 'string', 'max:255'],
+            'reference_no' => ['nullable', 'string', 'max:100'],
             'amount' => ['required', 'numeric', 'min:0'],
             'date' => ['required', 'date'],
             'batch_id' => ['nullable', 'exists:batches,id'],
@@ -36,6 +37,7 @@ class ExpenseController extends Controller
             'category' => $expense->category,
             'amount' => $expense->amount,
             'description' => $expense->description,
+            'reference_no' => $expense->reference_no,
         ]);
 
         return back()->with('success', "Expense of ₱" . number_format($expense->amount, 2) . " recorded.");

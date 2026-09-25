@@ -605,12 +605,6 @@
                         <th class="px-5 py-3.5 text-right
                                    text-xs font-semibold
                                    text-neutral-500 dark:text-neutral-400">
-                            Unit Cost
-                        </th>
-
-                        <th class="px-5 py-3.5 text-right
-                                   text-xs font-semibold
-                                   text-neutral-500 dark:text-neutral-400">
                             Sales
                         </th>
 
@@ -705,19 +699,6 @@
                         </td>
 
 
-                        {{-- Unit Cost --}}
-                        <td class="px-5 py-4 text-right">
-
-                            <span class="font-mono text-sm
-                                         text-neutral-500 dark:text-neutral-500">
-
-                                ₱{{ number_format($batch['average_item_cost'], 2) }}
-
-                            </span>
-
-                        </td>
-
-
                         {{-- Revenue --}}
                         <td class="px-5 py-4 text-right">
 
@@ -755,7 +736,7 @@
 
                     <tr>
 
-                        <td colspan="5"
+                        <td colspan="4"
                             class="px-5 py-4 text-right
                                    text-[11px] font-semibold uppercase tracking-wide
                                    text-neutral-500">
@@ -871,9 +852,13 @@
 
                                 <div class="min-w-0">
 
+                                    @php($txFirst = $tx->items->first())
                                     <p class="truncate text-sm font-semibold
                                               text-neutral-900 dark:text-white">
-                                        {{ $tx->item->brand }} {{ $tx->item->model }}
+                                        {{ $txFirst?->brand }} {{ $txFirst?->model }}
+                                        @if($tx->items->count() > 1)
+                                            <span class="ml-1 text-xs font-medium text-neutral-500">+{{ $tx->items->count() - 1 }} pair(s)</span>
+                                        @endif
                                     </p>
 
                                     <p class="mt-0.5 font-mono text-xs

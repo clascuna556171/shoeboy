@@ -16,7 +16,7 @@ class DeliveryController extends Controller
         $status = $request->query('status');
         $method = $request->query('method');
 
-        $query = Delivery::with(['order.item', 'order.customer', 'order.payment', 'order.staff'])
+        $query = Delivery::with(['order.items', 'order.customer', 'order.payment', 'order.staff'])
             ->latest();
 
         if ($status) {

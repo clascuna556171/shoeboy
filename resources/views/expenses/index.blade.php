@@ -37,6 +37,7 @@
                         <th class="py-3 px-4 font-semibold">Date</th>
                         <th class="py-3 px-4 font-semibold">Category</th>
                         <th class="py-3 px-4 font-semibold">Description</th>
+                        <th class="py-3 px-4 font-semibold">Reference No.</th>
                         <th class="py-3 px-4 font-semibold">Batch Link</th>
                         <th class="py-3 px-4 font-semibold text-right">Amount</th>
                         <th class="py-3 px-4 font-semibold text-right">Action</th>
@@ -50,6 +51,7 @@
                             <span class="badge badge-neutral">{{ $exp->category }}</span>
                         </td>
                         <td class="py-3.5 px-4 font-semibold text-neutral-800 dark:text-neutral-200">{{ $exp->description }}</td>
+                        <td class="py-3.5 px-4 font-mono text-neutral-500">{{ $exp->reference_no ?? '—' }}</td>
                         <td class="py-3.5 px-4 font-mono text-neutral-500">{{ $exp->batch?->batch_code ?? 'General Overhead' }}</td>
                         <td class="py-3.5 px-4 text-right font-mono font-bold text-rose-600 dark:text-rose-400">−₱{{ number_format($exp->amount, 2) }}</td>
                         <td class="py-3.5 px-4 text-right">
@@ -65,7 +67,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6">
+                        <td colspan="7">
                             <div class="app-empty">
                                 <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 14l6-6m0 0l-6-6m6 6H3"/></svg>
                                 <span class="text-xs font-medium">No expenses recorded yet.</span>
@@ -115,6 +117,11 @@
                 <div class="space-y-1">
                     <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Description:</label>
                     <input type="text" name="description" required placeholder="e.g. Freight cargo from Cebu port" class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl apple-focus-ring">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Reference No. <span class="text-neutral-500 font-normal">(optional — OR / receipt no.)</span>:</label>
+                    <input type="text" name="reference_no" placeholder="e.g. OR-2026-00123 / Bill #4567" class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-mono apple-focus-ring">
                 </div>
 
                 <div class="grid grid-cols-2 gap-2">

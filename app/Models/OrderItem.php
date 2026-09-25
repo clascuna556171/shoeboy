@@ -6,29 +6,30 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Expense extends Model
+class OrderItem extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'batch_id',
-        'category',
-        'description',
-        'reference_no',
-        'amount',
-        'date',
+        'order_id',
+        'item_id',
+        'awarded_price',
     ];
 
     protected function casts(): array
     {
         return [
-            'amount' => 'decimal:2',
-            'date' => 'date',
+            'awarded_price' => 'decimal:2',
         ];
     }
 
-    public function batch(): BelongsTo
+    public function order(): BelongsTo
     {
-        return $this->belongsTo(Batch::class);
+        return $this->belongsTo(Order::class);
+    }
+
+    public function item(): BelongsTo
+    {
+        return $this->belongsTo(Item::class);
     }
 }

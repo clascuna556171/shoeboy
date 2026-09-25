@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Item extends Model
 {
@@ -41,14 +41,16 @@ class Item extends Model
         return $this->belongsTo(Batch::class);
     }
 
-    public function orders(): HasMany
+    public function orders(): BelongsToMany
     {
-        return $this->hasMany(Order::class);
+        return $this->belongsToMany(Order::class, 'order_items')
+            ->withPivot('awarded_price')
+            ->withTimestamps();
     }
 
-    public function currentOrder(): HasOne
+    public function orderItems(): HasMany
     {
-        return $this->hasOne(Order::class)->whereIn('status', ['reserved', 'paid', 'fulfilled'])->latestOfMany();
+        return $this->hasMany(OrderItem::class);
     }
 
     public function scopeAvailable(Builder $query): Builder

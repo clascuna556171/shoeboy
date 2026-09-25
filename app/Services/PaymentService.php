@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Delivery;
 use App\Models\Item;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Support\Carbon;
@@ -70,13 +71,11 @@ class PaymentService
                 'expires_at' => null,
             ]);
 
-            // Sold na ang sapatos
-            $item = Item::where('id', $lockedOrder->item_id)->lockForUpdate()->first();
-            if ($item) {
-                $item->update([
-                    'status' => 'sold',
-                ]);
-            }
+            // Sold na ang tanan sapatos sa order
+            $itemIds = OrderItem::where('order_id', $lockedOrder->id)->pluck('item_id');
+            Item::whereIn('id', $itemIds)->update([
+                'status' => 'sold',
+            ]);
 
             // Andam daan delivery entry
             Delivery::firstOrCreate(

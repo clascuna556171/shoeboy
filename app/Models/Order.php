@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Order extends Model
@@ -14,7 +16,6 @@ class Order extends Model
 
     protected $fillable = [
         'order_number',
-        'item_id',
         'customer_id',
         'staff_id',
         'awarded_price',
@@ -34,21 +35,42 @@ class Order extends Model
         ];
     }
 
-    // Ginansya: Awarded Price - Avg Cost - Repair Cost
+    // Ginansya: sumada ang kada pares (Awarded Price - Avg Cost - Repair Cost)
     protected function profit(): Attribute
     {
         return Attribute::make(
             get: function () {
-                $baseCost = $this->item?->batch?->average_item_cost ?? 0;
-                $repairCost = (float) ($this->item?->repair_cost ?? 0);
-                return round((float) $this->awarded_price - $baseCost - $repairCost, 2);
+                $profit = $this->items->sum(function (Item $item) {
+                    $baseCost = $item->batch?->average_item_cost ?? 0;
+                    $repairCost = (float) $item->repair_cost;
+                    $awardedPrice = (float) ($item->pivot->awarded_price ?? 0);
+
+                    return $awardedPrice - $baseCost - $repairCost;
+                });
+
+                return round((float) $profit, 2);
             }
         );
     }
 
-    public function item(): BelongsTo
+    // Convenience accessor: the first pair on the order (safety net for single-item reads)
+    protected function item(): Attribute
     {
-        return $this->belongsTo(Item::class);
+        return Attribute::make(
+            get: fn () => $this->items->first()
+        );
+    }
+
+    public function orderedItems(): HasMany
+    {
+        return $this->hasMany(OrderItem::class);
+    }
+
+    public function items(): BelongsToMany
+    {
+        return $this->belongsToMany(Item::class, 'order_items')
+            ->withPivot('awarded_price')
+            ->withTimestamps();
     }
 
     public function customer(): BelongsTo
