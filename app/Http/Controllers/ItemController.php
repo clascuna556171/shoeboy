@@ -6,7 +6,6 @@ use App\Http\Controllers\Concerns\SortsQueries;
 use App\Models\Batch;
 use App\Models\Item;
 use App\Services\AuditService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -56,7 +55,7 @@ class ItemController extends Controller
             'size' => ['required', 'string'],
             'status' => ['required', 'in:available,reserved,sold'],
             'repair_cost' => ['nullable', 'numeric', 'min:0'],
-            'category' => ['nullable', 'string'],
+            'category' => ['nullable', 'string', 'max:50'],
         ]);
 
         $batch = Batch::findOrFail($validated['batch_id']);
@@ -108,36 +107,5 @@ class ItemController extends Controller
         ], $validated));
 
         return back()->with('success', "Item {$item->sku} updated.");
-    }
-
-    public function updateTriage(Request $request, Item $item): JsonResponse|RedirectResponse
-    {
-        if ($item->status === 'sold') {
-            if ($request->wantsJson()) {
-                return response()->json(['success' => false, 'message' => "Item {$item->sku} is already sold."], 422);
-            }
-
-            return back()->with('error', "Item {$item->sku} is already sold and cannot be re-triaged.");
-        }
-
-        $validated = $request->validate([
-            'status' => ['nullable', 'in:available,reserved,sold'],
-            'condition' => ['nullable', 'string'],
-            'repair_cost' => ['nullable', 'numeric', 'min:0'],
-        ]);
-
-        $item->update($validated);
-
-        AuditService::log('item_triage_updated', $item, array_merge([
-            'sku' => $item->sku,
-            'brand' => $item->brand,
-            'model' => $item->model,
-        ], $validated));
-
-        if ($request->wantsJson()) {
-            return response()->json(['success' => true, 'item' => $item]);
-        }
-
-        return back()->with('success', "Triage status updated for {$item->sku}.");
     }
 }

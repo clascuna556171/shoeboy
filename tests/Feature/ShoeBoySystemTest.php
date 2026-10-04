@@ -138,6 +138,29 @@ class ShoeBoySystemTest extends TestCase
         $responseStaff->assertStatus(403);
     }
 
+    public function test_reports_page_lists_individual_sales_and_expenses(): void
+    {
+        $order = app(OrderService::class)->awardItem(
+            item: $this->item,
+            customer: $this->customer,
+            staff: $this->staff,
+            awardedPrice: 4500.00
+        );
+        app(PaymentService::class)->recordPayment($order, 4500.00, 'cash', null, $this->staff);
+
+        $this->actingAs($this->owner)->post('/expenses', [
+            'category' => 'Store Utilities',
+            'description' => 'Ledger test power bill',
+            'amount' => 500.00,
+            'date' => now()->toDateString(),
+        ])->assertSessionHas('success');
+
+        $response = $this->actingAs($this->owner)->get('/reports');
+        $response->assertOk();
+        $response->assertSee($order->order_number);
+        $response->assertSee('Ledger test power bill');
+    }
+
     public function test_staff_can_award_available_item_to_customer(): void
     {
         $response = $this->actingAs($this->staff)->post('/orders/award', [
@@ -247,12 +270,18 @@ class ShoeBoySystemTest extends TestCase
         $order = Order::latest('id')->first();
         $this->assertCount(2, $order->fresh()->items);
         $this->assertEquals('walkin_pos', $order->order_type);
-        $this->assertEquals('paid', $order->status);
+        $this->assertEquals('fulfilled', $order->status);
 
         // One order, one payment, one delivery for the whole ticket.
         $this->assertSame(1, Order::where('id', $order->id)->count());
         $this->assertSame(1, Payment::where('order_id', $order->id)->count());
         $this->assertSame(1, Delivery::where('order_id', $order->id)->count());
+
+        // Walk-in POS is fulfilled on the spot: the delivery is auto-completed.
+        $delivery = Delivery::where('order_id', $order->id)->first();
+        $this->assertEquals('completed', $delivery->status);
+        $this->assertNotNull($delivery->date_completed);
+
         $this->assertDatabaseHas('items', ['id' => $this->item->id, 'status' => 'sold']);
         $this->assertDatabaseHas('items', ['id' => $secondItem->id, 'status' => 'sold']);
     }
@@ -431,6 +460,37 @@ class ShoeBoySystemTest extends TestCase
 
         $response->assertSessionHas('error');
         $this->assertNotEquals(9999.00, (float) $this->item->fresh()->listed_price);
+    }
+
+    public function test_item_can_be_created_without_a_category(): void
+    {
+        $response = $this->actingAs($this->staff)->post('/items', [
+            'batch_id' => $this->batch->id,
+            'brand' => 'Asics',
+            'model' => 'Gel Kayano',
+            'listed_price' => 232.00,
+            'condition' => 'Good',
+            'size' => 'US 9.0',
+            'status' => 'available',
+            'repair_cost' => 0,
+            'category' => '',
+        ]);
+
+        $response->assertSessionHas('success');
+
+        $item = Item::where('brand', 'Asics')->where('model', 'Gel Kayano')->firstOrFail();
+        $this->assertNull($item->category);
+    }
+
+    public function test_triage_endpoint_can_no_longer_flip_item_status(): void
+    {
+        // Reservations must come from an order, never a bare triage status flip.
+        $response = $this->actingAs($this->staff)->patch("/items/{$this->item->id}/triage", [
+            'status' => 'reserved',
+        ]);
+
+        $response->assertNotFound();
+        $this->assertEquals('available', $this->item->fresh()->status);
     }
 
     public function test_printable_receipt_is_available_for_an_order(): void

@@ -24,7 +24,7 @@ return new class extends Migration
             $table->enum('status', ['available', 'reserved', 'sold'])->default('available');
             $table->string('triage_status', 50)->default('available'); // washing, under_repair, available
             $table->decimal('repair_cost', 10, 2)->default(0.00);
-            $table->string('category', 50)->default('Basketball');
+            $table->string('category', 50)->nullable();
             $table->timestamps();
 
             $table->index(['batch_id', 'status']);

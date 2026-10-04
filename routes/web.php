@@ -31,7 +31,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/items', [ItemController::class, 'index'])->name('items.index');
     Route::post('/items', [ItemController::class, 'store'])->name('items.store');
     Route::put('/items/{item}', [ItemController::class, 'update'])->name('items.update');
-    Route::patch('/items/{item}/triage', [ItemController::class, 'updateTriage'])->name('items.triage');
 
     // Batches Module
     Route::get('/batches', [BatchController::class, 'index'])->name('batches.index');

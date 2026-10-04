@@ -123,9 +123,6 @@
          },
          countByStatus(status) {
              return this.shoes.filter(s => s.status === status).length;
-         },
-         triageAction(id) {
-             return `{{ url('/items') }}/${id}/triage`;
          }
      }">
 
@@ -275,7 +272,7 @@
                                     <span class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase"
                                           :class="'badge-' + selectedClaimShoe.status"
                                           x-text="selectedClaimShoe.status"></span>
-                                    <span class="text-xs text-neutral-500" x-text="selectedClaimShoe.category"></span>
+                                    <span class="text-xs text-neutral-500" x-text="selectedClaimShoe.category || '—'"></span>
                                 </div>
                                 <h3 class="font-bold text-lg text-[#1D1D1F] dark:text-white mt-1" x-text="selectedClaimShoe.brand + ' ' + selectedClaimShoe.model"></h3>
                             </div>
@@ -690,7 +687,7 @@
             <div class="flex items-center justify-between pb-3 border-b border-neutral-200/80 dark:border-neutral-800">
                 <div>
                     <h3 class="font-bold text-base text-[#1D1D1F] dark:text-white">{{ $activeBatch?->batch_code ?? 'All Batches' }} Serialized Pair Triage</h3>
-                    <p class="text-xs text-neutral-500">Manage individual pair statuses, condition grading, and repair costs.</p>
+                    <p class="text-xs text-neutral-500">Reference view of every serialized pair. Reservations are managed from Claims &mdash; pairs can only be set to reserved by awarding them to a buyer.</p>
                 </div>
                 <div class="flex flex-wrap items-center justify-end gap-2">
                     <div class="relative">
@@ -772,32 +769,9 @@
                                 <template x-if="item.status === 'sold'">
                                     <x-action-btn icon="eye" tone="secondary" @click="selectedSoldId = item.id">View</x-action-btn>
                                 </template>
-                                <form :action="triageAction(item.id)" method="POST" class="inline" x-show="item.status !== 'sold'">
-                                    @csrf
-                                    @method('PATCH')
-                                    <template x-if="item.status === 'available'">
-                                        <span>
-                                            <input type="hidden" name="status" value="reserved">
-                                            <x-action-btn tone="secondary" type="submit"
-                                                          class="text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900/60"
-                                                          data-confirm="Put this pair on hold?"
-                                                          data-confirm-variant="warning"
-                                                          x-bind:data-confirm-message="`${item.sku} will be marked as reserved and held out of available stock.`"
-                                                          data-confirm-label="Hold pair">Hold</x-action-btn>
-                                        </span>
-                                    </template>
-                                    <template x-if="item.status === 'reserved'">
-                                        <span>
-                                            <input type="hidden" name="status" value="available">
-                                            <x-action-btn tone="secondary" type="submit"
-                                                          class="text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/60"
-                                                          data-confirm="Release this pair?"
-                                                          data-confirm-variant="success"
-                                                          x-bind:data-confirm-message="`${item.sku} will return to available stock.`"
-                                                          data-confirm-label="Release pair">Release</x-action-btn>
-                                        </span>
-                                    </template>
-                                </form>
+                                <template x-if="item.status !== 'sold'">
+                                    <span class="text-xs text-neutral-400 dark:text-neutral-600">—</span>
+                                </template>
                             </td>
                         </tr>
                         </template>

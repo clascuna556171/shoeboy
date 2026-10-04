@@ -166,6 +166,77 @@ class ReportingService
         return $report;
     }
 
+    // Ledger sa matag pares nga nahalin (individual sales) sa gipiling range
+    public function getSalesLedger(?string $startDate = null, ?string $endDate = null): array
+    {
+        $query = Order::with(['items.batch', 'customer', 'staff', 'payment'])
+            ->whereIn('status', ['paid', 'fulfilled']);
+
+        if ($startDate) {
+            $query->whereDate('date_awarded', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->whereDate('date_awarded', '<=', $endDate);
+        }
+
+        $orders = $query->orderByDesc('date_awarded')->get();
+
+        $rows = [];
+        foreach ($orders as $order) {
+            foreach ($order->items as $item) {
+                $awarded = (float) ($item->pivot->awarded_price ?? 0);
+                $avgCost = $item->batch?->average_item_cost ?? 0;
+                $repair = (float) $item->repair_cost;
+
+                $rows[] = [
+                    'order_number' => $order->order_number,
+                    'date' => $order->date_awarded?->format('Y-m-d H:i'),
+                    'channel' => $order->order_type === 'walkin_pos' ? 'POS Walk-In' : 'Live Stream',
+                    'sku' => $item->sku,
+                    'brand_model' => trim(($item->brand ?? '') . ' ' . ($item->model ?? '')),
+                    'size' => $item->size,
+                    'condition' => $item->condition,
+                    'awarded_price' => round($awarded, 2),
+                    'repair_cost' => round($repair, 2),
+                    'unit_profit' => round($awarded - $avgCost - $repair, 2),
+                    'customer' => $order->customer?->display_handle,
+                    'payment_method' => $order->payment?->method ? strtoupper($order->payment->method) : '',
+                    'payment_ref' => $order->payment?->reference_no,
+                    'staff' => $order->staff?->name,
+                ];
+            }
+        }
+
+        return $rows;
+    }
+
+    // Ledger sa matag gasto (individual expenses) sa gipiling range
+    public function getExpenseLedger(?string $startDate = null, ?string $endDate = null): array
+    {
+        $query = Expense::with('batch');
+
+        if ($startDate) {
+            $query->whereDate('date', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->whereDate('date', '<=', $endDate);
+        }
+
+        $rows = [];
+        foreach ($query->orderByDesc('date')->get() as $expense) {
+            $rows[] = [
+                'date' => (string) $expense->date,
+                'category' => $expense->category,
+                'description' => $expense->description,
+                'reference_no' => $expense->reference_no,
+                'batch' => $expense->batch?->batch_code ?? 'General',
+                'amount' => round((float) $expense->amount, 2),
+            ];
+        }
+
+        return $rows;
+    }
+
     // Halin karon nga adlaw
     public function getDaySales(?string $date = null): array
     {
@@ -368,7 +439,14 @@ class ReportingService
                 ['style' => 'sHeader', 'cells' => ['Operating Expenses']],
                 ['style' => 'sHeader', 'cells' => ['Date', 'Category', 'Description', 'Reference No', 'Batch', 'Amount (PHP)']],
             ];
-            foreach (Expense::with('batch')->orderByDesc('date')->get() as $e) {
+            $expenseQuery = Expense::with('batch')->orderByDesc('date');
+            if ($startDate) {
+                $expenseQuery->whereDate('date', '>=', $startDate);
+            }
+            if ($endDate) {
+                $expenseQuery->whereDate('date', '<=', $endDate);
+            }
+            foreach ($expenseQuery->get() as $e) {
                 $rows[] = ['cells' => [
                     (string) $e->date, $e->category, $e->description, (string) ($e->reference_no ?? ''),
                     $e->batch?->batch_code ?? 'General', $this->cur($e->amount),

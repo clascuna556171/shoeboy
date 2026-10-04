@@ -23,12 +23,16 @@ class ReportController extends Controller
         $batchReports = $this->reportingService->getBatchProfitSummary();
         $tierReports = $this->reportingService->getPriceTierSummary();
         $sessionReports = $this->reportingService->getSessionSummary($startDate, $endDate);
+        $salesLedger = $this->reportingService->getSalesLedger($startDate, $endDate);
+        $expenseLedger = $this->reportingService->getExpenseLedger($startDate, $endDate);
 
         return view('reports.index', compact(
             'metrics',
             'batchReports',
             'tierReports',
             'sessionReports',
+            'salesLedger',
+            'expenseLedger',
             'startDate',
             'endDate'
         ));

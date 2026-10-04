@@ -20,9 +20,10 @@ class PaymentService
         float $amount,
         string $method,
         ?string $referenceNo,
-        User $verifier
+        User $verifier,
+        bool $immediateFulfillment = false
     ): Payment {
-        return DB::transaction(function () use ($order, $amount, $method, $referenceNo, $verifier) {
+        return DB::transaction(function () use ($order, $amount, $method, $referenceNo, $verifier, $immediateFulfillment) {
             $lockedOrder = Order::where('id', $order->id)->lockForUpdate()->firstOrFail();
 
             if ($lockedOrder->status !== 'reserved') {
@@ -67,7 +68,7 @@ class PaymentService
 
             // Paid na, tanggal reservation timer
             $lockedOrder->update([
-                'status' => 'paid',
+                'status' => $immediateFulfillment ? 'fulfilled' : 'paid',
                 'expires_at' => null,
             ]);
 
@@ -77,13 +78,19 @@ class PaymentService
                 'status' => 'sold',
             ]);
 
-            // Andam daan delivery entry
+            // Andam daan delivery entry (walk-in POS is fulfilled on the spot)
             Delivery::firstOrCreate(
                 ['order_id' => $lockedOrder->id],
-                [
-                    'method' => 'pickup',
-                    'status' => 'pending',
-                ]
+                $immediateFulfillment
+                    ? [
+                        'method' => 'pickup',
+                        'status' => 'completed',
+                        'date_completed' => Carbon::now(),
+                    ]
+                    : [
+                        'method' => 'pickup',
+                        'status' => 'pending',
+                    ]
             );
 
             AuditService::log('payment_verified', $payment, [

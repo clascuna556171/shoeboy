@@ -210,7 +210,8 @@ class OrderController extends Controller
                 amount: $total,
                 method: $paymentMethod,
                 referenceNo: $refNo,
-                verifier: $staff
+                verifier: $staff,
+                immediateFulfillment: true
             );
 
             return $order;

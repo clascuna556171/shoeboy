@@ -114,23 +114,27 @@
             </div>
 
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div class="flex items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl text-xs">
-                @foreach(['batches' => 'By Batch Intake', 'sessions' => 'By Session / Date', 'tiers' => 'By Price Tier'] as $key => $label)
+            <div class="flex flex-wrap items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl text-xs">
+                @foreach(['batches' => 'By Batch Intake', 'sessions' => 'By Session / Date', 'tiers' => 'By Price Tier', 'sales' => 'Sales Ledger', 'expenses' => 'Expenses Ledger'] as $key => $label)
                     <button type="button"
                             @click="setReportTab('{{ $key }}')"
                             :class="reportTab === '{{ $key }}' ? 'bg-white dark:bg-[#2C2C2E] font-bold text-[#1D1D1F] dark:text-white shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'"
-                            class="px-3 py-1.5 rounded-lg transition-all">
+                            class="px-3 py-1.5 rounded-lg transition-all whitespace-nowrap">
                         {{ $label }}
                     </button>
                 @endforeach
             </div>
 
-            <form x-show="reportTab === 'sessions'" x-cloak method="GET" action="{{ route('reports.index') }}" class="flex items-center gap-2 text-xs">
+            <form method="GET" action="{{ route('reports.index') }}" class="flex flex-wrap items-center gap-2 text-xs">
                 <input type="hidden" name="reportTab" :value="reportTab">
+                <span class="hidden lg:inline text-neutral-500">Date range</span>
                 <input type="date" name="start_date" value="{{ $startDate }}" class="app-input app-input-sm !w-auto">
                 <span class="text-neutral-500">to</span>
                 <input type="date" name="end_date" value="{{ $endDate }}" class="app-input app-input-sm !w-auto">
                 <button type="submit" class="app-btn app-btn-secondary app-btn-sm">Filter</button>
+                @if($startDate || $endDate)
+                    <a href="{{ route('reports.index', ['reportTab' => request('reportTab', 'batches')]) }}" class="app-btn app-btn-secondary app-btn-sm">Reset</a>
+                @endif
             </form>
             </div>
         </div>
@@ -241,6 +245,115 @@
                         </tr>
                         @endforeach
                     </tbody>
+                </table>
+            </div>
+        </div>
+
+        {{-- Sales ledger --}}
+        @php($salesGross = collect($salesLedger)->sum('awarded_price'))
+        @php($salesProfit = collect($salesLedger)->sum('unit_profit'))
+        <div x-show="reportTab === 'sales'" x-cloak>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
+                        <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
+                            <th class="py-3 px-4 font-semibold">Order</th>
+                            <th class="py-3 px-4 font-semibold">Date</th>
+                            <th class="py-3 px-4 font-semibold">Channel</th>
+                            <th class="py-3 px-4 font-semibold">SKU</th>
+                            <th class="py-3 px-4 font-semibold">Brand &amp; Model</th>
+                            <th class="py-3 px-4 font-semibold">Size</th>
+                            <th class="py-3 px-4 font-semibold text-right">Price</th>
+                            <th class="py-3 px-4 font-semibold text-right">Profit</th>
+                            <th class="py-3 px-4 font-semibold">Customer</th>
+                            <th class="py-3 px-4 font-semibold">Payment</th>
+                            <th class="py-3 px-4 font-semibold">Staff</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800/60">
+                        @forelse($salesLedger as $s)
+                        <tr class="app-row hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30">
+                            <td class="py-3.5 px-4 font-mono font-semibold text-[#0071E3] dark:text-[#0A84FF]">{{ $s['order_number'] }}</td>
+                            <td class="py-3.5 px-4 text-neutral-600 dark:text-neutral-400">{{ $s['date'] }}</td>
+                            <td class="py-3.5 px-4"><span class="badge badge-neutral">{{ $s['channel'] }}</span></td>
+                            <td class="py-3.5 px-4 font-mono">{{ $s['sku'] }}</td>
+                            <td class="py-3.5 px-4 font-semibold text-neutral-800 dark:text-neutral-200">{{ $s['brand_model'] }}</td>
+                            <td class="py-3.5 px-4 font-mono">{{ $s['size'] }}</td>
+                            <td class="py-3.5 px-4 text-right font-mono font-bold"><x-money :value="$s['awarded_price']" /></td>
+                            <td class="py-3.5 px-4 text-right font-mono font-bold {{ $s['unit_profit'] >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500' }}">{{ $s['unit_profit'] >= 0 ? '+' : '−' }}₱{{ number_format(abs($s['unit_profit']), 2) }}</td>
+                            <td class="py-3.5 px-4 text-neutral-600 dark:text-neutral-400">{{ $s['customer'] }}</td>
+                            <td class="py-3.5 px-4"><span class="text-xs font-mono text-neutral-500">{{ $s['payment_method'] }}{{ $s['payment_ref'] ? ' · ' . $s['payment_ref'] : '' }}</span></td>
+                            <td class="py-3.5 px-4 text-neutral-600 dark:text-neutral-400">{{ $s['staff'] }}</td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="11">
+                                <div class="app-empty">
+                                    <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                                    <span class="text-xs font-medium">No individual sales match the date range.</span>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                    @if(count($salesLedger))
+                    <tfoot class="border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-800/30">
+                        <tr>
+                            <td colspan="6" class="py-3 px-4 text-right text-xs font-semibold uppercase tracking-wider text-neutral-500">Totals — {{ count($salesLedger) }} {{ count($salesLedger) === 1 ? 'pair' : 'pairs' }}</td>
+                            <td class="py-3 px-4 text-right font-mono font-bold">₱{{ number_format($salesGross, 2) }}</td>
+                            <td class="py-3 px-4 text-right font-mono font-bold {{ $salesProfit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500' }}">{{ $salesProfit >= 0 ? '+' : '−' }}₱{{ number_format(abs($salesProfit), 2) }}</td>
+                            <td colspan="3"></td>
+                        </tr>
+                    </tfoot>
+                    @endif
+                </table>
+            </div>
+        </div>
+
+        {{-- Expenses ledger --}}
+        @php($expenseTotal = collect($expenseLedger)->sum('amount'))
+        <div x-show="reportTab === 'expenses'" x-cloak>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
+                        <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
+                            <th class="py-3 px-4 font-semibold">Date</th>
+                            <th class="py-3 px-4 font-semibold">Category</th>
+                            <th class="py-3 px-4 font-semibold">Description</th>
+                            <th class="py-3 px-4 font-semibold">Reference No</th>
+                            <th class="py-3 px-4 font-semibold">Batch</th>
+                            <th class="py-3 px-4 font-semibold text-right">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800/60">
+                        @forelse($expenseLedger as $e)
+                        <tr class="app-row hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30">
+                            <td class="py-3.5 px-4 font-mono text-neutral-600 dark:text-neutral-400">{{ $e['date'] }}</td>
+                            <td class="py-3.5 px-4"><span class="badge badge-neutral">{{ $e['category'] }}</span></td>
+                            <td class="py-3.5 px-4 text-neutral-800 dark:text-neutral-200">{{ $e['description'] }}</td>
+                            <td class="py-3.5 px-4 font-mono text-neutral-500">{{ $e['reference_no'] ?? '—' }}</td>
+                            <td class="py-3.5 px-4 font-mono text-neutral-600 dark:text-neutral-400">{{ $e['batch'] }}</td>
+                            <td class="py-3.5 px-4 text-right font-mono font-bold text-rose-500"><x-money :value="$e['amount']" /></td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="6">
+                                <div class="app-empty">
+                                    <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 9V7a4 4 0 00-8 0v2M5 9h14l1 12H4L5 9z"/></svg>
+                                    <span class="text-xs font-medium">No individual expenses match the date range.</span>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                    @if(count($expenseLedger))
+                    <tfoot class="border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-800/30">
+                        <tr>
+                            <td colspan="5" class="py-3 px-4 text-right text-xs font-semibold uppercase tracking-wider text-neutral-500">Total — {{ count($expenseLedger) }} {{ count($expenseLedger) === 1 ? 'entry' : 'entries' }}</td>
+                            <td class="py-3 px-4 text-right font-mono font-bold text-rose-500">₱{{ number_format($expenseTotal, 2) }}</td>
+                        </tr>
+                    </tfoot>
+                    @endif
                 </table>
             </div>
         </div>
