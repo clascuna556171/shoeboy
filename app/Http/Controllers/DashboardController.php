@@ -9,18 +9,24 @@ use App\Models\Expense;
 use App\Models\Item;
 use App\Models\Order;
 use App\Models\Supplier;
+use App\Services\OrderService;
 use App\Services\ReportingService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function __construct(protected ReportingService $reportingService)
-    {
+    public function __construct(
+        protected ReportingService $reportingService,
+        protected OrderService $orderService
+    ) {
     }
 
     public function index(Request $request): View
     {
+        // Lazily sweep lapsed reservations whenever anyone opens the workspace.
+        $this->orderService->releaseExpiredReservations();
+
         $user = $request->user();
 
         if ($user->isOwner()) {

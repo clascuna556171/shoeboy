@@ -2,14 +2,6 @@
 
 @section('title', 'Deliveries & Fulfillment')
 
-@php
-    $statusBadge = [
-        'pending'   => 'badge-pending',
-        'shipped'   => 'badge-shipped',
-        'completed' => 'badge-fulfilled',
-    ];
-@endphp
-
 @section('content')
 <div class="space-y-6">
 
@@ -22,17 +14,11 @@
                 </div>
         </div>
 
-        <div class="flex items-center gap-2 text-xs">
-            <div class="px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-300">
-                <span class="font-mono font-bold">{{ $pendingCount }}</span> Pending
-            </div>
-            <div class="px-3 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 text-blue-800 dark:text-blue-300">
-                <span class="font-mono font-bold">{{ $shippedCount }}</span> Shipped
-            </div>
-            <div class="px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 text-emerald-800 dark:text-emerald-300">
-                <span class="font-mono font-bold">{{ $completedCount }}</span> Completed
-            </div>
-        </div>
+        <x-header-counts :counts="[
+            ['label' => 'Pending', 'value' => $pendingCount, 'tone' => 'amber'],
+            ['label' => 'Shipped', 'value' => $shippedCount, 'tone' => 'blue'],
+            ['label' => 'Completed', 'value' => $completedCount, 'tone' => 'emerald'],
+        ]" />
     </div>
 
     <x-table-toolbar :action="route('deliveries.index')" :search="$search"
@@ -100,11 +86,9 @@
                         </td>
                         <td class="py-3.5 px-4 text-center">
                             <div class="inline-flex flex-col items-center gap-1">
-                                <span class="badge {{ $del->method === 'pickup' ? 'badge-neutral' : 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400' }}">
-                                    {{ $del->method === 'pickup' ? 'Store Pickup' : 'J&T Express' }}
-                                </span>
+                                <x-status-badge kind="method" :value="$del->method" />
                                 @if($del->order->payment)
-                                    <span class="badge {{ $del->order->payment->method === 'gcash' ? 'badge-paid' : 'badge-neutral' }}">{{ strtoupper($del->order->payment->method) }}</span>
+                                    <x-status-badge kind="payment" :value="$del->order->payment->method" />
                                 @endif
                             </div>
                         </td>
@@ -112,7 +96,7 @@
                             {{ $del->tracking_number ?? '—' }}
                         </td>
                         <td class="py-3.5 px-4 text-center">
-                            <span class="badge {{ $statusBadge[$del->status] ?? 'badge-neutral' }}">{{ $del->status }}</span>
+                            <x-status-badge kind="delivery" :value="$del->status" />
                             @if($del->date_completed)
                                 <span class="block text-[11px] text-neutral-500 mt-1">{{ $del->date_completed->format('M d, H:i') }}</span>
                             @endif

@@ -40,7 +40,18 @@ class ItemController extends Controller
         $this->applySort($query, ['sku', 'brand', 'model', 'size', 'condition', 'listed_price', 'status', 'created_at'], 'created_at', 'desc');
         $items = $query->paginate(25)->withQueryString();
 
-        return view('items.index', compact('items', 'batches', 'selectedBatchId'));
+        // Status breakdown for the header counters (respects the batch filter only).
+        $statusCounts = Item::query()
+            ->when($selectedBatchId, fn ($q) => $q->where('batch_id', $selectedBatchId))
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $availableCount = (int) ($statusCounts['available'] ?? 0);
+        $reservedCount = (int) ($statusCounts['reserved'] ?? 0);
+        $soldCount = (int) ($statusCounts['sold'] ?? 0);
+
+        return view('items.index', compact('items', 'batches', 'selectedBatchId', 'availableCount', 'reservedCount', 'soldCount'));
     }
 
     public function store(Request $request): RedirectResponse

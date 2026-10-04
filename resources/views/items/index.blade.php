@@ -13,8 +13,12 @@
                 <h1 class="text-xl md:text-2xl font-bold tracking-tight text-[#1D1D1F] dark:text-white mt-0.5">Footwear Inventory Units</h1>
                 </div>
         </div>
-        <div class="flex items-center gap-2">
-            <span class="badge badge-neutral">{{ $items->total() }} units</span>
+        <div class="flex flex-wrap items-center gap-2">
+            <x-header-counts class="mr-1" :counts="[
+                ['label' => 'Available', 'value' => $availableCount, 'tone' => 'emerald'],
+                ['label' => 'Reserved', 'value' => $reservedCount, 'tone' => 'amber'],
+                ['label' => 'Sold', 'value' => $soldCount, 'tone' => 'neutral'],
+            ]" />
             <button type="button" @click="showAddItem = true"
                     class="px-5 py-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold text-sm shadow-sm flex items-center gap-2 transition-all">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -38,7 +42,6 @@
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                     <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
                         <x-sort-th-server column="sku" label="SKU" />
-                        <th class="py-3 px-4 font-semibold">Batch</th>
                         <x-sort-th-server column="brand" label="Brand & Model" />
                         <x-sort-th-server column="size" label="Size" />
                         <x-sort-th-server column="condition" label="Condition" />
@@ -52,14 +55,13 @@
                     @forelse($items as $item)
                     <tr class="app-row hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30">
                         <td class="py-3.5 px-4 font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $item->sku }}</td>
-                        <td class="py-3.5 px-4"><x-batch-chip :batch="$item->batch" /></td>
                         <td class="py-3.5 px-4 font-semibold text-neutral-800 dark:text-neutral-200">{{ $item->brand }} {{ $item->model }}</td>
                         <td class="py-3.5 px-4 font-mono text-neutral-600 dark:text-neutral-300">{{ $item->size }}</td>
                         <td class="py-3.5 px-4 text-neutral-600 dark:text-neutral-300">{{ $item->condition }}</td>
                         <td class="py-3.5 px-4 text-neutral-500">{{ $item->price_tier }}</td>
                         <td class="py-3.5 px-4 text-right font-mono font-bold text-neutral-900 dark:text-white"><x-money :value="$item->listed_price" /></td>
                         <td class="py-3.5 px-4 text-center">
-                            <span class="badge badge-{{ $item->status }}">{{ strtoupper($item->status) }}</span>
+                            <x-status-badge kind="item" :value="$item->status" />
                         </td>
                         <td class="py-3.5 px-4 text-right">
                             @if($item->status === 'available')
@@ -93,7 +95,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9">
+                        <td colspan="8">
                             <div class="app-empty">
                                 <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h6m6-7l4 4m0 0l-4 4m4-4H10"/></svg>
                                 <span class="text-xs font-medium">No inventory items match the current filters.</span>

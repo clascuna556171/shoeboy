@@ -11,6 +11,7 @@ use App\Services\PaymentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -61,7 +62,17 @@ class OrderController extends Controller
 
         $orders = $query->paginate(20)->withQueryString();
 
-        return view('orders.index', compact('orders', 'status', 'type', 'focus'));
+        // Status breakdown for the header counters (shop-wide, ignoring filters).
+        $statusCounts = Order::selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $reservedCount = (int) ($statusCounts['reserved'] ?? 0);
+        $paidCount = (int) ($statusCounts['paid'] ?? 0);
+        $fulfilledCount = (int) ($statusCounts['fulfilled'] ?? 0);
+        $cancelledCount = (int) ($statusCounts['cancelled'] ?? 0);
+
+        return view('orders.index', compact('orders', 'status', 'type', 'focus', 'reservedCount', 'paidCount', 'fulfilledCount', 'cancelledCount'));
     }
 
     // I-award ang usa o daghan ka sapatos sa nakadaog / nipalit
@@ -253,5 +264,44 @@ class OrderController extends Controller
         }
 
         return back()->with('info', "Order {$order->order_number} cancelled and pair returned to available stock.");
+    }
+
+    // Auto-release a reservation whose window has elapsed (called by the live countdown).
+    public function release(Request $request, Order $order): JsonResponse|RedirectResponse
+    {
+        if ($order->status !== 'reserved') {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'released' => false,
+                    'message' => "Order {$order->order_number} is no longer reserved.",
+                ]);
+            }
+
+            return back()->with('info', "Order {$order->order_number} is no longer reserved.");
+        }
+
+        // Small tolerance for client clock skew: ask the client to retry until the server agrees.
+        if ($order->expires_at && $order->expires_at->isFuture()) {
+            if ($request->wantsJson()) {
+                return response()->json(['released' => false, 'retry' => true]);
+            }
+
+            return back()->with('info', 'Reservation window has not elapsed yet.');
+        }
+
+        $skus = $order->items->pluck('sku')->implode(', ');
+
+        $this->orderService->cancelOrder($order, 'Reservation window elapsed (auto-released)', $request->user());
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'released' => true,
+                'order_number' => $order->order_number,
+                'skus' => $skus,
+                'message' => "Reservation {$order->order_number} expired — {$skus} returned to stock.",
+            ]);
+        }
+
+        return back()->with('info', "Reservation {$order->order_number} expired and returned to stock.");
     }
 }

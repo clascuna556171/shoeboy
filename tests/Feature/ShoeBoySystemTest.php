@@ -12,6 +12,7 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Supplier;
 use App\Models\User;
+use App\Services\AuditService;
 use App\Services\OrderService;
 use App\Services\PaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -794,5 +795,167 @@ class ShoeBoySystemTest extends TestCase
     {
         $this->actingAs($this->owner)->get('/audit-log')->assertOk();
         $this->actingAs($this->staff)->get('/audit-log')->assertForbidden();
+    }
+
+    public function test_expired_reservation_is_auto_released_by_service(): void
+    {
+        $orderService = app(OrderService::class);
+
+        $order = $orderService->awardItem(
+            item: $this->item,
+            customer: $this->customer,
+            staff: $this->staff,
+            awardedPrice: 4500.00,
+            reservationMinutes: 120
+        );
+
+        $this->assertDatabaseHas('items', ['id' => $this->item->id, 'status' => 'reserved']);
+
+        $this->travel(121)->minutes();
+
+        $released = $orderService->releaseExpiredReservations();
+
+        $this->assertSame(1, $released);
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'cancelled']);
+        $this->assertDatabaseHas('items', ['id' => $this->item->id, 'status' => 'available']);
+    }
+
+    public function test_release_endpoint_releases_expired_reserved_order(): void
+    {
+        $orderService = app(OrderService::class);
+
+        $order = $orderService->awardItem(
+            item: $this->item,
+            customer: $this->customer,
+            staff: $this->staff,
+            awardedPrice: 4500.00,
+            reservationMinutes: 120
+        );
+
+        $this->travel(121)->minutes();
+
+        $response = $this->actingAs($this->staff)->postJson("/orders/{$order->id}/release");
+
+        $response->assertOk()->assertJson(['released' => true]);
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'cancelled']);
+        $this->assertDatabaseHas('items', ['id' => $this->item->id, 'status' => 'available']);
+    }
+
+    public function test_release_endpoint_refuses_order_that_is_not_reserved(): void
+    {
+        $orderService = app(OrderService::class);
+        $paymentService = app(PaymentService::class);
+
+        $order = $orderService->awardItem(
+            item: $this->item,
+            customer: $this->customer,
+            staff: $this->staff,
+            awardedPrice: 4500.00
+        );
+
+        $paymentService->recordPayment($order, 4500.00, 'gcash', 'REF-123', $this->staff);
+
+        $response = $this->actingAs($this->staff)->postJson("/orders/{$order->id}/release");
+
+        $response->assertOk()->assertJson(['released' => false]);
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'paid']);
+        $this->assertDatabaseHas('items', ['id' => $this->item->id, 'status' => 'sold']);
+    }
+
+    public function test_dashboard_load_sweeps_expired_reservations(): void
+    {
+        $orderService = app(OrderService::class);
+
+        $order = $orderService->awardItem(
+            item: $this->item,
+            customer: $this->customer,
+            staff: $this->staff,
+            awardedPrice: 4500.00,
+            reservationMinutes: 120
+        );
+
+        $this->travel(121)->minutes();
+
+        $this->actingAs($this->staff)->get('/')->assertOk();
+
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'cancelled']);
+        $this->assertDatabaseHas('items', ['id' => $this->item->id, 'status' => 'available']);
+    }
+
+    public function test_validation_errors_render_as_toasts_not_a_banner(): void
+    {
+        $page = $this->actingAs($this->owner)
+            ->followingRedirects()
+            ->from('/suppliers')
+            ->post('/suppliers', []);
+
+        $page->assertOk();
+        $page->assertSee('The name field is required.', false);
+        $page->assertDontSee('Please correct the following errors', false);
+    }
+
+    public function test_status_badges_use_the_unified_component(): void
+    {
+        $orderService = app(OrderService::class);
+        $orderService->awardItem(
+            item: $this->item,
+            customer: $this->customer,
+            staff: $this->staff,
+            awardedPrice: 4500.00
+        );
+
+        $response = $this->actingAs($this->staff)->get('/orders');
+
+        $response->assertOk();
+        $response->assertSee('badge-pending', false); // reserved order status
+        $response->assertSee('badge-live', false);    // live stream channel
+    }
+
+    public function test_staff_dashboard_renders_the_reservation_countdown(): void
+    {
+        $orderService = app(OrderService::class);
+        $orderService->awardItem(
+            item: $this->item,
+            customer: $this->customer,
+            staff: $this->staff,
+            awardedPrice: 4500.00,
+            reservationMinutes: 120
+        );
+
+        $response = $this->actingAs($this->staff)->get('/');
+
+        $response->assertOk();
+        $response->assertSee('reservationCountdown', false);
+        $response->assertSee('releaseUrl', false);
+        $response->assertSee('Expires in', false);
+    }
+
+    public function test_audit_category_uses_the_unified_badge_pill(): void
+    {
+        AuditService::log('user_login', null, null, $this->owner);
+
+        $response = $this->actingAs($this->owner)->get('/audit-log');
+
+        $response->assertOk();
+        $response->assertSee('badge-security', false);
+    }
+
+    public function test_list_pages_render_header_status_counters(): void
+    {
+        $this->actingAs($this->staff)->get('/items')
+            ->assertOk()
+            ->assertSee('Available', false)
+            ->assertSee('Reserved', false)
+            ->assertSee('Sold', false);
+
+        $this->actingAs($this->staff)->get('/orders')
+            ->assertOk()
+            ->assertSee('Paid', false)
+            ->assertSee('Fulfilled', false);
+
+        $this->actingAs($this->staff)->get('/deliveries')
+            ->assertOk()
+            ->assertSee('Pending', false)
+            ->assertSee('Shipped', false);
     }
 }

@@ -45,6 +45,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/orders/award', [OrderController::class, 'award'])->name('orders.award');
     Route::post('/orders/pos-checkout', [OrderController::class, 'posCheckout'])->name('orders.pos-checkout');
     Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
+    Route::post('/orders/{order}/release', [OrderController::class, 'release'])->name('orders.release');
 
     // Payment Verification Module
     Route::post('/payments/verify', [PaymentController::class, 'verify'])->name('payments.verify');

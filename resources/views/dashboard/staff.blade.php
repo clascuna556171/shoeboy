@@ -270,9 +270,7 @@
                             <div>
                                 <div class="flex items-center gap-2">
                                     <span class="font-mono font-bold text-sm text-[#0071E3] dark:text-[#0A84FF]" x-text="selectedClaimShoe.sku"></span>
-                                    <span class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase"
-                                          :class="'badge-' + selectedClaimShoe.status"
-                                          x-text="selectedClaimShoe.status"></span>
+                                    <span class="badge" :class="'badge-' + selectedClaimShoe.status" x-text="selectedClaimShoe.status"></span>
                                     <span class="text-xs text-neutral-500" x-text="selectedClaimShoe.category || '—'"></span>
                                 </div>
                                 <h3 class="font-bold text-lg text-[#1D1D1F] dark:text-white mt-1" x-text="selectedClaimShoe.brand + ' ' + selectedClaimShoe.model"></h3>
@@ -439,11 +437,23 @@
 
                     <div class="space-y-3 max-h-[580px] overflow-y-auto pr-1">
                         @forelse($activeClaims as $claim)
-                        <div class="p-3.5 rounded-2xl border transition-all space-y-2.5 {{ $claim->status === 'reserved' ? 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/40' : 'bg-neutral-50 dark:bg-neutral-800/40 border-neutral-200 dark:border-neutral-800' }}">
+                        @php($claimFirst = $claim->items->first())
+                        <div
+                            @if($claim->status === 'reserved' && $claim->expires_at)
+                                x-data="reservationCountdown({
+                                    expiresAt: @js($claim->expires_at->toIso8601String()),
+                                    startedAt: @js($claim->date_awarded->toIso8601String()),
+                                    orderId: {{ $claim->id }},
+                                    releaseUrl: @js(route('orders.release', $claim->id)),
+                                    sku: @js($claimFirst?->sku)
+                                })"
+                                x-show="!expired"
+                                x-transition.opacity.duration.300ms
+                            @endif
+                            class="p-3.5 rounded-2xl border transition-all space-y-2.5 {{ $claim->status === 'reserved' ? 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/40' : 'bg-neutral-50 dark:bg-neutral-800/40 border-neutral-200 dark:border-neutral-800' }}">
                             
                             <div class="flex items-start justify-between gap-2 text-sm">
                                 <div class="min-w-0">
-                                    @php($claimFirst = $claim->items->first())
                                     <div class="flex items-center gap-1.5">
                                         <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $claimFirst?->sku }}</span>
                                         <span class="text-neutral-500">•</span>
@@ -459,11 +469,29 @@
                                 </div>
                                 <div class="text-right shrink-0">
                                     <span class="font-mono font-bold text-neutral-900 dark:text-white">₱{{ number_format($claim->awarded_price, 2) }}</span>
-                                    <span class="block text-[11px] uppercase font-bold {{ $claim->status === 'reserved' ? 'text-amber-600' : 'text-emerald-600' }}">
-                                        {{ $claim->status }}
-                                    </span>
+                                    <div class="mt-1">
+                                        <x-status-badge kind="order" :value="$claim->status" />
+                                    </div>
                                 </div>
                             </div>
+
+                            @if($claim->status === 'reserved' && $claim->expires_at)
+                            <div class="space-y-1.5">
+                                <div class="flex items-center justify-between gap-2 text-[11px]">
+                                    <span class="inline-flex items-center gap-1 font-semibold"
+                                          :class="urgent ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400'">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        <span x-text="'Expires in ' + label"></span>
+                                    </span>
+                                    <span class="text-neutral-500">Auto-releases at zero</span>
+                                </div>
+                                <div class="h-1.5 w-full overflow-hidden rounded-full bg-amber-200/60 dark:bg-amber-900/40">
+                                    <div class="h-full rounded-full transition-[width] duration-1000 ease-linear"
+                                         :class="urgent ? 'bg-rose-500' : 'bg-amber-500'"
+                                         :style="'width:' + percent + '%'"></div>
+                                </div>
+                            </div>
+                            @endif
 
                             @if($claim->status === 'reserved')
                             <div class="pt-1 flex items-center justify-end gap-2">
@@ -534,7 +562,7 @@
                             <div>
                                 <div class="flex items-center justify-between text-xs mb-1">
                                     <span class="font-mono font-semibold text-[#0071E3] dark:text-[#0A84FF]" x-text="shoe.sku"></span>
-                                    <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold" :class="posCart.some(i => i.id === shoe.id) ? 'badge-neutral' : 'badge-available'" x-text="posCart.some(i => i.id === shoe.id) ? 'In ticket' : 'Available'"></span>
+                                    <span class="badge" :class="posCart.some(i => i.id === shoe.id) ? 'badge-neutral' : 'badge-available'" x-text="posCart.some(i => i.id === shoe.id) ? 'In ticket' : 'Available'"></span>
                                 </div>
                                 <h4 class="font-bold text-sm text-[#1D1D1F] dark:text-white line-clamp-1" x-text="shoe.brand + ' ' + shoe.model"></h4>
                                 <div class="flex items-center gap-2 text-xs text-neutral-500 mt-1">
@@ -767,7 +795,7 @@
                             <td class="py-3 px-3 text-right font-mono text-neutral-500" x-text="'₱' + Number(item.repair_cost).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></td>
                             <td class="py-3 px-3 text-right font-mono font-bold text-neutral-900 dark:text-white" x-text="'₱' + Number(item.listed_price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></td>
                             <td class="py-3 px-3 text-center">
-                                <span class="px-2 py-0.5 rounded-full text-xs font-semibold" :class="'badge-' + item.status" x-text="item.status.toUpperCase()"></span>
+                                <span class="badge" :class="'badge-' + item.status" x-text="item.status.toUpperCase()"></span>
                             </td>
                             <td class="py-3 px-3 text-right">
                                 <template x-if="item.status === 'sold'">

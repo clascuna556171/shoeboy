@@ -51,12 +51,12 @@ class AuditLog extends Model
     ];
 
     protected const CATEGORY_BADGE = [
-        'security' => 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-300',
-        'inventory' => 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300',
-        'sales' => 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300',
-        'finance' => 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-300',
-        'admin' => 'bg-violet-50 text-violet-600 dark:bg-violet-950/40 dark:text-violet-300',
-        'system' => 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300',
+        'security' => 'badge-security',
+        'inventory' => 'badge-inventory',
+        'sales' => 'badge-sales',
+        'finance' => 'badge-finance',
+        'admin' => 'badge-admin',
+        'system' => 'badge-system',
     ];
 
     protected const CATEGORY_DOT = [

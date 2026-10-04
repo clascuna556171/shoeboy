@@ -2,15 +2,6 @@
 
 @section('title', 'Orders Registry')
 
-@php
-    $statusBadge = [
-        'fulfilled' => 'badge-fulfilled',
-        'paid'      => 'badge-paid',
-        'reserved'  => 'badge-pending',
-        'cancelled' => 'badge-cancelled',
-    ];
-@endphp
-
 @section('content')
 <div class="space-y-6">
 
@@ -22,7 +13,12 @@
                 <h1 class="text-xl md:text-2xl font-bold tracking-tight text-[#1D1D1F] dark:text-white mt-0.5">Customer Orders Registry</h1>
                 </div>
         </div>
-        <span class="badge badge-neutral">{{ $orders->total() }} orders</span>
+        <x-header-counts :counts="[
+            ['label' => 'Reserved', 'value' => $reservedCount, 'tone' => 'amber'],
+            ['label' => 'Paid', 'value' => $paidCount, 'tone' => 'blue'],
+            ['label' => 'Fulfilled', 'value' => $fulfilledCount, 'tone' => 'emerald'],
+            ['label' => 'Cancelled', 'value' => $cancelledCount, 'tone' => 'rose'],
+        ]" />
     </div>
 
     <x-table-toolbar :action="route('orders.index')" :search="request('search')"
@@ -57,9 +53,7 @@
                         <td class="py-3.5 px-4">
                             <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF] block">{{ $ord->order_number }}</span>
                             <span class="text-xs text-neutral-500 font-mono">{{ $ord->date_awarded->format('M d, Y H:i') }}</span>
-                            <span class="badge mt-1 {{ $ord->order_type === 'live_stream' ? 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400' : 'badge-neutral' }}">
-                                {{ $ord->order_type === 'live_stream' ? 'Live Stream' : 'POS Walk-In' }}
-                            </span>
+                            <x-status-badge kind="channel" :value="$ord->order_type" class="mt-1" />
                         </td>
                         <td class="py-3.5 px-4">
                             <div class="flex items-center gap-2">
@@ -80,12 +74,12 @@
                         <td class="py-3.5 px-4 text-neutral-700 dark:text-neutral-300">{{ $ord->staff->name }}</td>
                         <td class="py-3.5 px-4 text-right font-mono font-bold text-neutral-900 dark:text-white"><x-money :value="$ord->awarded_price" /></td>
                         <td class="py-3.5 px-4 text-center">
-                            <span class="badge {{ $statusBadge[$ord->status] ?? 'badge-neutral' }}">{{ $ord->status }}</span>
+                            <x-status-badge kind="order" :value="$ord->status" />
                         </td>
                         <td class="py-3.5 px-4 text-center">
                             @if($ord->payment)
                                 <div class="inline-flex flex-col items-center gap-1">
-                                    <span class="badge {{ $ord->payment->method === 'gcash' ? 'badge-paid' : 'badge-neutral' }}">{{ strtoupper($ord->payment->method) }}</span>
+                                    <x-status-badge kind="payment" :value="$ord->payment->method" />
                                     @if($ord->payment->method === 'gcash')
                                         <span class="max-w-[140px] truncate font-mono text-xs text-neutral-500 dark:text-neutral-400">{{ $ord->payment->reference_no }}</span>
                                     @endif

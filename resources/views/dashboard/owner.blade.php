@@ -180,22 +180,9 @@
                         </div>
 
 
-                        <span class="inline-flex self-start
-                                     items-center gap-1.5
-                                     rounded-full
-                                     px-3 py-1.5
-                                     text-xs font-semibold
-                                     {{ $netPositive
-                                        ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
-                                        : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300' }}">
-
-                            <span class="w-1.5 h-1.5 rounded-full
-                                         {{ $netPositive ? 'bg-emerald-500' : 'bg-amber-500' }}">
-                            </span>
-
-                            {{ $netPositive ? 'Positive balance' : 'Recovering costs' }}
-
-                        </span>
+                        <x-status-badge kind="balance" :dot="true"
+                                        :value="$netPositive ? 'positive' : 'negative'"
+                                        class="self-start" />
 
                     </div>
 
@@ -903,13 +890,7 @@
 
                                 <span>{{ $tx->date_awarded->diffForHumans() }}</span>
 
-                                <span class="ml-auto inline-flex rounded-md px-1.5 py-0.5
-                                             text-[10px] font-semibold uppercase tracking-wide
-                                             {{ $isGcash
-                                                 ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300'
-                                                 : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300' }}">
-                                    {{ $tx->payment?->method ?? 'Cash' }}
-                                </span>
+                                <x-status-badge kind="payment" :value="$tx->payment?->method ?? 'cash'" class="ml-auto" />
 
                             </div>
 

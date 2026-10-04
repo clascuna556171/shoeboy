@@ -65,7 +65,7 @@
                         </td>
                         <td class="py-3.5 px-4 font-mono text-neutral-700 dark:text-neutral-300">{{ $user->email }}</td>
                         <td class="py-3.5 px-4 text-center">
-                            <span class="badge {{ $user->isOwner() ? 'badge-owner' : 'badge-staff' }}">{{ $user->role }}</span>
+                            <x-status-badge kind="role" :value="$user->role" />
                         </td>
                         <td class="py-3.5 px-4 text-center font-mono font-semibold">{{ $user->orders_count }}</td>
                         <td class="py-3.5 px-4 text-center font-mono font-semibold">{{ $user->verified_payments_count }}</td>

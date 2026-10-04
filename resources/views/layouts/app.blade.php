@@ -166,6 +166,13 @@
             if (session('info')) { $toasts[] = ['type' => 'info', 'message' => session('info')]; }
             if (session('error')) { $toasts[] = ['type' => 'error', 'message' => session('error')]; }
             if (session('undo')) { $toasts[] = ['type' => 'undo', 'message' => session('undo')['message'] ?? 'Record deleted.', 'undo' => session('undo')['url'] ?? null]; }
+
+            // Validation errors become toasts (login keeps its inline field hints).
+            if (! request()->routeIs('login')) {
+                foreach ($errors->all() as $err) {
+                    $toasts[] = ['type' => 'error', 'message' => $err, 'duration' => 6000];
+                }
+            }
         @endphp
 
         {{-- Floating toasts --}}
@@ -216,20 +223,6 @@
                 </div>
             </template>
         </div>
-
-        @if($errors->any() && ! request()->routeIs('login'))
-            <div class="mb-4 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 text-rose-800 dark:text-rose-300 text-xs space-y-1 shadow-sm">
-                <div class="font-bold flex items-center gap-2">
-                    <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    <span>Please correct the following errors:</span>
-                </div>
-                <ul class="list-disc pl-6 space-y-0.5">
-                    @foreach($errors->all() as $err)
-                        <li>{{ $err }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
 
         @yield('content')
     </main>

@@ -64,18 +64,6 @@
         border-color: rgba(44, 44, 46, 0.8);
     }
 
-    /* Status Badges */
-    .badge-available { background-color: #E8F5E9; color: #2E7D32; border: 1px solid rgba(46, 125, 50, 0.15); }
-    .dark .badge-available { background-color: rgba(46, 125, 50, 0.2); color: #4ADE80; border: 1px solid rgba(74, 222, 128, 0.25); }
-    .badge-reserved { background-color: #FFF8E1; color: #B45309; border: 1px solid rgba(245, 127, 23, 0.2); }
-    .dark .badge-reserved { background-color: rgba(245, 127, 23, 0.2); color: #FBBF24; border: 1px solid rgba(251, 191, 36, 0.3); }
-    .badge-repair { background-color: #FBE9E7; color: #C2410C; border: 1px solid rgba(216, 67, 21, 0.2); }
-    .dark .badge-repair { background-color: rgba(216, 67, 21, 0.2); color: #FB923C; border: 1px solid rgba(251, 146, 60, 0.3); }
-    .badge-sold { background-color: #ECEFF1; color: #455A64; border: 1px solid rgba(69, 90, 100, 0.15); }
-    .dark .badge-sold { background-color: rgba(69, 90, 100, 0.25); color: #94A3B8; border: 1px solid rgba(148, 163, 184, 0.2); }
-    .badge-washing { background-color: #E0F2FE; color: #0369A1; border: 1px solid rgba(3, 105, 161, 0.2); }
-    .dark .badge-washing { background-color: rgba(3, 105, 161, 0.2); color: #38BDF8; border: 1px solid rgba(56, 189, 248, 0.3); }
-
     /* Subtle focus ring (legacy) */
     .apple-focus-ring:focus { outline: none; border-color: #0071E3; box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.18); }
     .dark .apple-focus-ring:focus { border-color: #0A84FF; box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.25); }
@@ -132,6 +120,39 @@
     .dark .badge-cancelled{ background-color: rgba(180,35,24,.25); color: #FCA5A5; border-color: rgba(252,165,165,.25); }
     .dark .badge-owner    { background-color: rgba(245,158,11,.2); color: #FCD34D; border-color: rgba(252,211,77,.3); }
     .dark .badge-staff    { background-color: rgba(10,132,255,.18); color: #7CB8FF; border-color: rgba(10,132,255,.28); }
+
+    .badge-live, .badge-jnt     { background-color: #FFF1F2; color: #E11D48; border-color: rgba(225,29,72,.2); }
+    .dark .badge-live, .dark .badge-jnt { background-color: rgba(225,29,72,.18); color: #FDA4AF; border-color: rgba(253,164,175,.25); }
+    .badge-gcash                { background-color: #E3F0FF; color: #0058B8; border-color: rgba(0,113,227,.18); }
+    .dark .badge-gcash          { background-color: rgba(10,132,255,.18); color: #7CB8FF; border-color: rgba(10,132,255,.28); }
+    .badge-pos, .badge-pickup, .badge-cash { background-color: #ECEFF1; color: #455A64; border-color: rgba(69,90,100,.15); }
+    .dark .badge-pos, .dark .badge-pickup, .dark .badge-cash { background-color: rgba(69,90,100,.3); color: #CBD5E1; border-color: rgba(148,163,184,.2); }
+
+    /* Item / stock statuses — reuse the shared palette */
+    .badge-available { background-color: #E7F7EE; color: #1B7A45; border-color: rgba(27,122,69,.18); }
+    .dark .badge-available { background-color: rgba(27,122,69,.25); color: #6EE7A8; border-color: rgba(110,231,168,.25); }
+    .badge-reserved  { background-color: #FFF7E6; color: #B45309; border-color: rgba(245,127,23,.22); }
+    .dark .badge-reserved { background-color: rgba(245,127,23,.2); color: #FBBF24; border-color: rgba(251,191,36,.3); }
+    .badge-washing   { background-color: #E5F3FB; color: #0369A1; border-color: rgba(3,105,161,.2); }
+    .dark .badge-washing { background-color: rgba(3,105,161,.25); color: #7DD3FC; border-color: rgba(125,211,252,.3); }
+    .badge-repair    { background-color: #FFF1F2; color: #E11D48; border-color: rgba(225,29,72,.2); }
+    .dark .badge-repair { background-color: rgba(225,29,72,.18); color: #FDA4AF; border-color: rgba(253,164,175,.25); }
+    .badge-sold      { background-color: #ECEFF1; color: #455A64; border-color: rgba(69,90,100,.15); }
+    .dark .badge-sold { background-color: rgba(69,90,100,.3); color: #CBD5E1; border-color: rgba(148,163,184,.2); }
+
+    /* Audit log categories — distinct hues, shared pill format */
+    .badge-security  { background-color: #EEF2FF; color: #4F46E5; border-color: rgba(79,70,229,.2); }
+    .dark .badge-security { background-color: rgba(79,70,229,.22); color: #A5B4FC; border-color: rgba(165,180,252,.25); }
+    .badge-inventory { background-color: #ECFDF5; color: #059669; border-color: rgba(5,150,105,.2); }
+    .dark .badge-inventory { background-color: rgba(5,150,105,.25); color: #6EE7B7; border-color: rgba(110,231,183,.25); }
+    .badge-sales     { background-color: #FFF1F2; color: #E11D48; border-color: rgba(225,29,72,.2); }
+    .dark .badge-sales { background-color: rgba(225,29,72,.18); color: #FDA4AF; border-color: rgba(253,164,175,.25); }
+    .badge-finance   { background-color: #FFFBEB; color: #D97706; border-color: rgba(217,119,6,.22); }
+    .dark .badge-finance { background-color: rgba(217,119,6,.22); color: #FCD34D; border-color: rgba(252,211,77,.3); }
+    .badge-admin     { background-color: #F5F3FF; color: #7C3AED; border-color: rgba(124,58,237,.2); }
+    .dark .badge-admin { background-color: rgba(124,58,237,.22); color: #C4B5FD; border-color: rgba(196,181,253,.25); }
+    .badge-system    { background-color: #ECEFF1; color: #455A64; border-color: rgba(69,90,100,.15); }
+    .dark .badge-system { background-color: rgba(69,90,100,.3); color: #CBD5E1; border-color: rgba(148,163,184,.2); }
 
     /* ---- Modal motion ------------------------------------------------ */
     .app-modal-backdrop { animation: app-fade-in 0.15s ease-out; }

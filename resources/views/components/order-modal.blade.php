@@ -3,22 +3,13 @@
     'delivery' => null,
 ])
 
-@php
-    $statusBadge = [
-        'fulfilled' => 'badge-fulfilled',
-        'paid'      => 'badge-paid',
-        'reserved'  => 'badge-pending',
-        'cancelled' => 'badge-cancelled',
-    ];
-@endphp
-
 <x-modal eyebrow="Order Details" :title="$order->order_number" accent="neutral" size="lg" scroll {{ $attributes }}>
     <div class="space-y-4 text-sm">
 
         {{-- Meta --}}
         <div class="flex flex-wrap items-center gap-2">
-            <span class="badge {{ $statusBadge[$order->status] ?? 'badge-neutral' }}">{{ $order->status }}</span>
-            <span class="badge badge-neutral">{{ $order->order_type === 'live_stream' ? 'Live Stream' : 'POS Walk-In' }}</span>
+            <x-status-badge kind="order" :value="$order->status" />
+            <x-status-badge kind="channel" :value="$order->order_type" />
             <span class="font-mono text-xs text-neutral-500">{{ $order->date_awarded?->format('M d, Y H:i') }}</span>
             <x-money :value="$order->awarded_price" class="ml-auto font-mono text-lg font-bold text-neutral-900 dark:text-white" />
         </div>
@@ -86,7 +77,7 @@
             <div class="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-neutral-500">Delivery</div>
             <div class="grid grid-cols-2 gap-2 text-xs">
                 <div><span class="text-neutral-500">Method</span><div class="font-semibold text-neutral-800 dark:text-neutral-200">{{ $delivery->method === 'pickup' ? 'Store Pickup' : 'J&T Express' }}</div></div>
-                <div><span class="text-neutral-500">Status</span><div class="font-semibold capitalize text-neutral-800 dark:text-neutral-200">{{ $delivery->status }}</div></div>
+                <div><span class="text-neutral-500">Status</span><div class="mt-0.5"><x-status-badge kind="delivery" :value="$delivery->status" /></div></div>
                 <div><span class="text-neutral-500">Tracking</span><div class="font-mono text-neutral-800 dark:text-neutral-200">{{ $delivery->tracking_number ?? '—' }}</div></div>
                 @if($delivery->date_completed)
                 <div><span class="text-neutral-500">Completed</span><div class="text-neutral-800 dark:text-neutral-200">{{ $delivery->date_completed->format('M d, Y H:i') }}</div></div>
