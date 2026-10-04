@@ -62,6 +62,7 @@
 
 
             <a href="{{ route('reports.export') }}"
+               data-progress="download"
                title="Download current financial report"
                class="inline-flex items-center justify-center gap-2
                       min-h-10 px-4
@@ -248,7 +249,7 @@
 
                             <span class="font-mono text-sm font-semibold
                                          text-neutral-900 dark:text-white">
-                                ₱{{ number_format($metrics['total_revenue'], 2) }}
+                                <x-money :value="$metrics['total_revenue']" />
                             </span>
                         </div>
 
@@ -276,7 +277,7 @@
 
                             <span class="font-mono text-sm font-bold
                                          text-emerald-600 dark:text-emerald-400">
-                                ₱{{ number_format($metrics['gross_profit'], 2) }}
+                                <x-money :value="$metrics['gross_profit']" />
                             </span>
 
                         </div>
@@ -373,7 +374,7 @@
 
                     <p class="mt-3 text-xl font-bold font-mono
                               text-neutral-950 dark:text-white">
-                        ₱{{ number_format($metrics['cash_total'], 2) }}
+                        <x-money :value="$metrics['cash_total']" />
                     </p>
 
                     <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-500">
@@ -408,7 +409,7 @@
 
                     <p class="mt-3 text-xl font-bold font-mono
                               text-neutral-950 dark:text-white">
-                        ₱{{ number_format($metrics['gcash_total'], 2) }}
+                        <x-money :value="$metrics['gcash_total']" />
                     </p>
 
                     <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-500">
@@ -694,7 +695,7 @@
                                    font-mono text-sm
                                    text-neutral-500 dark:text-neutral-500">
 
-                            ₱{{ number_format($batch['total_cost'], 2) }}
+                            <x-money :value="$batch['total_cost']" />
 
                         </td>
 
@@ -705,7 +706,7 @@
                             <span class="font-mono text-sm font-semibold
                                          text-neutral-900 dark:text-white">
 
-                                ₱{{ number_format($batch['realized_revenue'], 2) }}
+                                <x-money :value="$batch['realized_revenue']" />
 
                             </span>
 
@@ -746,7 +747,7 @@
                         <td class="px-5 py-4 text-right
                                    font-mono text-sm font-bold
                                    text-neutral-900 dark:text-white">
-                            ₱{{ number_format($totalSales, 2) }}
+                            <x-money :value="$totalSales" />
                         </td>
 
                         <td class="px-5 py-4 text-right
@@ -814,12 +815,19 @@
 
                 @php($isGcash = $tx->payment?->method === 'gcash')
 
-                <div class="rounded-xl
+                <div x-data="{ open: false }"
+                     @click="open = true"
+                     @keydown.enter="open = true"
+                     role="button"
+                     tabindex="0"
+                     class="group cursor-pointer rounded-xl
                             border border-neutral-200 dark:border-neutral-800
                             p-4
                             hover:border-neutral-300 dark:hover:border-neutral-700
                             hover:bg-neutral-50 dark:hover:bg-neutral-800/40
-                            transition-colors">
+                            hover:shadow-sm hover:-translate-y-0.5
+                            transition-all duration-150
+                            focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0071E3]/40">
 
                     <div class="flex items-start gap-3.5">
 
@@ -871,7 +879,7 @@
 
                                 <p class="shrink-0 font-mono text-lg font-bold
                                           text-neutral-950 dark:text-white">
-                                    ₱{{ number_format($tx->awarded_price, 2) }}
+                                    <x-money :value="$tx->awarded_price" />
                                 </p>
 
                             </div>
@@ -909,6 +917,12 @@
 
                     </div>
 
+                    <div class="mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800/70 flex items-center justify-end gap-1 text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 group-hover:text-[#0071E3] dark:group-hover:text-[#0A84FF] transition-colors">
+                        View details
+                        <svg class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+
+                    <x-order-modal :order="$tx" :delivery="$tx->delivery" x-show="open" close="open = false" />
                 </div>
 
                 @empty
@@ -963,16 +977,12 @@
                     shadow-sm overflow-hidden"
              x-data="{ open: false }">
 
-        <button type="button"
-                @click="open = !open"
-                :aria-expanded="open"
-                class="w-full px-6 py-4
-                       flex items-center justify-between gap-4
-                       text-left
-                       hover:bg-neutral-50 dark:hover:bg-neutral-800/40
-                       transition-colors">
+        <div class="w-full px-6 py-4 flex items-center justify-between gap-4 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/40">
 
-            <div class="flex items-center gap-3 min-w-0">
+            <button type="button"
+                    @click="open = !open"
+                    :aria-expanded="open"
+                    class="flex items-center gap-3 min-w-0 text-left flex-1">
 
                 <span class="w-9 h-9 shrink-0
                              flex items-center justify-center
@@ -1010,29 +1020,43 @@
 
                 </div>
 
+            </button>
+
+
+            <div class="flex items-center gap-3 shrink-0">
+
+                <a href="{{ route('audit.index') }}"
+                   class="text-xs font-semibold whitespace-nowrap
+                          text-[#0071E3] dark:text-[#0A84FF] hover:underline">
+                    View full log
+                </a>
+
+                <button type="button"
+                        @click="open = !open"
+                        :aria-expanded="open"
+                        class="flex items-center gap-1.5
+                               text-xs font-medium
+                               text-neutral-500 dark:text-neutral-500
+                               hover:text-neutral-700 dark:hover:text-neutral-300">
+
+                    <span x-text="open ? 'Hide' : 'Show'">Show</span>
+
+                    <svg class="w-4 h-4 transition-transform duration-200"
+                         :class="open ? 'rotate-180' : ''"
+                         fill="none"
+                         stroke="currentColor"
+                         viewBox="0 0 24 24">
+                        <path stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M19 9l-7 7-7-7"/>
+                    </svg>
+
+                </button>
+
             </div>
 
-
-            <span class="flex items-center gap-1.5 shrink-0
-                         text-xs font-medium
-                         text-neutral-500 dark:text-neutral-500">
-
-                <span x-text="open ? 'Hide' : 'Show'">Show</span>
-
-                <svg class="w-4 h-4 transition-transform duration-200"
-                     :class="open ? 'rotate-180' : ''"
-                     fill="none"
-                     stroke="currentColor"
-                     viewBox="0 0 24 24">
-                    <path stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M19 9l-7 7-7-7"/>
-                </svg>
-
-            </span>
-
-        </button>
+        </div>
 
 
         <div x-show="open"
@@ -1057,11 +1081,7 @@
                         <span class="absolute left-0 top-3.5
                                      w-[7px] h-[7px] rounded-full
                                      ring-4 ring-white dark:ring-[#1C1C1E]
-                                     {{ $log->category === 'security' ? 'bg-indigo-400'
-                                        : ($log->category === 'inventory' ? 'bg-emerald-400'
-                                        : ($log->category === 'sales' ? 'bg-rose-400'
-                                        : ($log->category === 'finance' ? 'bg-amber-400'
-                                        : ($log->category === 'admin' ? 'bg-violet-400' : 'bg-neutral-400')))) }}"></span>
+                                     {{ $log->category_dot_class }}"></span>
 
                         <div class="flex items-start justify-between gap-3">
 
@@ -1087,14 +1107,7 @@
 
                         <div x-show="rawOpen" x-cloak
                              class="mt-2 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-800/30 p-2.5">
-                            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
-                                @foreach($log->detail_items as $detail)
-                                <div class="flex items-center justify-between gap-2">
-                                    <dt class="text-neutral-500">{{ $detail['label'] }}</dt>
-                                    <dd class="text-right font-medium text-neutral-700 dark:text-neutral-200">{{ $detail['value'] }}</dd>
-                                </div>
-                                @endforeach
-                            </dl>
+                            <x-audit-details :log="$log" class="text-[11px] gap-x-4 gap-y-1" />
                         </div>
 
                     </div>

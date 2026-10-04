@@ -3,7 +3,7 @@
 @section('title', 'Supplier Records')
 
 @section('content')
-<div class="space-y-6" x-data="{ showSupplierModal: false, view: 'cards', editingSupplier: null }">
+<div class="space-y-6" x-data="{ showSupplierModal: false, view: localStorage.getItem('shoeboy.suppliers.view') || 'cards', editingSupplier: null, setView(v){ this.view = v; localStorage.setItem('shoeboy.suppliers.view', v); } }">
 
     {{-- Page header --}}
     <div class="app-card p-5 lg:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -16,13 +16,13 @@
 
         <div class="flex flex-wrap items-center gap-2">
             <div class="flex items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl">
-                <button type="button" @click="view = 'cards'"
+                <button type="button" @click="setView('cards')"
                         :class="view === 'cards' ? 'bg-white dark:bg-[#2C2C2E] shadow-sm font-semibold text-neutral-900 dark:text-white' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'"
                         class="px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1.5">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                     Cards
                 </button>
-                <button type="button" @click="view = 'table'"
+                <button type="button" @click="setView('table')"
                         :class="view === 'table' ? 'bg-white dark:bg-[#2C2C2E] shadow-sm font-semibold text-neutral-900 dark:text-white' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'"
                         class="px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1.5">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -39,13 +39,9 @@
         </div>
     </div>
 
-    @include('partials.table-toolbar', [
-        'action' => route('suppliers.index'),
-        'search' => $search,
-        'searchPlaceholder' => 'Search supplier name or contact...',
-        'resetUrl' => route('suppliers.index'),
-        'filters' => [],
-    ])
+    <x-table-toolbar :action="route('suppliers.index')" :search="$search"
+                     search-placeholder="Search supplier name or contact..."
+                     :reset-url="route('suppliers.index')" :filters="[]" />
 
     {{-- Cards --}}
     <div x-show="view === 'cards'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -72,20 +68,17 @@
                 @endif
             </div>
 
-            <div class="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-end gap-2 text-xs">
-                <button type="button"
-                        @click="editingSupplier = {{ Js::from(['id' => $sup->id, 'name' => $sup->name, 'contact_number' => $sup->contact_number, 'notes' => $sup->notes]) }}"
-                        class="px-2.5 py-1 rounded-lg font-semibold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
-                    Edit
-                </button>
+            <div class="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-end gap-1.5">
+                <x-action-btn icon="edit" tone="secondary"
+                              @click="editingSupplier = {{ Js::from(['id' => $sup->id, 'name' => $sup->name, 'contact_number' => $sup->contact_number, 'notes' => $sup->notes]) }}">Edit</x-action-btn>
                 <form action="{{ route('suppliers.destroy', $sup->id) }}" method="POST" class="inline">
                     @csrf
                     @method('DELETE')
-                    <button type="submit"
-                            @click.prevent="$store.dialog.show({ variant: 'danger', title: 'Delete this supplier?', message: 'You can undo this right after from the notification toast.', confirmLabel: 'Delete' }).then(ok => ok && $el.closest('form').submit())"
-                            class="px-2.5 py-1 rounded-lg font-semibold text-neutral-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors">
-                        Delete
-                    </button>
+                    <x-action-btn icon="trash" tone="ghost-danger" type="submit"
+                                  data-confirm="Delete this supplier?"
+                                  data-confirm-variant="danger"
+                                  data-confirm-message="You can undo this right after from the notification toast."
+                                  data-confirm-label="Delete">Delete</x-action-btn>
                 </form>
             </div>
         </div>
@@ -105,9 +98,9 @@
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                     <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
-                        @include('partials.sortable-th', ['column' => 'name', 'label' => 'Supplier'])
-                        @include('partials.sortable-th', ['column' => 'contact_number', 'label' => 'Contact Number'])
-                        @include('partials.sortable-th', ['column' => 'batches_count', 'label' => 'Batches', 'align' => 'center'])
+                        <x-sort-th-server column="name" label="Supplier" />
+                        <x-sort-th-server column="contact_number" label="Contact Number" />
+                        <x-sort-th-server column="batches_count" label="Batches" align="center" />
                         <th class="py-3 px-4 font-semibold">Notes</th>
                         <th class="py-3 px-4 font-semibold text-right">Actions</th>
                     </tr>
@@ -126,19 +119,16 @@
                         <td class="py-3.5 px-4"><span class="block max-w-[260px] truncate text-neutral-500 dark:text-neutral-400">{{ $sup->notes ?? '—' }}</span></td>
                         <td class="py-3.5 px-4 text-right">
                             <div class="inline-flex items-center gap-1.5">
-                                <button type="button"
-                                        @click="editingSupplier = {{ Js::from(['id' => $sup->id, 'name' => $sup->name, 'contact_number' => $sup->contact_number, 'notes' => $sup->notes]) }}"
-                                        class="px-2.5 py-1.5 rounded-lg font-semibold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
-                                    Edit
-                                </button>
+                                <x-action-btn icon="edit" tone="secondary"
+                                              @click="editingSupplier = {{ Js::from(['id' => $sup->id, 'name' => $sup->name, 'contact_number' => $sup->contact_number, 'notes' => $sup->notes]) }}">Edit</x-action-btn>
                                 <form action="{{ route('suppliers.destroy', $sup->id) }}" method="POST" class="inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit"
-                                            @click.prevent="$store.dialog.show({ variant: 'danger', title: 'Delete this supplier?', message: 'You can undo this right after from the notification toast.', confirmLabel: 'Delete' }).then(ok => ok && $el.closest('form').submit())"
-                                            class="px-2.5 py-1.5 rounded-lg font-semibold text-neutral-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors">
-                                        Delete
-                                    </button>
+                                    <x-action-btn icon="trash" tone="ghost-danger" type="submit"
+                                                  data-confirm="Delete this supplier?"
+                                                  data-confirm-variant="danger"
+                                                  data-confirm-message="You can undo this right after from the notification toast."
+                                                  data-confirm-label="Delete">Delete</x-action-btn>
                                 </form>
                             </div>
                         </td>
@@ -164,17 +154,17 @@
                 @csrf
 
                 <div>
-                    <label class="app-label">Supplier Name</label>
+                    <label class="app-label">Supplier Name <span class="app-req">*</span></label>
                     <input type="text" name="name" required placeholder="e.g. Suntop Bales Warehouse" class="app-input">
                 </div>
 
                 <div>
-                    <label class="app-label">Contact Number (optional, numeric)</label>
+                    <label class="app-label">Contact Number <span class="app-optional">(optional, numeric)</span></label>
                     <input type="text" name="contact_number" placeholder="09171234567" class="app-input">
                 </div>
 
                 <div>
-                    <label class="app-label">Notes &amp; Inspection Terms</label>
+                    <label class="app-label">Notes &amp; Inspection Terms <span class="app-optional">(optional)</span></label>
                     <textarea name="notes" rows="3" placeholder="Inspection terms, return policy, bale quality notes..." class="app-textarea"></textarea>
                 </div>
 
@@ -193,17 +183,17 @@
                 @method('PUT')
 
                 <div>
-                    <label class="app-label">Supplier Name</label>
+                    <label class="app-label">Supplier Name <span class="app-req">*</span></label>
                     <input type="text" name="name" :value="editingSupplier?.name" required class="app-input">
                 </div>
 
                 <div>
-                    <label class="app-label">Contact Number (optional)</label>
+                    <label class="app-label">Contact Number <span class="app-optional">(optional)</span></label>
                     <input type="text" name="contact_number" :value="editingSupplier?.contact_number" class="app-input">
                 </div>
 
                 <div>
-                    <label class="app-label">Notes &amp; Inspection Terms</label>
+                    <label class="app-label">Notes &amp; Inspection Terms <span class="app-optional">(optional)</span></label>
                     <textarea name="notes" rows="3" class="app-textarea" x-text="editingSupplier?.notes"></textarea>
                 </div>
 

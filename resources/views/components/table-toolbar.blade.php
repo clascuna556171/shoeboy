@@ -1,8 +1,11 @@
-@php
-    $filters = $filters ?? [];
-    $searchPlaceholder = $searchPlaceholder ?? 'Search...';
-    $search = $search ?? null;
-@endphp
+@props([
+    'action',
+    'filters' => [],
+    'search' => null,
+    'searchPlaceholder' => 'Search...',
+    'resetUrl' => null,
+])
+
 <div class="app-card p-4">
     <form method="GET" action="{{ $action }}" class="flex flex-col md:flex-row md:items-center gap-3">
         <div class="relative flex-1 min-w-[220px]">
@@ -22,7 +25,7 @@
 
         <div class="flex items-center gap-2 shrink-0">
             <button type="submit" class="app-btn app-btn-primary">Apply</button>
-            <a href="{{ $resetUrl }}" class="app-btn app-btn-secondary">Reset</a>
+            <a href="{{ $resetUrl ?? $action }}" class="app-btn app-btn-secondary">Reset</a>
         </div>
     </form>
 

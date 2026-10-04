@@ -5,7 +5,11 @@
 @section('content')
 <div class="space-y-6"
      x-data="{
-         activeTab: @js(request('tab', 'claims')), // 'claims', 'pos', 'triage'
+         activeTab: @js(request('tab')) || localStorage.getItem('shoeboy.staff.tab') || 'claims', // 'claims', 'pos', 'triage'
+         setTab(tab) {
+             this.activeTab = tab;
+             localStorage.setItem('shoeboy.staff.tab', tab);
+         },
          
          // Live Claims State
          claimInput: '',
@@ -15,6 +19,13 @@
          claimCart: [],
          claimReservation: '120',
          shoes: {{ Js::from($items) }},
+
+         // Triage Table State
+         triageSearch: '',
+         triageStatus: 'all',
+         triageSort: 'sku',
+         triageDir: 'asc',
+         selectedSoldId: null,
          
          // POS State
          posSearch: '',
@@ -46,7 +57,7 @@
 
          addToClaim(shoe) {
              if (this.claimCart.some(i => i.id === shoe.id)) return;
-             this.claimCart.push({ id: shoe.id, sku: shoe.sku, brand: shoe.brand, model: shoe.model, size: shoe.size, price: shoe.listed_price });
+             this.claimCart.push({ id: shoe.id, sku: shoe.sku, brand: shoe.brand, model: shoe.model, size: shoe.size, price: shoe.listed_price, batch: shoe.batch });
          },
          removeFromClaim(id) {
              this.claimCart = this.claimCart.filter(i => i.id !== id);
@@ -80,6 +91,41 @@
              this.payMethod = 'gcash';
              this.payRef = '';
              this.showPayModal = true;
+         },
+
+         get triageItems() {
+             let list = this.shoes;
+             if (this.triageStatus !== 'all') {
+                 list = list.filter(s => s.status === this.triageStatus);
+             }
+             const q = (this.triageSearch || '').trim().toLowerCase();
+             if (q) {
+                 list = list.filter(s => `${s.sku} ${s.brand} ${s.model} ${s.condition} ${s.size}`.toLowerCase().includes(q));
+             }
+             const numeric = ['size', 'repair_cost', 'listed_price'];
+             const dir = this.triageDir === 'asc' ? 1 : -1;
+             return [...list].sort((a, b) => {
+                 const av = a[this.triageSort];
+                 const bv = b[this.triageSort];
+                 if (numeric.includes(this.triageSort)) {
+                     return ((parseFloat(av) || 0) - (parseFloat(bv) || 0)) * dir;
+                 }
+                 return String(av ?? '').localeCompare(String(bv ?? '')) * dir;
+             });
+         },
+         sortTriage(column) {
+             if (this.triageSort === column) {
+                 this.triageDir = this.triageDir === 'asc' ? 'desc' : 'asc';
+             } else {
+                 this.triageSort = column;
+                 this.triageDir = 'asc';
+             }
+         },
+         countByStatus(status) {
+             return this.shoes.filter(s => s.status === status).length;
+         },
+         triageAction(id) {
+             return `{{ url('/items') }}/${id}/triage`;
          }
      }">
 
@@ -108,7 +154,7 @@
 
         <div class="flex items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl border border-neutral-200/70 dark:border-neutral-700">
             <button type="button"
-                    @click="activeTab = 'claims'"
+                    @click="setTab('claims')"
                     :class="activeTab === 'claims' ? 'bg-white dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-white font-semibold shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'"
                     class="px-4 py-2 rounded-lg text-sm transition-all flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
@@ -119,7 +165,7 @@
             </button>
 
             <button type="button"
-                    @click="activeTab = 'pos'"
+                    @click="setTab('pos')"
                     :class="activeTab === 'pos' ? 'bg-white dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-white font-semibold shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'"
                     class="px-4 py-2 rounded-lg text-sm transition-all flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
@@ -130,7 +176,7 @@
             </button>
 
             <button type="button"
-                    @click="activeTab = 'triage'"
+                    @click="setTab('triage')"
                     :class="activeTab === 'triage' ? 'bg-white dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-white font-semibold shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'"
                     class="px-4 py-2 rounded-lg text-sm transition-all flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
@@ -324,11 +370,11 @@
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div class="space-y-1">
-                                <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Buyer FB Handle:</label>
+                                <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Buyer FB Handle <span class="app-req">*</span>:</label>
                                 <input type="text" name="messenger_contact" x-model="buyerHandle" required placeholder="@username (e.g. @ken_hoops23)" class="app-input">
                             </div>
                             <div class="space-y-1">
-                                <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Customer Full Name:</label>
+                                <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Customer Full Name <span class="app-req">*</span>:</label>
                                 <input type="text" name="customer_name" x-model="buyerName" required placeholder="e.g. Ken Hoops" class="app-input">
                             </div>
                         </div>
@@ -339,7 +385,10 @@
                                 <template x-for="item in claimCart" :key="item.id">
                                     <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/60">
                                         <div class="min-w-0">
-                                            <div class="font-semibold text-neutral-800 dark:text-neutral-200 truncate text-xs" x-text="item.brand + ' ' + item.model"></div>
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="inline-flex items-center rounded-md bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-600 dark:text-neutral-300" x-text="item.batch ? item.batch.batch_code : ''"></span>
+                                                <span class="font-semibold text-neutral-800 dark:text-neutral-200 truncate text-xs" x-text="item.brand + ' ' + item.model"></span>
+                                            </div>
                                             <div class="text-[11px] text-neutral-500 font-mono" x-text="item.sku + ' • ' + item.size"></div>
                                         </div>
                                         <div class="flex items-center gap-2">
@@ -429,11 +478,11 @@
 
                                 <form action="{{ route('orders.cancel', $claim->id) }}" method="POST" class="inline">
                                     @csrf
-                                    <button type="submit"
-                                            @click.prevent="$store.dialog.show({ variant: 'danger', title: 'Release this reservation?', message: 'The pair returns to available stock and the claim is cancelled.', confirmLabel: 'Release' }).then(ok => ok && $el.closest('form').submit())"
-                                            class="inline-flex items-center justify-center min-h-8 px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] text-neutral-600 dark:text-neutral-300 text-xs font-medium hover:text-rose-600 hover:border-rose-200 dark:hover:border-rose-900/60 transition-colors">
-                                        Release
-                                    </button>
+                                    <x-action-btn tone="secondary" type="submit"
+                                                  data-confirm="Release this reservation?"
+                                                  data-confirm-variant="danger"
+                                                  data-confirm-message="The pair returns to available stock and the claim is cancelled."
+                                                  data-confirm-label="Release">Release</x-action-btn>
                                 </form>
                             </div>
                             @elseif($claim->payment)
@@ -489,6 +538,7 @@
                                 </div>
                                 <h4 class="font-bold text-sm text-[#1D1D1F] dark:text-white line-clamp-1" x-text="shoe.brand + ' ' + shoe.model"></h4>
                                 <div class="flex items-center gap-2 text-xs text-neutral-500 mt-1">
+                                    <span class="inline-flex items-center rounded-md bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-600 dark:text-neutral-300" x-text="shoe.batch ? shoe.batch.batch_code : ''"></span>
                                     <span class="font-mono" x-text="shoe.size"></span>
                                     <span>•</span>
                                     <span x-text="shoe.condition"></span>
@@ -531,7 +581,10 @@
                         <template x-for="item in posCart" :key="item.id">
                             <div class="flex items-center justify-between p-3 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/60 text-sm">
                                 <div class="min-w-0 flex-1 mr-2">
-                                    <div class="font-semibold text-neutral-800 dark:text-neutral-200 truncate" x-text="item.brand + ' ' + item.model"></div>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="inline-flex items-center rounded-md bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-600 dark:text-neutral-300" x-text="item.batch ? item.batch.batch_code : ''"></span>
+                                        <span class="font-semibold text-neutral-800 dark:text-neutral-200 truncate" x-text="item.brand + ' ' + item.model"></span>
+                                    </div>
                                     <div class="text-[11px] text-neutral-500 font-mono" x-text="item.sku + ' • ' + item.size"></div>
                                 </div>
                                 <div class="flex items-center gap-3">
@@ -600,8 +653,8 @@
                         <template x-if="posPaymentMethod === 'cash'">
                             <div class="p-3 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/60 text-sm space-y-2">
                                 <div class="flex items-center justify-between">
-                                    <label class="text-neutral-500">Cash Received (₱):</label>
-                                    <input type="number" x-model="posCashTendered" name="cash_tendered" class="app-input app-input-sm font-mono text-right w-28">
+                                    <label class="text-neutral-500">Cash Received (₱) <span class="app-req">*</span>:</label>
+                                    <input type="number" step="0.01" min="0" x-model="posCashTendered" name="cash_tendered" :required="posPaymentMethod === 'cash'" class="app-input app-input-sm font-mono text-right w-28">
                                 </div>
                                 <div class="flex items-center justify-between pt-1 border-t border-neutral-200 dark:border-neutral-700">
                                     <span class="text-sm text-neutral-500">Change:</span>
@@ -612,8 +665,8 @@
 
                         <template x-if="posPaymentMethod === 'gcash'">
                             <div class="p-3 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/60 text-sm space-y-1">
-                                <label class="text-neutral-500 block">GCash Reference No:</label>
-                                <input type="text" x-model="posGcashRef" name="gcash_ref" placeholder="e.g. 1092837482" class="app-input app-input-sm font-mono">
+                                <label class="text-neutral-500 block">GCash Reference No <span class="app-req">*</span>:</label>
+                                <input type="text" x-model="posGcashRef" name="gcash_ref" :required="posPaymentMethod === 'gcash'" placeholder="e.g. 1092837482" class="app-input app-input-sm font-mono">
                             </div>
                         </template>
 
@@ -639,10 +692,48 @@
                     <h3 class="font-bold text-base text-[#1D1D1F] dark:text-white">{{ $activeBatch?->batch_code ?? 'All Batches' }} Serialized Pair Triage</h3>
                     <p class="text-xs text-neutral-500">Manage individual pair statuses, condition grading, and repair costs.</p>
                 </div>
-                <div class="flex flex-wrap items-center gap-2">
-                    <span class="badge badge-available">{{ $items->where('status', 'available')->count() }} available</span>
-                    <span class="badge badge-reserved">{{ $items->where('status', 'reserved')->count() }} reserved</span>
-                    <span class="badge badge-sold">{{ $items->where('status', 'sold')->count() }} sold</span>
+                <div class="flex flex-wrap items-center justify-end gap-2">
+                    <div class="relative">
+                        <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-500">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </span>
+                        <input type="text" x-model="triageSearch" placeholder="Search SKU, brand, model..."
+                               class="app-input app-input-sm !w-56 pl-9">
+                    </div>
+                    <div class="flex flex-wrap items-center gap-1.5">
+                        <button type="button" @click="triageStatus = 'all'"
+                                class="app-btn app-btn-sm"
+                                :class="triageStatus === 'all' ? 'app-btn-primary' : 'app-btn-secondary'">
+                            All
+                            <span class="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-mono leading-none"
+                                  :class="triageStatus === 'all' ? 'bg-white/20 text-white' : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'"
+                                  x-text="shoes.length"></span>
+                        </button>
+                        <button type="button" @click="triageStatus = 'available'"
+                                class="app-btn app-btn-sm"
+                                :class="triageStatus === 'available' ? 'app-btn-primary' : 'app-btn-secondary'">
+                            Available
+                            <span class="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-mono leading-none"
+                                  :class="triageStatus === 'available' ? 'bg-white/20 text-white' : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'"
+                                  x-text="countByStatus('available')"></span>
+                        </button>
+                        <button type="button" @click="triageStatus = 'reserved'"
+                                class="app-btn app-btn-sm"
+                                :class="triageStatus === 'reserved' ? 'app-btn-primary' : 'app-btn-secondary'">
+                            Reserved
+                            <span class="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-mono leading-none"
+                                  :class="triageStatus === 'reserved' ? 'bg-white/20 text-white' : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'"
+                                  x-text="countByStatus('reserved')"></span>
+                        </button>
+                        <button type="button" @click="triageStatus = 'sold'"
+                                class="app-btn app-btn-sm"
+                                :class="triageStatus === 'sold' ? 'app-btn-primary' : 'app-btn-secondary'">
+                            Sold
+                            <span class="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-mono leading-none"
+                                  :class="triageStatus === 'sold' ? 'bg-white/20 text-white' : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'"
+                                  x-text="countByStatus('sold')"></span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -650,63 +741,86 @@
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200/80 dark:border-neutral-800 pb-2">
                         <tr>
-                            <th class="py-2.5 px-3">SKU</th>
-                            <th class="py-2.5 px-3">Brand & Model</th>
-                            <th class="py-2.5 px-3">Size</th>
-                            <th class="py-2.5 px-3">Condition</th>
-                            <th class="py-2.5 px-3 text-right">Repair Cost</th>
-                            <th class="py-2.5 px-3 text-right">Listed Price</th>
-                            <th class="py-2.5 px-3 text-center">Status</th>
-                            <th class="py-2.5 px-3 text-right">Action</th>
+                            <x-sort-th column="sku" label="SKU" method="sortTriage" active="triageSort" dir="triageDir" />
+                            <x-sort-th column="brand" label="Brand & Model" method="sortTriage" active="triageSort" dir="triageDir" />
+                            <x-sort-th column="size" label="Size" method="sortTriage" active="triageSort" dir="triageDir" />
+                            <x-sort-th column="condition" label="Condition" method="sortTriage" active="triageSort" dir="triageDir" />
+                            <x-sort-th column="repair_cost" label="Repair Cost" align="right" method="sortTriage" active="triageSort" dir="triageDir" />
+                            <x-sort-th column="listed_price" label="Listed Price" align="right" method="sortTriage" active="triageSort" dir="triageDir" />
+                            <x-sort-th column="status" label="Status" align="center" method="sortTriage" active="triageSort" dir="triageDir" />
+                            <th class="py-2.5 px-3 text-right font-semibold">Action</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800/60 font-sans">
-                        @forelse($items as $item)
+                        <template x-for="item in triageItems" :key="item.id">
                         <tr class="hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30">
-                            <td class="py-3 px-3 font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $item->sku }}</td>
-                            <td class="py-3 px-3 font-semibold text-neutral-800 dark:text-neutral-200">{{ $item->brand }} {{ $item->model }}</td>
-                            <td class="py-3 px-3 font-mono">{{ $item->size }}</td>
-                            <td class="py-3 px-3">{{ $item->condition }}</td>
-                            <td class="py-3 px-3 text-right font-mono text-neutral-500">₱{{ number_format($item->repair_cost, 2) }}</td>
-                            <td class="py-3 px-3 text-right font-mono font-bold text-neutral-900 dark:text-white">₱{{ number_format($item->listed_price, 2) }}</td>
+                            <td class="py-3 px-3 font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]" x-text="item.sku"></td>
+                            <td class="py-3 px-3">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="inline-flex items-center rounded-md bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300" x-text="item.batch ? item.batch.batch_code : ''"></span>
+                                    <span class="font-semibold text-neutral-800 dark:text-neutral-200" x-text="`${item.brand} ${item.model}`"></span>
+                                </div>
+                            </td>
+                            <td class="py-3 px-3 font-mono" x-text="item.size"></td>
+                            <td class="py-3 px-3" x-text="item.condition"></td>
+                            <td class="py-3 px-3 text-right font-mono text-neutral-500" x-text="'₱' + Number(item.repair_cost).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></td>
+                            <td class="py-3 px-3 text-right font-mono font-bold text-neutral-900 dark:text-white" x-text="'₱' + Number(item.listed_price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></td>
                             <td class="py-3 px-3 text-center">
-                                <span class="px-2 py-0.5 rounded-full text-xs font-semibold badge-{{ $item->status }}">
-                                    {{ strtoupper($item->status) }}
-                                </span>
+                                <span class="px-2 py-0.5 rounded-full text-xs font-semibold" :class="'badge-' + item.status" x-text="item.status.toUpperCase()"></span>
                             </td>
                             <td class="py-3 px-3 text-right">
-                                <form action="{{ route('items.triage', $item->id) }}" method="POST" class="inline">
+                                <template x-if="item.status === 'sold'">
+                                    <x-action-btn icon="eye" tone="secondary" @click="selectedSoldId = item.id">View</x-action-btn>
+                                </template>
+                                <form :action="triageAction(item.id)" method="POST" class="inline" x-show="item.status !== 'sold'">
                                     @csrf
                                     @method('PATCH')
-                                    @if($item->status === 'available')
-                                        <input type="hidden" name="status" value="reserved">
-                                        <button type="submit"
-                                                @click.prevent="$store.dialog.show({ variant: 'warning', title: 'Put this pair on hold?', message: '{{ $item->sku }} will be marked as reserved and held out of available stock.', confirmLabel: 'Hold pair' }).then(ok => ok && $el.closest('form').submit())"
-                                                class="inline-flex items-center justify-center min-h-8 px-3 py-1.5 rounded-lg border text-xs font-semibold border-amber-200 dark:border-amber-900/60 bg-white dark:bg-[#1C1C1E] text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors">Hold</button>
-                                    @elseif($item->status === 'reserved')
-                                        <input type="hidden" name="status" value="available">
-                                        <button type="submit"
-                                                @click.prevent="$store.dialog.show({ variant: 'success', title: 'Release this pair?', message: '{{ $item->sku }} will return to available stock.', confirmLabel: 'Release pair' }).then(ok => ok && $el.closest('form').submit())"
-                                                class="inline-flex items-center justify-center min-h-8 px-3 py-1.5 rounded-lg border text-xs font-semibold border-emerald-200 dark:border-emerald-900/60 bg-white dark:bg-[#1C1C1E] text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors">Release</button>
-                                    @endif
+                                    <template x-if="item.status === 'available'">
+                                        <span>
+                                            <input type="hidden" name="status" value="reserved">
+                                            <x-action-btn tone="secondary" type="submit"
+                                                          class="text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900/60"
+                                                          data-confirm="Put this pair on hold?"
+                                                          data-confirm-variant="warning"
+                                                          x-bind:data-confirm-message="`${item.sku} will be marked as reserved and held out of available stock.`"
+                                                          data-confirm-label="Hold pair">Hold</x-action-btn>
+                                        </span>
+                                    </template>
+                                    <template x-if="item.status === 'reserved'">
+                                        <span>
+                                            <input type="hidden" name="status" value="available">
+                                            <x-action-btn tone="secondary" type="submit"
+                                                          class="text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/60"
+                                                          data-confirm="Release this pair?"
+                                                          data-confirm-variant="success"
+                                                          x-bind:data-confirm-message="`${item.sku} will return to available stock.`"
+                                                          data-confirm-label="Release pair">Release</x-action-btn>
+                                        </span>
+                                    </template>
                                 </form>
                             </td>
                         </tr>
-                        @empty
-                        <tr>
+                        </template>
+                        <tr x-show="triageItems.length === 0" x-cloak>
                             <td colspan="8">
                                 <div class="app-empty">
                                     <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                                    <span class="text-xs font-medium">No pairs logged in this batch yet.</span>
+                                    <span class="text-xs font-medium">No pairs match your search or filter.</span>
                                 </div>
                             </td>
                         </tr>
-                        @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
+
+    @foreach($items as $item)
+        @php($soldOrder = $item->status === 'sold' ? $item->orders->first() : null)
+        @if($soldOrder)
+            <x-order-modal :order="$soldOrder" x-show="selectedSoldId === {{ $item->id }}" close="selectedSoldId = null" />
+        @endif
+    @endforeach
 
     {{-- Modal para bayad --}}
     <x-modal title="Verify Payment" accent="emerald" close="showPayModal = false"
@@ -721,12 +835,12 @@
                 </div>
 
                 <div>
-                    <label class="app-label">Payment Amount (₱)</label>
+                    <label class="app-label">Payment Amount (₱) <span class="app-req">*</span></label>
                     <input type="number" step="0.01" name="amount" x-model="payAmount" required class="app-input font-mono">
                 </div>
 
                 <div>
-                    <label class="app-label">Payment Method</label>
+                    <label class="app-label">Payment Method <span class="app-req">*</span></label>
                     <select name="method" x-model="payMethod" class="app-select">
                         <option value="gcash">GCash Transfer</option>
                         <option value="cash">Cash Drawer</option>
@@ -734,8 +848,8 @@
                 </div>
 
                 <div x-show="payMethod === 'gcash'">
-                    <label class="app-label">GCash Reference Number</label>
-                    <input type="text" name="reference_no" x-model="payRef" placeholder="e.g. 1092837482" class="app-input font-mono uppercase">
+                    <label class="app-label">GCash Reference Number <span class="app-req">*</span></label>
+                    <input type="text" name="reference_no" x-model="payRef" :required="payMethod === 'gcash'" placeholder="e.g. 1092837482" class="app-input font-mono uppercase">
                     <span class="text-xs text-neutral-500 mt-1 block">Unique reference check is enforced.</span>
                 </div>
 

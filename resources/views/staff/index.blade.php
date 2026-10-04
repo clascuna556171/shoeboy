@@ -22,15 +22,12 @@
         </button>
     </div>
 
-    @include('partials.table-toolbar', [
-        'action' => route('staff.index'),
-        'search' => $search,
-        'searchPlaceholder' => 'Search name or email...',
-        'resetUrl' => route('staff.index'),
-        'filters' => [
-            ['name' => 'role', 'selected' => $role, 'options' => ['' => 'All Roles', 'owner' => 'Owner', 'staff' => 'Staff']],
-        ],
-    ])
+    <x-table-toolbar :action="route('staff.index')" :search="$search"
+                     search-placeholder="Search name or email..."
+                     :reset-url="route('staff.index')"
+                     :filters="[
+                         ['name' => 'role', 'selected' => $role, 'options' => ['' => 'All Roles', 'owner' => 'Owner', 'staff' => 'Staff']],
+                     ]" />
 
     {{-- Table --}}
     <div class="app-card overflow-hidden">
@@ -43,11 +40,11 @@
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                     <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
-                        @include('partials.sortable-th', ['column' => 'name', 'label' => 'Name & Contact'])
-                        @include('partials.sortable-th', ['column' => 'email', 'label' => 'Email Address'])
-                        @include('partials.sortable-th', ['column' => 'role', 'label' => 'Role', 'align' => 'center'])
-                        @include('partials.sortable-th', ['column' => 'orders_count', 'label' => 'Orders Awarded', 'align' => 'center'])
-                        @include('partials.sortable-th', ['column' => 'verified_payments_count', 'label' => 'Verified Payments', 'align' => 'center'])
+                        <x-sort-th-server column="name" label="Name & Contact" />
+                        <x-sort-th-server column="email" label="Email Address" />
+                        <x-sort-th-server column="role" label="Role" align="center" />
+                        <x-sort-th-server column="orders_count" label="Orders Awarded" align="center" />
+                        <x-sort-th-server column="verified_payments_count" label="Verified Payments" align="center" />
                         <th class="py-3 px-4 font-semibold text-center">Status</th>
                         <th class="py-3 px-4 font-semibold text-right">Actions</th>
                     </tr>
@@ -85,20 +82,18 @@
                         </td>
                         <td class="py-3.5 px-4 text-right">
                             <div class="inline-flex items-center gap-1.5">
-                                <button type="button"
-                                        @click="editingUser = {{ Js::from(['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'role' => $user->role, 'contact_number' => $user->contact_number, 'is_active' => (bool) $user->is_active]) }}"
-                                        class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
-                                    Edit
-                                </button>
+                                <x-action-btn icon="edit" tone="secondary"
+                                              @click="editingUser = {{ Js::from(['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'role' => $user->role, 'contact_number' => $user->contact_number, 'is_active' => (bool) $user->is_active]) }}">Edit</x-action-btn>
                                 @if($user->id !== auth()->id())
                                 <form action="{{ route('staff.toggle', $user->id) }}" method="POST" class="inline">
                                     @csrf
                                     @method('PATCH')
-                                    <button type="submit"
-                                            @click.prevent="$store.dialog.show({ variant: '{{ $user->is_active ? 'warning' : 'success' }}', title: '{{ $user->is_active ? 'Deactivate' : 'Reactivate' }} {{ $user->name }}?', message: '{{ $user->is_active ? 'They will no longer be able to sign in.' : 'They will regain access to the console.' }}', confirmLabel: '{{ $user->is_active ? 'Deactivate' : 'Reactivate' }}' }).then(ok => ok && $el.closest('form').submit())"
-                                            class="inline-flex items-center justify-center min-h-8 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors {{ $user->is_active ? 'border-rose-200 dark:border-rose-900/60 bg-white dark:bg-[#1C1C1E] text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40' : 'border-emerald-200 dark:border-emerald-900/60 bg-white dark:bg-[#1C1C1E] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40' }}">
-                                        {{ $user->is_active ? 'Deactivate' : 'Reactivate' }}
-                                    </button>
+                                    <x-action-btn icon="power" tone="secondary" type="submit"
+                                                  class="{{ $user->is_active ? 'text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/60' : 'text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/60' }}"
+                                                  data-confirm="{{ $user->is_active ? 'Deactivate' : 'Reactivate' }} {{ $user->name }}?"
+                                                  data-confirm-variant="{{ $user->is_active ? 'warning' : 'success' }}"
+                                                  data-confirm-message="{{ $user->is_active ? 'They will no longer be able to sign in.' : 'They will regain access to the console.' }}"
+                                                  data-confirm-label="{{ $user->is_active ? 'Deactivate' : 'Reactivate' }}">{{ $user->is_active ? 'Deactivate' : 'Reactivate' }}</x-action-btn>
                                 </form>
                                 @else
                                 <span class="text-[11px] text-neutral-500 italic">Current Session</span>
@@ -119,37 +114,37 @@
                 @csrf
 
                 <div>
-                    <label class="app-label">Staff Full Name</label>
+                    <label class="app-label">Staff Full Name <span class="app-req">*</span></label>
                     <input type="text" name="name" required placeholder="e.g. Maria Helper" class="app-input">
                 </div>
 
                 <div>
-                    <label class="app-label">Email Address (Login)</label>
+                    <label class="app-label">Email Address (Login) <span class="app-req">*</span></label>
                     <input type="email" name="email" required placeholder="staff@theshoeboy.com" class="app-input">
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="app-label">Role</label>
-                        <select name="role" class="app-select">
+                        <label class="app-label">Role <span class="app-req">*</span></label>
+                        <select name="role" required class="app-select">
                             <option value="staff">Staff (Operations)</option>
                             <option value="owner">Owner (Administrator)</option>
                         </select>
                     </div>
                     <div>
-                        <label class="app-label">Contact Number</label>
+                        <label class="app-label">Contact Number <span class="app-optional">(optional)</span></label>
                         <input type="text" name="contact_number" placeholder="09171234567" class="app-input">
                     </div>
                 </div>
 
                 <div>
-                    <label class="app-label">Password (min 8 characters)</label>
-                    <input type="password" name="password" required class="app-input">
+                    <label class="app-label">Password (min 8 characters) <span class="app-req">*</span></label>
+                    <input type="password" name="password" required minlength="8" class="app-input">
                 </div>
 
                 <div>
-                    <label class="app-label">Confirm Password</label>
-                    <input type="password" name="password_confirmation" required class="app-input">
+                    <label class="app-label">Confirm Password <span class="app-req">*</span></label>
+                    <input type="password" name="password_confirmation" required minlength="8" class="app-input">
                 </div>
 
                 <div class="flex gap-2 pt-4">
@@ -167,25 +162,25 @@
                 @method('PUT')
 
                 <div>
-                    <label class="app-label">Full Name</label>
+                    <label class="app-label">Full Name <span class="app-req">*</span></label>
                     <input type="text" name="name" :value="editingUser?.name" required class="app-input">
                 </div>
 
                 <div>
-                    <label class="app-label">Email Address (Login)</label>
+                    <label class="app-label">Email Address (Login) <span class="app-req">*</span></label>
                     <input type="email" name="email" :value="editingUser?.email" required class="app-input">
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="app-label">Role</label>
-                        <select name="role" :value="editingUser?.role" class="app-select">
+                        <label class="app-label">Role <span class="app-req">*</span></label>
+                        <select name="role" :value="editingUser?.role" required class="app-select">
                             <option value="staff">Staff (Operations)</option>
                             <option value="owner">Owner (Administrator)</option>
                         </select>
                     </div>
                     <div>
-                        <label class="app-label">Contact Number</label>
+                        <label class="app-label">Contact Number <span class="app-optional">(optional)</span></label>
                         <input type="text" name="contact_number" :value="editingUser?.contact_number" class="app-input">
                     </div>
                 </div>
@@ -200,12 +195,12 @@
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="app-label">New Password (optional)</label>
-                        <input type="password" name="password" class="app-input">
+                        <label class="app-label">New Password <span class="app-optional">(optional)</span></label>
+                        <input type="password" name="password" minlength="8" class="app-input">
                     </div>
                     <div>
-                        <label class="app-label">Confirm Password</label>
-                        <input type="password" name="password_confirmation" class="app-input">
+                        <label class="app-label">Confirm Password <span class="app-optional">(optional)</span></label>
+                        <input type="password" name="password_confirmation" minlength="8" class="app-input">
                     </div>
                 </div>
 

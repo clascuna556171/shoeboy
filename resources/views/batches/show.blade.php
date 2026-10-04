@@ -83,59 +83,7 @@
              x-show="showAddItemModal" x-cloak @keydown.escape.window="showAddItemModal = false">
             <form action="{{ route('items.store') }}" method="POST" class="space-y-3.5 text-sm">
                 @csrf
-                <input type="hidden" name="batch_id" value="{{ $batch->id }}">
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="app-label">Brand</label>
-                        <input type="text" name="brand" required placeholder="Li-Ning, Nike..." class="app-input">
-                    </div>
-                    <div>
-                        <label class="app-label">Model Name</label>
-                        <input type="text" name="model" required placeholder="Way of Wade 10..." class="app-input">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-3 gap-3">
-                    <div>
-                        <label class="app-label">Size</label>
-                        <input type="text" name="size" required placeholder="US 10.5" class="app-input font-mono">
-                    </div>
-                    <div>
-                        <label class="app-label">Condition</label>
-                        <select name="condition" class="app-select">
-                            <option value="Pristine">Pristine</option>
-                            <option value="Good" selected>Good</option>
-                            <option value="Fair">Fair</option>
-                            <option value="Needs Repair">Needs Repair</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="app-label">Status</label>
-                        <select name="status" class="app-select">
-                            <option value="available" selected>Available</option>
-                            <option value="reserved">Reserved</option>
-                            <option value="sold">Sold</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="app-label">Target Listed Price (₱)</label>
-                        <input type="number" step="0.01" name="listed_price" required placeholder="3500.00" class="app-input font-mono">
-                        <p class="mt-1 text-[11px] text-neutral-500">Tier auto-assigns — T1 &lt; ₱1k · T2 ₱1k–2k · T3 ₱2k+</p>
-                    </div>
-                    <div>
-                        <label class="app-label">Repair Cost (₱)</label>
-                        <input type="number" step="0.01" name="repair_cost" value="0.00" class="app-input font-mono">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="app-label">Custom SKU (optional)</label>
-                    <input type="text" name="sku" placeholder="Auto-generated if empty" class="app-input font-mono uppercase">
-                </div>
+                <x-add-pair-fields :locked-batch="$batch" />
 
                 <div class="flex gap-2 pt-4">
                     <button type="button" @click="showAddItemModal = false" class="app-btn app-btn-secondary flex-1">Cancel</button>

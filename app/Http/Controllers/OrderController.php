@@ -133,7 +133,8 @@ class OrderController extends Controller
             ]);
         }
 
-        return back()->with('success', "Reserved {$order->items->count()} pair(s) for {$customer->name}. Reservation active.");
+        return redirect()->route('dashboard', ['tab' => 'claims'])
+            ->with('success', "Reserved {$order->items->count()} pair(s) for {$customer->name}. Reservation active.");
     }
 
     // Walk-in POS checkout (usa ka order, daghang sapatos + discount)
@@ -145,8 +146,11 @@ class OrderController extends Controller
             'discount' => ['nullable', 'numeric', 'min:0'],
             'discount_note' => ['nullable', 'string'],
             'payment_method' => ['required', 'in:cash,gcash'],
-            'cash_tendered' => ['nullable', 'numeric'],
-            'gcash_ref' => ['nullable', 'string'],
+            'cash_tendered' => ['nullable', 'numeric', 'min:0', 'required_if:payment_method,cash'],
+            'gcash_ref' => ['nullable', 'string', 'max:100', 'required_if:payment_method,gcash'],
+        ], [
+            'cash_tendered.required_if' => 'Please enter the cash received from the customer.',
+            'gcash_ref.required_if' => 'A GCash reference number is required for GCash payments.',
         ]);
 
         $staff = $request->user();
@@ -173,6 +177,16 @@ class OrderController extends Controller
         $discountNote = $validated['discount_note'] ?? null;
         $paymentMethod = $validated['payment_method'];
         $gcashRef = $validated['gcash_ref'] ?? null;
+
+        if ($paymentMethod === 'cash') {
+            $due = array_sum($prices);
+            $tendered = (float) ($validated['cash_tendered'] ?? 0);
+            if ($tendered + 0.001 < $due) {
+                throw ValidationException::withMessages([
+                    'cash_tendered' => 'Cash received (₱' . number_format($tendered, 2) . ') is less than the amount due (₱' . number_format($due, 2) . ').',
+                ]);
+            }
+        }
 
         $order = DB::transaction(function () use ($itemModels, $prices, $walkinCustomer, $staff, $discountNote, $paymentMethod, $gcashRef) {
             $order = $this->orderService->awardItems(
@@ -211,8 +225,9 @@ class OrderController extends Controller
             ]);
         }
 
-        return redirect()->route('orders.receipt', $order)
-            ->with('success', "POS sale completed ({$order->items->count()} pair(s)) and inventory updated.");
+        return redirect()->route('dashboard', ['tab' => 'pos'])
+            ->with('success', "POS sale completed ({$order->items->count()} pair(s)) and inventory updated.")
+            ->with('receipt', ['label' => 'Print receipt', 'url' => route('orders.receipt', $order)]);
     }
 
     // Printable receipt for any order

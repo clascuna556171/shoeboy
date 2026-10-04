@@ -20,7 +20,7 @@ class ItemController extends Controller
         $batches = Batch::latest()->get();
         $selectedBatchId = $request->query('batch_id');
 
-        $query = Item::with('batch');
+        $query = Item::with(['batch', 'orders.customer', 'orders.staff', 'orders.payment', 'orders.items', 'orders.delivery']);
 
         if ($selectedBatchId) {
             $query->where('batch_id', $selectedBatchId);
@@ -62,8 +62,14 @@ class ItemController extends Controller
         $batch = Batch::findOrFail($validated['batch_id']);
 
         if (empty($validated['sku'])) {
-            $nextIndex = $batch->items()->count() + 1;
-            $validated['sku'] = sprintf('%s-%03d', $batch->batch_code, $nextIndex);
+            $existing = $batch->items()->pluck('sku');
+            $index = $batch->items()->count() + 1;
+            do {
+                $candidate = sprintf('%s-%03d', $batch->batch_code, $index);
+                $index++;
+            } while ($existing->contains($candidate));
+
+            $validated['sku'] = $candidate;
         }
 
         $item = Item::create($validated);
@@ -83,8 +89,8 @@ class ItemController extends Controller
         }
 
         $validated = $request->validate([
-            'brand' => ['sometimes', 'string', 'max:100'],
-            'model' => ['sometimes', 'string', 'max:150'],
+            'brand' => ['required', 'string', 'max:100'],
+            'model' => ['required', 'string', 'max:150'],
             'listed_price' => ['required', 'numeric', 'min:0'],
             'condition' => ['required', 'string'],
             'size' => ['required', 'string'],

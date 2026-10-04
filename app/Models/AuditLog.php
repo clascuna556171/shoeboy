@@ -47,6 +47,25 @@ class AuditLog extends Model
         'expense_deleted' => 'Deleted an expense',
         'expense_restored' => 'Restored an expense',
         'system_backup_created' => 'Created a system backup',
+        'system_bootstrapped' => 'System initialized',
+    ];
+
+    protected const CATEGORY_BADGE = [
+        'security' => 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-300',
+        'inventory' => 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-300',
+        'sales' => 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-300',
+        'finance' => 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-300',
+        'admin' => 'bg-violet-50 text-violet-600 dark:bg-violet-950/40 dark:text-violet-300',
+        'system' => 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300',
+    ];
+
+    protected const CATEGORY_DOT = [
+        'security' => 'bg-indigo-400',
+        'inventory' => 'bg-emerald-400',
+        'sales' => 'bg-rose-400',
+        'finance' => 'bg-amber-400',
+        'admin' => 'bg-violet-400',
+        'system' => 'bg-neutral-400',
     ];
 
     protected const DETAIL_LABELS = [
@@ -278,6 +297,44 @@ class AuditLog extends Model
                 $this->ip_address ? 'IP ' . $this->ip_address : null,
                 $this->created_at?->format('M d, Y g:i A'),
             ])));
+        });
+    }
+
+    /** Tailwind badge classes for the entry's category. */
+    protected function categoryBadgeClass(): Attribute
+    {
+        return Attribute::make(get: fn () => self::CATEGORY_BADGE[$this->category] ?? self::CATEGORY_BADGE['system']);
+    }
+
+    /** Tailwind dot classes for the entry's category. */
+    protected function categoryDotClass(): Attribute
+    {
+        return Attribute::make(get: fn () => self::CATEGORY_DOT[$this->category] ?? self::CATEGORY_DOT['system']);
+    }
+
+    /** Optional deep-link back to the affected record/page. */
+    protected function link(): Attribute
+    {
+        return Attribute::make(get: function () {
+            $d = $this->details ?? [];
+
+            return match (true) {
+                Str::startsWith($this->action, ['order_', 'payment_']) && ! empty($d['order_number'])
+                    => ['label' => 'View order', 'url' => route('orders.index', ['focus' => $d['order_number']])],
+                $this->action === 'delivery_updated' && ! empty($d['order_number'])
+                    => ['label' => 'View delivery', 'url' => route('deliveries.index', ['search' => $d['order_number']])],
+                Str::startsWith($this->action, ['item_']) && ! empty($d['sku'])
+                    => ['label' => 'View item', 'url' => route('items.index', ['search' => $d['sku']])],
+                Str::startsWith($this->action, ['batch_']) && ! empty($d['batch_code'])
+                    => ['label' => 'View batch', 'url' => route('batches.index', ['search' => $d['batch_code']])],
+                Str::startsWith($this->action, ['expense_']) && ! empty($d['description'])
+                    => ['label' => 'View expense', 'url' => route('expenses.index', ['search' => $d['description']])],
+                Str::startsWith($this->action, ['staff_']) && ! empty($d['name'])
+                    => ['label' => 'View staff', 'url' => route('staff.index', ['search' => $d['name']])],
+                Str::startsWith($this->action, ['supplier_']) && ! empty($d['name'])
+                    => ['label' => 'View supplier', 'url' => route('suppliers.index', ['search' => $d['name']])],
+                default => null,
+            };
         });
     }
 

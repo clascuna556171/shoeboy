@@ -36,6 +36,10 @@
 </head>
 <body class="bg-[#F5F5F7] dark:bg-[#121214] text-[#1D1D1F] dark:text-[#F5F5F7] font-sans antialiased min-h-screen flex flex-col transition-colors duration-200 selection:bg-[#0071E3] selection:text-white">
 
+    <div id="app-progress" class="app-progress" aria-hidden="true">
+        <div class="app-progress__bar"></div>
+    </div>
+
     @php
         $isOwner = auth()->check() && auth()->user()->isOwner();
 
@@ -106,7 +110,10 @@
                         @csrf
                         <button type="button"
                                 title="Sign out"
-                                @click="$store.dialog.show({ variant: 'neutral', title: 'Sign out?', message: 'You will be returned to the login screen.', confirmLabel: 'Sign out' }).then(ok => ok && $el.closest('form').submit())"
+                                data-confirm="Sign out?"
+                                data-confirm-variant="danger"
+                                data-confirm-message="You will be returned to the login screen."
+                                data-confirm-label="Sign out"
                                 class="p-2 rounded-xl text-neutral-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                         </button>
@@ -152,23 +159,25 @@
 
     <main class="flex-1 w-full max-w-[1720px] mx-auto p-4 lg:p-6 transition-all duration-200">
         @php
+            $receiptLink = session('receipt');
             $toasts = [];
-            if (session('success')) { $toasts[] = ['type' => 'success', 'message' => session('success')]; }
+            if (session('success')) { $toasts[] = ['type' => 'success', 'message' => session('success'), 'link' => $receiptLink]; }
             if (session('info')) { $toasts[] = ['type' => 'info', 'message' => session('info')]; }
             if (session('error')) { $toasts[] = ['type' => 'error', 'message' => session('error')]; }
-            if (session('undo')) { $toasts[] = ['type' => 'info', 'message' => session('undo')['message'] ?? 'Record deleted.', 'undo' => session('undo')['url'] ?? null]; }
+            if (session('undo')) { $toasts[] = ['type' => 'undo', 'message' => session('undo')['message'] ?? 'Record deleted.', 'undo' => session('undo')['url'] ?? null]; }
         @endphp
 
         {{-- Floating toasts --}}
         <div class="fixed top-4 right-4 z-[100] flex flex-col gap-2 w-[min(92vw,22rem)] pointer-events-none"
              x-data="toastHub({{ Js::from($toasts) }})">
             <template x-for="t in toasts" :key="t.id">
-                <div class="pointer-events-auto rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#1C1C1E] shadow-lg p-3.5 flex items-start gap-3 app-modal-panel">
+                <div class="pointer-events-auto relative overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#1C1C1E] shadow-lg p-3.5 flex items-start gap-3 app-modal-panel">
                     <span class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
                           :class="{
                               'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400': t.type === 'success',
                               'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400': t.type === 'error',
-                              'bg-blue-50 text-[#0071E3] dark:bg-blue-950/40 dark:text-[#0A84FF]': t.type === 'info'
+                              'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300': t.type === 'info',
+                              'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400': t.type === 'undo'
                           }">
                         <template x-if="t.type === 'success'">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -179,17 +188,30 @@
                         <template x-if="t.type === 'info'">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         </template>
+                        <template x-if="t.type === 'undo'">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        </template>
                     </span>
                     <div class="min-w-0 flex-1">
                         <p class="text-sm font-medium text-neutral-700 dark:text-neutral-200" x-text="t.message"></p>
                         <form x-show="t.undo" :action="t.undo" method="POST" class="mt-1.5">
                             @csrf
-                            <button type="submit" class="text-xs font-semibold text-[#0071E3] dark:text-[#0A84FF] hover:underline">Undo</button>
+                            <button type="submit" class="inline-flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400 hover:underline">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                Undo
+                            </button>
                         </form>
+                        <template x-if="t.link">
+                            <a :href="t.link.url" class="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-[#0071E3] dark:text-[#0A84FF] hover:underline">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                <span x-text="t.link.label"></span>
+                            </a>
+                        </template>
                     </div>
                     <button type="button" @click="dismiss(t.id)" class="p-1 rounded-lg text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 shrink-0">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
+                    <div class="app-toast-progress" :class="'type-' + t.type" :style="'animation-duration: ' + t.duration + 'ms'"></div>
                 </div>
             </template>
         </div>
@@ -263,16 +285,20 @@
             <div class="mt-5 flex justify-end gap-2">
                 <button type="button"
                         @click="$store.dialog.cancel()"
+                        :disabled="$store.dialog.loading"
                         class="app-btn app-btn-secondary"
                         x-text="$store.dialog.cancelLabel"></button>
                 <button type="button"
                         @click="$store.dialog.confirm()"
+                        :disabled="$store.dialog.loading"
                         :class="{
                             'app-btn-danger': $store.dialog.variant === 'danger',
                             'app-btn-amber': $store.dialog.variant === 'warning',
                             'app-btn-emerald': $store.dialog.variant === 'success',
                             'app-btn-blue': $store.dialog.variant === 'info',
-                            'app-btn-primary': $store.dialog.variant === 'neutral'
+                            'app-btn-primary': $store.dialog.variant === 'neutral',
+                            'is-loading': $store.dialog.loading,
+                            'is-compact': $store.dialog.loading
                         }"
                         class="app-btn"
                         x-text="$store.dialog.confirmLabel"></button>

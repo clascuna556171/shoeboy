@@ -9,11 +9,17 @@
 
 @section('content')
 <div class="space-y-6" x-data="{
-        reportTab: 'batches',
+        reportTab: @js(request('reportTab', 'batches')),
         showExportModal: false,
         exportPreset: 'all',
         exportContent: 'all',
         exportSections: { summary: true, transactions: true, batches: true, tiers: true, expenses: true, inventory: true },
+        setReportTab(key) {
+            this.reportTab = key;
+            const u = new URL(location.href);
+            u.searchParams.set('reportTab', key);
+            history.replaceState(null, '', u);
+        },
         applyContent(mode) {
             this.exportContent = mode;
             if (mode === 'sales') {
@@ -65,28 +71,28 @@
                 <div class="mt-4 flex flex-col items-stretch gap-2 xl:flex-row xl:items-center">
                     <div class="flex-1 min-w-0 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-800/30 p-3">
                         <div class="text-xs font-medium uppercase tracking-wider text-neutral-500">Gross Sales</div>
-                        <div class="mt-1 font-mono text-lg font-bold text-[#1D1D1F] dark:text-white">₱{{ number_format($metrics['total_revenue'], 2) }}</div>
+                        <x-money :value="$metrics['total_revenue']" class="mt-1 block font-mono text-lg font-bold text-[#1D1D1F] dark:text-white" />
                     </div>
 
                     <div class="self-center font-mono text-lg text-neutral-500 dark:text-neutral-400">−</div>
 
                     <div class="flex-1 min-w-0 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-800/30 p-3">
                         <div class="text-xs font-medium uppercase tracking-wider text-neutral-500">Allocated COGS</div>
-                        <div class="mt-1 font-mono text-lg font-bold text-neutral-800 dark:text-neutral-200">₱{{ number_format($metrics['total_cogs'], 2) }}</div>
+                        <x-money :value="$metrics['total_cogs']" class="mt-1 block font-mono text-lg font-bold text-neutral-800 dark:text-neutral-200" />
                     </div>
 
                     <div class="self-center font-mono text-lg text-neutral-500 dark:text-neutral-400">=</div>
 
                     <div class="flex-1 min-w-0 rounded-xl border border-emerald-200/70 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 p-3">
                         <div class="text-xs font-medium uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Gross Profit</div>
-                        <div class="mt-1 font-mono text-lg font-bold text-emerald-700 dark:text-emerald-300">₱{{ number_format($metrics['gross_profit'], 2) }}</div>
+                        <x-money :value="$metrics['gross_profit']" class="mt-1 block font-mono text-lg font-bold text-emerald-700 dark:text-emerald-300" />
                     </div>
 
                     <div class="self-center font-mono text-lg text-neutral-500 dark:text-neutral-400">−</div>
 
                     <div class="flex-1 min-w-0 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-800/30 p-3">
                         <div class="text-xs font-medium uppercase tracking-wider text-neutral-500">Store Expenses</div>
-                        <div class="mt-1 font-mono text-lg font-bold text-rose-600 dark:text-rose-400">₱{{ number_format($metrics['total_expenses'], 2) }}</div>
+                        <x-money :value="$metrics['total_expenses']" class="mt-1 block font-mono text-lg font-bold text-rose-600 dark:text-rose-400" />
                     </div>
                 </div>
             </div>
@@ -111,7 +117,7 @@
             <div class="flex items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl text-xs">
                 @foreach(['batches' => 'By Batch Intake', 'sessions' => 'By Session / Date', 'tiers' => 'By Price Tier'] as $key => $label)
                     <button type="button"
-                            @click="reportTab = '{{ $key }}'"
+                            @click="setReportTab('{{ $key }}')"
                             :class="reportTab === '{{ $key }}' ? 'bg-white dark:bg-[#2C2C2E] font-bold text-[#1D1D1F] dark:text-white shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'"
                             class="px-3 py-1.5 rounded-lg transition-all">
                         {{ $label }}
@@ -120,6 +126,7 @@
             </div>
 
             <form x-show="reportTab === 'sessions'" x-cloak method="GET" action="{{ route('reports.index') }}" class="flex items-center gap-2 text-xs">
+                <input type="hidden" name="reportTab" :value="reportTab">
                 <input type="date" name="start_date" value="{{ $startDate }}" class="app-input app-input-sm !w-auto">
                 <span class="text-neutral-500">to</span>
                 <input type="date" name="end_date" value="{{ $endDate }}" class="app-input app-input-sm !w-auto">
@@ -157,10 +164,10 @@
                                 <span class="text-amber-600">{{ $b['reserved_pairs'] }}</span> /
                                 <span class="text-emerald-600">{{ $b['available_pairs'] }}</span>
                             </td>
-                            <td class="py-3.5 px-4 text-right font-mono text-neutral-600 dark:text-neutral-400">₱{{ number_format($b['total_cost'], 2) }}</td>
-                            <td class="py-3.5 px-4 text-right font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">₱{{ number_format($b['realized_revenue'], 2) }}</td>
+                            <td class="py-3.5 px-4 text-right font-mono text-neutral-600 dark:text-neutral-400"><x-money :value="$b['total_cost']" /></td>
+                            <td class="py-3.5 px-4 text-right font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]"><x-money :value="$b['realized_revenue']" /></td>
                             <td class="py-3.5 px-4 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">+₱{{ number_format($b['order_profit_sum'], 2) }}</td>
-                            <td class="py-3.5 px-4 text-right font-mono text-rose-500">₱{{ number_format($b['batch_expenses'], 2) }}</td>
+                            <td class="py-3.5 px-4 text-right font-mono text-rose-500"><x-money :value="$b['batch_expenses']" /></td>
                             <td class="py-3.5 px-4 text-right font-mono font-bold {{ $b['net_proceeds'] >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-neutral-500' }}">
                                 {{ $b['net_proceeds'] >= 0 ? '+' : '' }}₱{{ number_format($b['net_proceeds'], 2) }}
                             </td>
@@ -190,10 +197,10 @@
                         <tr class="app-row hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30">
                             <td class="py-3.5 px-4 font-mono font-bold text-neutral-800 dark:text-neutral-200">{{ $s['date'] }}</td>
                             <td class="py-3.5 px-4 text-center font-mono font-semibold">{{ $s['orders_count'] }}</td>
-                            <td class="py-3.5 px-4 text-right font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">₱{{ number_format($s['gross_sales'], 2) }}</td>
+                            <td class="py-3.5 px-4 text-right font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]"><x-money :value="$s['gross_sales']" /></td>
                             <td class="py-3.5 px-4 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">+₱{{ number_format($s['net_profit'], 2) }}</td>
-                            <td class="py-3.5 px-4 text-right font-mono text-neutral-700 dark:text-neutral-300">₱{{ number_format($s['cash_collected'], 2) }}</td>
-                            <td class="py-3.5 px-4 text-right font-mono text-[#0071E3] dark:text-[#0A84FF]">₱{{ number_format($s['gcash_collected'], 2) }}</td>
+                            <td class="py-3.5 px-4 text-right font-mono text-neutral-700 dark:text-neutral-300"><x-money :value="$s['cash_collected']" /></td>
+                            <td class="py-3.5 px-4 text-right font-mono text-[#0071E3] dark:text-[#0A84FF]"><x-money :value="$s['gcash_collected']" /></td>
                         </tr>
                         @empty
                         <tr>
@@ -228,8 +235,8 @@
                         <tr class="app-row hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30">
                             <td class="py-3.5 px-4 font-semibold text-neutral-800 dark:text-neutral-200">{{ $t['tier'] }}</td>
                             <td class="py-3.5 px-4 text-center font-mono">{{ $t['sold_count'] }} / {{ $t['total_items'] }}</td>
-                            <td class="py-3.5 px-4 text-right font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">₱{{ number_format($t['total_revenue'], 2) }}</td>
-                            <td class="py-3.5 px-4 text-right font-mono text-neutral-500">₱{{ number_format($t['total_cogs'], 2) }}</td>
+                            <td class="py-3.5 px-4 text-right font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]"><x-money :value="$t['total_revenue']" /></td>
+                            <td class="py-3.5 px-4 text-right font-mono text-neutral-500"><x-money :value="$t['total_cogs']" /></td>
                             <td class="py-3.5 px-4 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">+₱{{ number_format($t['net_profit'], 2) }}</td>
                         </tr>
                         @endforeach
@@ -243,7 +250,7 @@
     <x-modal eyebrow="Custom Export" title="Build your report" accent="indigo" size="lg" scroll
              close="showExportModal = false"
              x-show="showExportModal" x-cloak @keydown.escape.window="showExportModal = false">
-            <form method="GET" action="{{ route('reports.export') }}" class="space-y-4">
+            <form method="GET" action="{{ route('reports.export') }}" data-progress="download" class="space-y-4">
                 <div>
                     <label class="app-label">Date Range</label>
                     <select name="preset" x-model="exportPreset" class="app-select">
@@ -259,12 +266,12 @@
 
                 <div x-show="exportPreset === 'custom'" x-cloak class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="app-label">Start Date</label>
-                        <input type="date" name="start_date" class="app-input">
+                        <label class="app-label">Start Date <span class="app-req">*</span></label>
+                        <input type="date" name="start_date" :required="exportPreset === 'custom'" class="app-input">
                     </div>
                     <div>
-                        <label class="app-label">End Date</label>
-                        <input type="date" name="end_date" class="app-input">
+                        <label class="app-label">End Date <span class="app-req">*</span></label>
+                        <input type="date" name="end_date" :required="exportPreset === 'custom'" class="app-input">
                     </div>
                 </div>
 

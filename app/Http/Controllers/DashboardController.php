@@ -68,7 +68,11 @@ class DashboardController extends Controller
             $activeBatch = $batches->firstWhere('id', (int) $requested) ?? $batches->first();
         }
 
-        $items = Item::with('batch')
+        $items = Item::with([
+                'batch',
+                'orders' => fn ($q) => $q->whereIn('status', ['paid', 'fulfilled'])
+                    ->with(['items', 'customer', 'staff', 'payment', 'delivery']),
+            ])
             ->when($activeBatch, fn ($q) => $q->where('batch_id', $activeBatch->id))
             ->get();
 

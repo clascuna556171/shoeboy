@@ -41,6 +41,8 @@ class PaymentController extends Controller
             ]);
         }
 
-        return back()->with('success', "Payment of ₱" . number_format($payment->amount, 2) . " verified for Order {$order->order_number}.");
+        return back()
+            ->with('success', "Payment of ₱" . number_format($payment->amount, 2) . " verified for Order {$order->order_number}.")
+            ->with('receipt', ['label' => 'Print receipt', 'url' => route('orders.receipt', $order)]);
     }
 }

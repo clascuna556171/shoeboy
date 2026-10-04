@@ -28,15 +28,12 @@
         </div>
     </div>
 
-    @include('partials.table-toolbar', [
-        'action' => route('expenses.index'),
-        'search' => $search,
-        'searchPlaceholder' => 'Search description or reference no...',
-        'resetUrl' => route('expenses.index'),
-        'filters' => [
-            ['name' => 'category', 'selected' => $category, 'options' => ['' => 'All Categories'] + $categories->mapWithKeys(fn ($c) => [$c => $c])->all()],
-        ],
-    ])
+    <x-table-toolbar :action="route('expenses.index')" :search="$search"
+                     search-placeholder="Search description or reference no..."
+                     :reset-url="route('expenses.index')"
+                     :filters="[
+                         ['name' => 'category', 'selected' => $category, 'options' => ['' => 'All Categories'] + $categories->mapWithKeys(fn ($c) => [$c => $c])->all()],
+                     ]" />
 
     {{-- Table --}}
     <div class="app-card overflow-hidden">
@@ -44,12 +41,12 @@
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                     <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
-                        @include('partials.sortable-th', ['column' => 'date', 'label' => 'Date'])
-                        @include('partials.sortable-th', ['column' => 'category', 'label' => 'Category'])
-                        @include('partials.sortable-th', ['column' => 'description', 'label' => 'Description'])
-                        @include('partials.sortable-th', ['column' => 'reference_no', 'label' => 'Reference No.'])
+                        <x-sort-th-server column="date" label="Date" />
+                        <x-sort-th-server column="category" label="Category" />
+                        <x-sort-th-server column="description" label="Description" />
+                        <x-sort-th-server column="reference_no" label="Reference No." />
                         <th class="py-3 px-4 font-semibold">Batch Link</th>
-                        @include('partials.sortable-th', ['column' => 'amount', 'label' => 'Amount', 'align' => 'right'])
+                        <x-sort-th-server column="amount" label="Amount" align="right" />
                         <th class="py-3 px-4 font-semibold text-right">Action</th>
                     </tr>
                 </thead>
@@ -68,11 +65,11 @@
                             <form action="{{ route('expenses.destroy', $exp->id) }}" method="POST" class="inline">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit"
-                                        @click.prevent="$store.dialog.show({ variant: 'danger', title: 'Delete this expense?', message: 'You can undo this right after from the notification toast.', confirmLabel: 'Delete' }).then(ok => ok && $el.closest('form').submit())"
-                                        class="px-2.5 py-1 rounded-lg text-xs font-semibold text-neutral-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors">
-                                    Delete
-                                </button>
+                                <x-action-btn icon="trash" tone="ghost-danger" type="submit"
+                                              data-confirm="Delete this expense?"
+                                              data-confirm-variant="danger"
+                                              data-confirm-message="You can undo this right after from the notification toast."
+                                              data-confirm-label="Delete">Delete</x-action-btn>
                             </form>
                         </td>
                     </tr>
@@ -104,7 +101,7 @@
                 @csrf
 
                 <div>
-                    <label class="app-label">Category</label>
+                    <label class="app-label">Category <span class="app-req">*</span></label>
                     <select name="category" required class="app-select">
                         <option value="Sack Purchase">Sack / Bale Purchase</option>
                         <option value="Shipping & Freight">Shipping & Freight</option>
@@ -116,28 +113,28 @@
                 </div>
 
                 <div>
-                    <label class="app-label">Description</label>
+                    <label class="app-label">Description <span class="app-req">*</span></label>
                     <input type="text" name="description" required placeholder="e.g. Freight cargo from Cebu port" class="app-input">
                 </div>
 
                 <div>
-                    <label class="app-label">Reference No. <span class="text-neutral-500 font-normal">(optional — OR / receipt no.)</span></label>
+                    <label class="app-label">Reference No. <span class="app-optional">(optional — OR / receipt no.)</span></label>
                     <input type="text" name="reference_no" placeholder="e.g. OR-2026-00123 / Bill #4567" class="app-input font-mono">
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="app-label">Amount (₱)</label>
+                        <label class="app-label">Amount (₱) <span class="app-req">*</span></label>
                         <input type="number" step="0.01" name="amount" required placeholder="0.00" class="app-input font-mono">
                     </div>
                     <div>
-                        <label class="app-label">Date</label>
+                        <label class="app-label">Date <span class="app-req">*</span></label>
                         <input type="date" name="date" required value="{{ date('Y-m-d') }}" class="app-input">
                     </div>
                 </div>
 
                 <div>
-                    <label class="app-label">Tie to Batch (optional)</label>
+                    <label class="app-label">Tie to Batch <span class="app-optional">(optional)</span></label>
                     <select name="batch_id" class="app-select">
                         <option value="">General Shop Overhead (No Batch Link)</option>
                         @foreach($batches as $b)

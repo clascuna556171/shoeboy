@@ -35,16 +35,13 @@
         </div>
     </div>
 
-    @include('partials.table-toolbar', [
-        'action' => route('deliveries.index'),
-        'search' => $search,
-        'searchPlaceholder' => 'Search order #, buyer, tracking...',
-        'resetUrl' => route('deliveries.index'),
-        'filters' => [
-            ['name' => 'status', 'selected' => request('status'), 'options' => ['' => 'All Statuses', 'pending' => 'Pending', 'shipped' => 'Shipped', 'completed' => 'Completed']],
-            ['name' => 'method', 'selected' => request('method'), 'options' => ['' => 'All Methods', 'pickup' => 'Pickup', 'jnt_delivery' => 'J&T']],
-        ],
-    ])
+    <x-table-toolbar :action="route('deliveries.index')" :search="$search"
+                     search-placeholder="Search order #, buyer, tracking..."
+                     :reset-url="route('deliveries.index')"
+                     :filters="[
+                         ['name' => 'status', 'selected' => request('status'), 'options' => ['' => 'All Statuses', 'pending' => 'Pending', 'shipped' => 'Shipped', 'completed' => 'Completed']],
+                         ['name' => 'method', 'selected' => request('method'), 'options' => ['' => 'All Methods', 'pickup' => 'Pickup', 'jnt_delivery' => 'J&T']],
+                     ]" />
 
     {{-- Table --}}
     <div class="app-card overflow-hidden">
@@ -54,9 +51,9 @@
                     <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
                         <th class="py-3 px-4 font-semibold">Order</th>
                         <th class="py-3 px-4 font-semibold">Recipient</th>
-                        @include('partials.sortable-th', ['column' => 'method', 'label' => 'Method & Payment', 'align' => 'center'])
-                        @include('partials.sortable-th', ['column' => 'tracking_number', 'label' => 'Tracking / Waybill'])
-                        @include('partials.sortable-th', ['column' => 'status', 'label' => 'Status', 'align' => 'center'])
+                        <x-sort-th-server column="method" label="Method & Payment" align="center" />
+                        <x-sort-th-server column="tracking_number" label="Tracking / Waybill" />
+                        <x-sort-th-server column="status" label="Status" align="center" />
                         <th class="py-3 px-4 font-semibold text-right">Update</th>
                     </tr>
                 </thead>
@@ -81,10 +78,10 @@
                             <div class="flex flex-wrap items-center gap-2">
                                 <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $del->order->order_number }}</span>
                                 <span class="badge badge-neutral">{{ $pairs->count() }} {{ $pairs->count() === 1 ? 'pair' : 'pairs' }}</span>
-                                <button type="button" @click="open = !open"
+                                <button type="button" @click="open = true"
                                         class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] text-[11px] font-semibold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                    <span x-text="open ? 'Hide' : 'Details'"></span>
+                                    <span>Details</span>
                                 </button>
                             </div>
                             <span class="block text-xs text-neutral-500 font-mono mt-1">Ordered {{ $del->order->date_awarded?->format('M d, Y H:i') }}</span>
@@ -133,75 +130,27 @@
                                   @submit.prevent="status === 'completed'
                                       ? $store.dialog.show({ variant: 'warning', title: 'Complete this delivery?', message: 'Marking as completed is permanent and cannot be undone. The order will be marked as fulfilled.', confirmLabel: 'Complete permanently' }).then(ok => ok && $el.submit())
                                       : $el.submit()"
-                                  class="flex items-center justify-end gap-2">
+                                  class="flex flex-wrap items-center justify-end gap-1.5">
                                 @csrf
                                 @method('PUT')
-                                <div class="flex items-center gap-1.5 rounded-xl border p-1.5 transition-colors"
-                                     :class="changed
-                                         ? 'border-amber-300 dark:border-amber-900/60 bg-amber-50/40 dark:bg-amber-950/10'
-                                         : 'border-neutral-200 dark:border-neutral-700 bg-neutral-50/60 dark:bg-neutral-900/40'">
-                                    <select name="method" x-model="method" class="app-input !w-auto !py-2">
-                                        <option value="pickup">Pickup</option>
-                                        <option value="jnt_delivery">J&amp;T</option>
-                                    </select>
-                                    <input type="text" name="tracking_number" x-model="tracking" placeholder="Tracking #" class="app-input !w-32 !py-2 font-mono">
-                                    <select name="status" x-model="status" class="app-input !w-auto !py-2">
-                                        <option value="pending">Pending</option>
-                                        <option value="shipped">Shipped</option>
-                                        <option value="completed">Completed</option>
-                                    </select>
-                                </div>
-
-                                <div class="flex flex-col items-end gap-0.5">
-                                    <button type="submit" :disabled="!changed"
-                                            :class="changed
-                                                ? 'bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200'
-                                                : 'border border-neutral-200 dark:border-neutral-700 text-neutral-500 dark:text-neutral-500 cursor-not-allowed'"
-                                            class="px-3 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition-colors">
-                                        Save
-                                    </button>
-                                    <span x-show="changed" x-cloak class="text-[11px] font-medium text-amber-600 dark:text-amber-400">Unsaved</span>
-                                </div>
+                                <select name="method" x-model="method" class="app-select app-input-sm !w-auto">
+                                    <option value="pickup">Pickup</option>
+                                    <option value="jnt_delivery">J&amp;T</option>
+                                </select>
+                                <input type="text" name="tracking_number" x-model="tracking" placeholder="Tracking #" class="app-input app-input-sm !w-32 font-mono">
+                                <select name="status" x-model="status" class="app-select app-input-sm !w-auto">
+                                    <option value="pending">Pending</option>
+                                    <option value="shipped">Shipped</option>
+                                    <option value="completed">Completed</option>
+                                </select>
+                                <button type="submit" :disabled="!changed"
+                                        class="app-btn app-btn-sm app-btn-primary">Save</button>
+                                <span x-show="changed" x-cloak class="w-full text-right text-[11px] font-medium text-amber-600 dark:text-amber-400">Unsaved changes</span>
                             </form>
                             @endif
                         </td>
                     </tr>
-                    <tr x-show="open" x-cloak>
-                        <td colspan="6" class="px-4 pb-4 pt-0">
-                            <div class="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-800/30 p-4 space-y-3">
-                                <div>
-                                    <div class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 mb-1.5">Pairs</div>
-                                    <div class="space-y-1.5">
-                                        @foreach($pairs as $item)
-                                        <div class="flex items-center justify-between gap-3 text-sm">
-                                            <div class="min-w-0">
-                                                <div class="font-semibold text-neutral-800 dark:text-neutral-200 truncate">{{ $item->brand }} {{ $item->model }}</div>
-                                                <div class="text-xs text-neutral-500 font-mono">{{ $item->sku }} · Size {{ $item->size }} · {{ $item->condition }}</div>
-                                            </div>
-                                            <span class="font-mono font-semibold text-neutral-900 dark:text-white shrink-0">₱{{ number_format((float) ($item->pivot->awarded_price ?? $item->listed_price), 2) }}</span>
-                                        </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 border-t border-neutral-200 dark:border-neutral-800 pt-3 text-xs">
-                                    <div>
-                                        <div class="text-neutral-500 font-semibold uppercase tracking-wider text-[10px]">Shipping Address</div>
-                                        <div class="text-neutral-600 dark:text-neutral-300">{{ $del->order->customer->shipping_address ?: '—' }}</div>
-                                    </div>
-                                    <div>
-                                        <div class="text-neutral-500 font-semibold uppercase tracking-wider text-[10px]">Payment</div>
-                                        <div class="font-semibold text-neutral-800 dark:text-neutral-200">{{ $del->order->payment ? strtoupper($del->order->payment->method) : 'Unpaid' }}</div>
-                                        @if($del->order->payment?->reference_no)
-                                            <div class="text-neutral-500 font-mono break-all">{{ $del->order->payment->reference_no }}</div>
-                                        @endif
-                                    </div>
-                                </div>
-                                <div class="flex justify-end">
-                                    <a href="{{ route('orders.index', ['focus' => $del->order->order_number]) }}" class="text-[11px] font-semibold text-[#0071E3] dark:text-[#0A84FF] hover:underline">View full order</a>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
+                    <x-order-modal :order="$del->order" :delivery="$del" x-show="open" close="open = false" />
                 </tbody>
                 @empty
                 <tbody>

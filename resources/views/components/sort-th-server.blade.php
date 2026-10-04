@@ -1,5 +1,10 @@
+@props([
+    'column',
+    'label',
+    'align' => 'left',
+])
+
 @php
-    $align = $align ?? 'left';
     $isActive = request('sort') === $column;
     $dir = request('direction') === 'asc' ? 'asc' : 'desc';
     $nextDir = ($isActive && $dir === 'asc') ? 'desc' : 'asc';
@@ -7,6 +12,7 @@
     $alignClass = $align === 'right' ? 'text-right' : ($align === 'center' ? 'text-center' : 'text-left');
     $justifyClass = $align === 'right' ? 'justify-end' : ($align === 'center' ? 'justify-center' : 'justify-start');
 @endphp
+
 <th class="py-3 px-4 font-semibold {{ $alignClass }}">
     <a href="{{ $url }}"
        class="flex w-full items-center gap-1 {{ $justifyClass }} {{ $isActive ? 'text-[#0071E3] dark:text-[#0A84FF]' : 'hover:text-neutral-700 dark:hover:text-neutral-200' }}">

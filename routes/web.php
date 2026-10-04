@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BatchController;
 use App\Http\Controllers\DashboardController;
@@ -61,6 +62,9 @@ Route::middleware('auth')->group(function () {
 
     // Owner-Only Protected Routes
     Route::middleware('role:owner')->group(function () {
+        // Security & Audit Log (accessible from the owner workspace, not in nav)
+        Route::get('/audit-log', [AuditLogController::class, 'index'])->name('audit.index');
+
         // Financial & Profit Reports Module
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/export', [ReportController::class, 'exportExcel'])->name('reports.export');

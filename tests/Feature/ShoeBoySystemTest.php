@@ -603,4 +603,49 @@ class ShoeBoySystemTest extends TestCase
         $response->assertSessionHas('success');
         $this->assertDatabaseHas('users', ['id' => $this->staff->id, 'name' => 'Kent Updated']);
     }
+
+    public function test_released_item_can_be_resold_after_cancellation(): void
+    {
+        $orderService = app(OrderService::class);
+
+        $order = $orderService->awardItem(
+            item: $this->item,
+            customer: $this->customer,
+            staff: $this->staff,
+            awardedPrice: 4500.00
+        );
+
+        $orderService->cancelOrder($order, 'Test release', $this->staff);
+        $this->assertDatabaseHas('items', ['id' => $this->item->id, 'status' => 'available']);
+
+        $response = $this->actingAs($this->staff)->post('/orders/pos-checkout', [
+            'item_ids' => [$this->item->id],
+            'payment_method' => 'cash',
+            'cash_tendered' => 5000.00,
+        ]);
+
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('items', ['id' => $this->item->id, 'status' => 'sold']);
+    }
+
+    public function test_pos_requires_cash_received_and_gcash_reference(): void
+    {
+        $missingCash = $this->actingAs($this->staff)->post('/orders/pos-checkout', [
+            'item_ids' => [$this->item->id],
+            'payment_method' => 'cash',
+        ]);
+        $missingCash->assertSessionHasErrors('cash_tendered');
+
+        $missingRef = $this->actingAs($this->staff)->post('/orders/pos-checkout', [
+            'item_ids' => [$this->item->id],
+            'payment_method' => 'gcash',
+        ]);
+        $missingRef->assertSessionHasErrors('gcash_ref');
+    }
+
+    public function test_owner_can_access_audit_log_but_staff_cannot(): void
+    {
+        $this->actingAs($this->owner)->get('/audit-log')->assertOk();
+        $this->actingAs($this->staff)->get('/audit-log')->assertForbidden();
+    }
 }
