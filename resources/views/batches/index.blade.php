@@ -3,7 +3,7 @@
 @section('title', 'Batch Intake & Registry')
 
 @section('content')
-<div class="space-y-6" x-data="{ showIntakeModal: false, view: 'cards' }">
+<div class="space-y-6" x-data="{ showIntakeModal: false, view: 'cards', editingBatch: null }">
 
     {{-- Page header --}}
     <div class="app-card p-5 lg:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -38,6 +38,14 @@
             </button>
         </div>
     </div>
+
+    @include('partials.table-toolbar', [
+        'action' => route('batches.index'),
+        'search' => $search,
+        'searchPlaceholder' => 'Search batch code or supplier...',
+        'resetUrl' => route('batches.index'),
+        'filters' => [],
+    ])
 
     {{-- Batch cards --}}
     <div x-show="view === 'cards'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -80,12 +88,28 @@
                 </div>
             </div>
 
-            <div class="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+            <div class="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between gap-2">
                 <span class="text-sm text-neutral-500 font-mono">{{ $batch->total_sacks }} sack(s)</span>
-                <a href="{{ route('batches.show', $batch->id) }}"
-                   class="px-3.5 py-1.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 group-hover:bg-neutral-900 dark:group-hover:bg-white group-hover:text-white dark:group-hover:text-neutral-900 text-neutral-700 dark:text-neutral-200 text-xs font-semibold transition-all">
-                    View Pairs
-                </a>
+                <div class="flex items-center gap-1.5">
+                    <button type="button"
+                            @click="editingBatch = {{ Js::from(['id' => $batch->id, 'supplier_id' => $batch->supplier_id, 'batch_code' => $batch->batch_code, 'date_acquired' => $batch->date_acquired->format('Y-m-d'), 'total_sacks' => $batch->total_sacks, 'total_pairs' => $batch->total_pairs, 'total_cost' => (float) $batch->total_cost]) }}"
+                            class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
+                        Edit
+                    </button>
+                    <form action="{{ route('batches.destroy', $batch->id) }}" method="POST" class="inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit"
+                                @click.prevent="$store.dialog.show({ variant: 'danger', title: 'Delete batch {{ $batch->batch_code }}?', message: 'Batches that still contain pairs or expenses cannot be deleted.', confirmLabel: 'Delete' }).then(ok => ok && $el.closest('form').submit())"
+                                class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-neutral-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors">
+                            Delete
+                        </button>
+                    </form>
+                    <a href="{{ route('batches.show', $batch->id) }}"
+                       class="px-3.5 py-1.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 group-hover:bg-neutral-900 dark:group-hover:bg-white group-hover:text-white dark:group-hover:text-neutral-900 text-neutral-700 dark:text-neutral-200 text-xs font-semibold transition-all">
+                        Open
+                    </a>
+                </div>
             </div>
         </div>
         @empty
@@ -104,10 +128,10 @@
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                     <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
-                        <th class="py-3 px-4 font-semibold">Batch</th>
+                        @include('partials.sortable-th', ['column' => 'batch_code', 'label' => 'Batch'])
                         <th class="py-3 px-4 font-semibold">Supplier</th>
-                        <th class="py-3 px-4 text-center font-semibold">Sacks</th>
-                        <th class="py-3 px-4 text-right font-semibold">Bale Outlay</th>
+                        @include('partials.sortable-th', ['column' => 'total_sacks', 'label' => 'Sacks', 'align' => 'center'])
+                        @include('partials.sortable-th', ['column' => 'total_cost', 'label' => 'Bale Outlay', 'align' => 'right'])
                         <th class="py-3 px-4 text-right font-semibold">Base Unit Cost</th>
                         <th class="py-3 px-4 text-center font-semibold">Stock (A / R / S)</th>
                         <th class="py-3 px-4 text-right font-semibold">Action</th>
@@ -132,10 +156,26 @@
                             </div>
                         </td>
                         <td class="py-3.5 px-4 text-right">
-                            <a href="{{ route('batches.show', $batch->id) }}"
-                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] text-neutral-700 dark:text-neutral-200 text-sm font-semibold hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
-                                View
-                            </a>
+                            <div class="inline-flex items-center gap-1.5">
+                                <button type="button"
+                                        @click="editingBatch = {{ Js::from(['id' => $batch->id, 'supplier_id' => $batch->supplier_id, 'batch_code' => $batch->batch_code, 'date_acquired' => $batch->date_acquired->format('Y-m-d'), 'total_sacks' => $batch->total_sacks, 'total_pairs' => $batch->total_pairs, 'total_cost' => (float) $batch->total_cost]) }}"
+                                        class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
+                                    Edit
+                                </button>
+                                <form action="{{ route('batches.destroy', $batch->id) }}" method="POST" class="inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                            @click.prevent="$store.dialog.show({ variant: 'danger', title: 'Delete batch {{ $batch->batch_code }}?', message: 'Batches that still contain pairs or expenses cannot be deleted.', confirmLabel: 'Delete' }).then(ok => ok && $el.closest('form').submit())"
+                                            class="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-neutral-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors">
+                                        Delete
+                                    </button>
+                                </form>
+                                <a href="{{ route('batches.show', $batch->id) }}"
+                                   class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] text-neutral-700 dark:text-neutral-200 text-sm font-semibold hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                                    Open
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     @empty
@@ -153,64 +193,54 @@
     </div>
 
     {{-- Intake modal --}}
-    <div x-show="showIntakeModal"
-         x-cloak
-         class="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-         x-data="{
-             cost: 18000,
-             pairs: 24,
-             get avg() {
-                 const p = Math.max(1, parseInt(this.pairs) || 1);
-                 const c = parseFloat(this.cost) || 0;
-                 return (c / p).toFixed(2);
-             }
-         }">
-        <div class="app-modal-panel bg-white dark:bg-[#1C1C1E] border border-neutral-200 dark:border-neutral-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-neutral-800">
-                <div class="flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                    <h3 class="font-bold text-base text-[#1D1D1F] dark:text-white">Record New Batch Intake</h3>
-                </div>
-                <button @click="showIntakeModal = false" class="text-neutral-500 hover:text-neutral-600 text-sm">✕</button>
-            </div>
-
+    <x-modal title="Record New Batch Intake" accent="amber" close="showIntakeModal = false"
+             x-show="showIntakeModal" x-cloak @keydown.escape.window="showIntakeModal = false"
+             x-data="{
+                 cost: 18000,
+                 pairs: 24,
+                 get avg() {
+                     const p = Math.max(1, parseInt(this.pairs) || 1);
+                     const c = parseFloat(this.cost) || 0;
+                     return (c / p).toFixed(2);
+                 }
+             }">
             <form action="{{ route('batches.store') }}" method="POST" class="space-y-3.5 text-sm">
                 @csrf
 
-                <div class="space-y-1">
-                    <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Supplier Record:</label>
-                    <select name="supplier_id" required class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl apple-focus-ring">
+                <div>
+                    <label class="app-label">Supplier Record</label>
+                    <select name="supplier_id" required class="app-select">
                         @foreach($suppliers as $sup)
                             <option value="{{ $sup->id }}">{{ $sup->name }}</option>
                         @endforeach
                     </select>
                 </div>
 
-                <div class="grid grid-cols-2 gap-2">
-                    <div class="space-y-1">
-                        <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Batch Short Code:</label>
-                        <input type="text" name="batch_code" required placeholder="e.g. B06" class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-mono uppercase apple-focus-ring">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="app-label">Batch Short Code</label>
+                        <input type="text" name="batch_code" required placeholder="e.g. B06" class="app-input font-mono uppercase">
                     </div>
-                    <div class="space-y-1">
-                        <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Date Acquired:</label>
-                        <input type="date" name="date_acquired" required value="{{ date('Y-m-d') }}" class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl apple-focus-ring">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <div class="space-y-1">
-                        <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Total Sacks / Bales:</label>
-                        <input type="number" name="total_sacks" required min="1" value="1" class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-mono apple-focus-ring">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Total Footwear Pairs:</label>
-                        <input type="number" name="total_pairs" x-model="pairs" required min="1" value="24" class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-mono apple-focus-ring">
+                    <div>
+                        <label class="app-label">Date Acquired</label>
+                        <input type="date" name="date_acquired" required value="{{ date('Y-m-d') }}" class="app-input">
                     </div>
                 </div>
 
-                <div class="space-y-1">
-                    <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Total Batch Cost (PHP):</label>
-                    <input type="number" step="0.01" name="total_cost" x-model="cost" required min="0" value="18000" class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-mono text-sm apple-focus-ring">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="app-label">Total Sacks / Bales</label>
+                        <input type="number" name="total_sacks" required min="1" value="1" class="app-input font-mono">
+                    </div>
+                    <div>
+                        <label class="app-label">Total Footwear Pairs</label>
+                        <input type="number" name="total_pairs" x-model="pairs" required min="1" value="24" class="app-input font-mono">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="app-label">Total Batch Cost (₱)</label>
+                    <input type="number" step="0.01" name="total_cost" x-model="cost" required min="0" value="18000" class="app-input font-mono">
                 </div>
 
                 <div class="p-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800/70 text-xs flex items-center justify-between">
@@ -218,13 +248,63 @@
                     <span class="font-mono font-bold text-sm text-[#0071E3] dark:text-[#0A84FF]" x-text="'₱' + avg"></span>
                 </div>
 
-                <div class="flex gap-2 pt-2">
-                    <button type="button" @click="showIntakeModal = false" class="flex-1 py-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-semibold">Cancel</button>
-                    <button type="submit" class="flex-1 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold">Save Batch</button>
+                <div class="flex gap-2 pt-4">
+                    <button type="button" @click="showIntakeModal = false" class="app-btn app-btn-secondary flex-1">Cancel</button>
+                    <button type="submit" class="app-btn app-btn-amber flex-1">Save Batch</button>
                 </div>
             </form>
-        </div>
-    </div>
+    </x-modal>
+
+    {{-- Edit batch modal --}}
+    <x-modal accent="amber" close="editingBatch = null"
+             x-show="editingBatch" x-cloak @keydown.escape.window="editingBatch = null">
+        <x-slot:heading>Edit Batch <span x-text="editingBatch ? editingBatch.batch_code : ''"></span></x-slot:heading>
+            <form :action="editingBatch ? '/batches/' + editingBatch.id : '#'" method="POST" class="space-y-3.5 text-sm">
+                @csrf
+                @method('PUT')
+
+                <div>
+                    <label class="app-label">Supplier Record</label>
+                    <select name="supplier_id" :value="editingBatch?.supplier_id" required class="app-select">
+                        @foreach($suppliers as $sup)
+                            <option value="{{ $sup->id }}">{{ $sup->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="app-label">Batch Short Code</label>
+                        <input type="text" name="batch_code" :value="editingBatch?.batch_code" required class="app-input font-mono uppercase">
+                    </div>
+                    <div>
+                        <label class="app-label">Date Acquired</label>
+                        <input type="date" name="date_acquired" :value="editingBatch?.date_acquired" required class="app-input">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="app-label">Total Sacks / Bales</label>
+                        <input type="number" name="total_sacks" :value="editingBatch?.total_sacks" required min="1" class="app-input font-mono">
+                    </div>
+                    <div>
+                        <label class="app-label">Total Footwear Pairs</label>
+                        <input type="number" name="total_pairs" :value="editingBatch?.total_pairs" required min="1" class="app-input font-mono">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="app-label">Total Batch Cost (₱)</label>
+                    <input type="number" step="0.01" name="total_cost" :value="editingBatch?.total_cost" required min="0" class="app-input font-mono">
+                </div>
+
+                <div class="flex gap-2 pt-4">
+                    <button type="button" @click="editingBatch = null" class="app-btn app-btn-secondary flex-1">Cancel</button>
+                    <button type="submit" class="app-btn app-btn-amber flex-1">Save changes</button>
+                </div>
+            </form>
+    </x-modal>
 
 </div>
 @endsection

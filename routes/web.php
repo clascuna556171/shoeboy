@@ -36,9 +36,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/batches', [BatchController::class, 'index'])->name('batches.index');
     Route::post('/batches', [BatchController::class, 'store'])->name('batches.store');
     Route::get('/batches/{batch}', [BatchController::class, 'show'])->name('batches.show');
+    Route::put('/batches/{batch}', [BatchController::class, 'update'])->name('batches.update');
+    Route::delete('/batches/{batch}', [BatchController::class, 'destroy'])->name('batches.destroy');
 
     // Orders & Walk-in POS Module
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order}/receipt', [OrderController::class, 'receipt'])->name('orders.receipt');
     Route::post('/orders/award', [OrderController::class, 'award'])->name('orders.award');
     Route::post('/orders/pos-checkout', [OrderController::class, 'posCheckout'])->name('orders.pos-checkout');
     Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
@@ -54,12 +57,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/expenses', [ExpenseController::class, 'index'])->name('expenses.index');
     Route::post('/expenses', [ExpenseController::class, 'store'])->name('expenses.store');
     Route::delete('/expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
+    Route::post('/expenses/{id}/restore', [ExpenseController::class, 'restore'])->name('expenses.restore');
 
     // Owner-Only Protected Routes
     Route::middleware('role:owner')->group(function () {
         // Financial & Profit Reports Module
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-        Route::get('/reports/export', [ReportController::class, 'exportCsv'])->name('reports.export');
+        Route::get('/reports/export', [ReportController::class, 'exportExcel'])->name('reports.export');
+        Route::get('/reports/export-all', [ReportController::class, 'exportAllExcel'])->name('reports.export-all');
 
         // Staff Account Management Module
         Route::get('/staff', [UserController::class, 'index'])->name('staff.index');
@@ -72,5 +77,6 @@ Route::middleware('auth')->group(function () {
         Route::post('/suppliers', [SupplierController::class, 'store'])->name('suppliers.store');
         Route::put('/suppliers/{supplier}', [SupplierController::class, 'update'])->name('suppliers.update');
         Route::delete('/suppliers/{supplier}', [SupplierController::class, 'destroy'])->name('suppliers.destroy');
+        Route::post('/suppliers/{id}/restore', [SupplierController::class, 'restore'])->name('suppliers.restore');
     });
 });

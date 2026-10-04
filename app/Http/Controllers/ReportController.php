@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\ReportingService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
 class ReportController extends Controller
@@ -33,13 +34,51 @@ class ReportController extends Controller
         ));
     }
 
-    public function exportCsv(): Response
+    public function exportExcel(Request $request): Response
     {
-        $csvContent = $this->reportingService->generateCsvExport();
-        $filename = 'The_Shoe_Boy_Profit_Report_' . date('Ymd_His') . '.csv';
+        [$startDate, $endDate] = $this->resolveRange($request);
+        $sections = (array) $request->query('sections', []);
 
-        return response($csvContent, 200, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+        $content = $this->reportingService->generateExcelExport($startDate, $endDate, $sections);
+        $suffix = ($startDate || $endDate) ? '_' . ($startDate ?: 'start') . '_to_' . ($endDate ?: 'today') : '';
+        $filename = 'The_Shoe_Boy_Profit_Report' . $suffix . '_' . date('Ymd_His') . '.xls';
+
+        return $this->excelResponse($content, $filename);
+    }
+
+    public function exportAllExcel(): Response
+    {
+        $content = $this->reportingService->generateExcelExport();
+        $filename = 'The_Shoe_Boy_Profit_Report_All_' . date('Ymd_His') . '.xls';
+
+        return $this->excelResponse($content, $filename);
+    }
+
+    /**
+     * Resolve the requested export range from a preset or custom dates.
+     *
+     * @return array{0: ?string, 1: ?string}
+     */
+    protected function resolveRange(Request $request): array
+    {
+        $preset = $request->query('preset');
+        $now = Carbon::now();
+
+        return match ($preset) {
+            'today' => [$now->toDateString(), $now->toDateString()],
+            'week' => [$now->copy()->startOfWeek()->toDateString(), $now->toDateString()],
+            'month' => [$now->copy()->startOfMonth()->toDateString(), $now->toDateString()],
+            'last30' => [$now->copy()->subDays(29)->toDateString(), $now->toDateString()],
+            'year' => [$now->copy()->startOfYear()->toDateString(), $now->toDateString()],
+            'custom' => [$request->query('start_date'), $request->query('end_date')],
+            default => [null, null],
+        };
+    }
+
+    protected function excelResponse(string $content, string $filename): Response
+    {
+        return response($content, 200, [
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
             'Pragma' => 'no-cache',
             'Expires' => '0',

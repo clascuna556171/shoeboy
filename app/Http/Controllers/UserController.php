@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\SortsQueries;
 use App\Models\User;
 use App\Services\AuditService;
 use Illuminate\Http\RedirectResponse;
@@ -12,10 +13,30 @@ use Illuminate\View\View;
 
 class UserController extends Controller
 {
-    public function index(): View
+    use SortsQueries;
+
+    public function index(Request $request): View
     {
-        $users = User::withCount(['orders', 'verifiedPayments'])->latest()->get();
-        return view('staff.index', compact('users'));
+        $search = $request->query('search');
+        $role = $request->query('role');
+
+        $query = User::withCount(['orders', 'verifiedPayments']);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($role) {
+            $query->where('role', $role);
+        }
+
+        $this->applySort($query, ['name', 'email', 'role', 'orders_count', 'verified_payments_count', 'created_at'], 'created_at', 'desc');
+        $users = $query->get();
+
+        return view('staff.index', compact('users', 'search', 'role'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -65,6 +86,12 @@ class UserController extends Controller
             'is_active' => $request->has('is_active') ? $request->boolean('is_active') : $user->is_active,
         ];
 
+        // Owners cannot lock themselves out of their own account.
+        if ($user->id === auth()->id()) {
+            $updateData['is_active'] = true;
+            $updateData['role'] = 'owner';
+        }
+
         if (! empty($validated['password'])) {
             $updateData['password'] = Hash::make($validated['password']);
         }
@@ -73,6 +100,7 @@ class UserController extends Controller
 
         AuditService::log('staff_account_updated', $user, [
             'name' => $user->name,
+            'email' => $user->email,
             'role' => $user->role,
             'is_active' => $user->is_active,
         ]);

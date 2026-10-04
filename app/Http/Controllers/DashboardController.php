@@ -27,14 +27,14 @@ class DashboardController extends Controller
             return $this->ownerDashboard();
         }
 
-        return $this->staffDashboard();
+        return $this->staffDashboard($request);
     }
 
     protected function ownerDashboard(): View
     {
         $metrics = $this->reportingService->getOverallFinancialMetrics();
         $batchSummaries = $this->reportingService->getBatchProfitSummary();
-        $recentAuditLogs = AuditLog::with('user')->latest()->take(10)->get();
+        $recentAuditLogs = AuditLog::with('user')->latest()->take(25)->get();
         $recentTransactions = Order::with(['items.batch', 'customer', 'staff', 'payment'])
             ->whereIn('status', ['paid', 'fulfilled'])
             ->latest('date_awarded')
@@ -56,10 +56,17 @@ class DashboardController extends Controller
         ));
     }
 
-    protected function staffDashboard(): View
+    protected function staffDashboard(Request $request): View
     {
         $batches = Batch::with('supplier')->latest()->get();
-        $activeBatch = $batches->first();
+
+        // Batch picker: defaults to ALL batches; a valid id scopes to that batch, invalid falls back to the newest.
+        $requested = $request->query('batch');
+        if ($requested === null || $requested === 'all') {
+            $activeBatch = null;
+        } else {
+            $activeBatch = $batches->firstWhere('id', (int) $requested) ?? $batches->first();
+        }
 
         $items = Item::with('batch')
             ->when($activeBatch, fn ($q) => $q->where('batch_id', $activeBatch->id))
@@ -67,17 +74,19 @@ class DashboardController extends Controller
 
         $activeClaims = Order::with(['items', 'customer', 'staff', 'payment'])
             ->whereIn('status', ['reserved', 'paid'])
+            ->when($activeBatch, fn ($q) => $q->whereHas('items', fn ($iq) => $iq->where('batch_id', $activeBatch->id)))
             ->latest('date_awarded')
             ->get();
 
-        $availableShoes = Item::with('batch')
-            ->where('status', 'available')
-            ->orderBy('brand')
+        $expenses = Expense::with('batch')
+            ->when($activeBatch, fn ($q) => $q->where('batch_id', $activeBatch->id))
+            ->latest('date')
+            ->take(10)
             ->get();
 
-        $expenses = Expense::with('batch')->latest('date')->take(10)->get();
         $pendingDeliveries = Delivery::with(['order.items', 'order.customer'])
             ->where('status', 'pending')
+            ->when($activeBatch, fn ($q) => $q->whereHas('order.items', fn ($iq) => $iq->where('batch_id', $activeBatch->id)))
             ->latest()
             ->take(5)
             ->get();
@@ -87,7 +96,6 @@ class DashboardController extends Controller
             'activeBatch',
             'items',
             'activeClaims',
-            'availableShoes',
             'expenses',
             'pendingDeliveries'
         ));

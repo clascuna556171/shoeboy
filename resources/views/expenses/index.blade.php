@@ -28,18 +28,28 @@
         </div>
     </div>
 
+    @include('partials.table-toolbar', [
+        'action' => route('expenses.index'),
+        'search' => $search,
+        'searchPlaceholder' => 'Search description or reference no...',
+        'resetUrl' => route('expenses.index'),
+        'filters' => [
+            ['name' => 'category', 'selected' => $category, 'options' => ['' => 'All Categories'] + $categories->mapWithKeys(fn ($c) => [$c => $c])->all()],
+        ],
+    ])
+
     {{-- Table --}}
     <div class="app-card overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                     <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
-                        <th class="py-3 px-4 font-semibold">Date</th>
-                        <th class="py-3 px-4 font-semibold">Category</th>
-                        <th class="py-3 px-4 font-semibold">Description</th>
-                        <th class="py-3 px-4 font-semibold">Reference No.</th>
+                        @include('partials.sortable-th', ['column' => 'date', 'label' => 'Date'])
+                        @include('partials.sortable-th', ['column' => 'category', 'label' => 'Category'])
+                        @include('partials.sortable-th', ['column' => 'description', 'label' => 'Description'])
+                        @include('partials.sortable-th', ['column' => 'reference_no', 'label' => 'Reference No.'])
                         <th class="py-3 px-4 font-semibold">Batch Link</th>
-                        <th class="py-3 px-4 font-semibold text-right">Amount</th>
+                        @include('partials.sortable-th', ['column' => 'amount', 'label' => 'Amount', 'align' => 'right'])
                         <th class="py-3 px-4 font-semibold text-right">Action</th>
                     </tr>
                 </thead>
@@ -58,7 +68,8 @@
                             <form action="{{ route('expenses.destroy', $exp->id) }}" method="POST" class="inline">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" onclick="return confirm('Delete this expense?')"
+                                <button type="submit"
+                                        @click.prevent="$store.dialog.show({ variant: 'danger', title: 'Delete this expense?', message: 'You can undo this right after from the notification toast.', confirmLabel: 'Delete' }).then(ok => ok && $el.closest('form').submit())"
                                         class="px-2.5 py-1 rounded-lg text-xs font-semibold text-neutral-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors">
                                     Delete
                                 </button>
@@ -87,24 +98,14 @@
     </div>
 
     {{-- Modal --}}
-    <div x-show="showExpenseModal"
-         x-cloak
-         class="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div class="app-modal-panel bg-white dark:bg-[#1C1C1E] border border-neutral-200 dark:border-neutral-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-neutral-800">
-                <div class="flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-                    <h3 class="font-bold text-base text-[#1D1D1F] dark:text-white">Record Shop Expense</h3>
-                </div>
-                <button @click="showExpenseModal = false" class="text-neutral-500 hover:text-neutral-600 text-sm">✕</button>
-            </div>
-
+    <x-modal title="Record Shop Expense" accent="rose" close="showExpenseModal = false"
+             x-show="showExpenseModal" x-cloak @keydown.escape.window="showExpenseModal = false">
             <form action="{{ route('expenses.store') }}" method="POST" class="space-y-3.5 text-sm">
                 @csrf
 
-                <div class="space-y-1">
-                    <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Category:</label>
-                    <select name="category" required class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl apple-focus-ring">
+                <div>
+                    <label class="app-label">Category</label>
+                    <select name="category" required class="app-select">
                         <option value="Sack Purchase">Sack / Bale Purchase</option>
                         <option value="Shipping & Freight">Shipping & Freight</option>
                         <option value="Shoe Restoration">Shoe Restoration & Wash</option>
@@ -114,30 +115,30 @@
                     </select>
                 </div>
 
-                <div class="space-y-1">
-                    <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Description:</label>
-                    <input type="text" name="description" required placeholder="e.g. Freight cargo from Cebu port" class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl apple-focus-ring">
+                <div>
+                    <label class="app-label">Description</label>
+                    <input type="text" name="description" required placeholder="e.g. Freight cargo from Cebu port" class="app-input">
                 </div>
 
-                <div class="space-y-1">
-                    <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Reference No. <span class="text-neutral-500 font-normal">(optional — OR / receipt no.)</span>:</label>
-                    <input type="text" name="reference_no" placeholder="e.g. OR-2026-00123 / Bill #4567" class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-mono apple-focus-ring">
+                <div>
+                    <label class="app-label">Reference No. <span class="text-neutral-500 font-normal">(optional — OR / receipt no.)</span></label>
+                    <input type="text" name="reference_no" placeholder="e.g. OR-2026-00123 / Bill #4567" class="app-input font-mono">
                 </div>
 
-                <div class="grid grid-cols-2 gap-2">
-                    <div class="space-y-1">
-                        <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Amount (₱):</label>
-                        <input type="number" step="0.01" name="amount" required placeholder="0.00" class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-mono apple-focus-ring">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="app-label">Amount (₱)</label>
+                        <input type="number" step="0.01" name="amount" required placeholder="0.00" class="app-input font-mono">
                     </div>
-                    <div class="space-y-1">
-                        <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Date:</label>
-                        <input type="date" name="date" required value="{{ date('Y-m-d') }}" class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl apple-focus-ring">
+                    <div>
+                        <label class="app-label">Date</label>
+                        <input type="date" name="date" required value="{{ date('Y-m-d') }}" class="app-input">
                     </div>
                 </div>
 
-                <div class="space-y-1">
-                    <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Tie to Batch (Optional):</label>
-                    <select name="batch_id" class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl apple-focus-ring">
+                <div>
+                    <label class="app-label">Tie to Batch (optional)</label>
+                    <select name="batch_id" class="app-select">
                         <option value="">General Shop Overhead (No Batch Link)</option>
                         @foreach($batches as $b)
                             <option value="{{ $b->id }}">{{ $b->batch_code }} ({{ $b->supplier->name }})</option>
@@ -145,13 +146,12 @@
                     </select>
                 </div>
 
-                <div class="flex gap-2 pt-2">
-                    <button type="button" @click="showExpenseModal = false" class="flex-1 py-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-semibold">Cancel</button>
-                    <button type="submit" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold">Save Expense</button>
+                <div class="flex gap-2 pt-4">
+                    <button type="button" @click="showExpenseModal = false" class="app-btn app-btn-secondary flex-1">Cancel</button>
+                    <button type="submit" class="app-btn app-btn-rose flex-1">Save Expense</button>
                 </div>
             </form>
-        </div>
-    </div>
+    </x-modal>
 
 </div>
 @endsection

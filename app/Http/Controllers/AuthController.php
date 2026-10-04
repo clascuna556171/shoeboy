@@ -30,6 +30,10 @@ class AuthController extends Controller
         $remember = $request->boolean('remember');
 
         if (! Auth::attempt($credentials, $remember)) {
+            AuditService::log('login_failed', null, [
+                'email' => $credentials['email'],
+            ]);
+
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials do not match our records.'],
             ]);
@@ -38,6 +42,10 @@ class AuthController extends Controller
         $user = Auth::user();
 
         if (! $user->is_active) {
+            AuditService::log('login_blocked', $user, [
+                'email' => $user->email,
+            ]);
+
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();

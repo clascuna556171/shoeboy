@@ -25,37 +25,16 @@
         <span class="badge badge-neutral">{{ $orders->total() }} orders</span>
     </div>
 
-    {{-- Filters --}}
-    <div class="app-card p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-        <div class="flex flex-wrap items-center gap-1.5">
-            @php
-                $tabs = [
-                    ['label' => 'All',        'value' => null,        'active' => 'bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F]'],
-                    ['label' => 'Reserved',   'value' => 'reserved',  'active' => 'bg-amber-500 text-white'],
-                    ['label' => 'Paid',       'value' => 'paid',      'active' => 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900'],
-                    ['label' => 'Fulfilled',  'value' => 'fulfilled', 'active' => 'bg-emerald-600 text-white'],
-                    ['label' => 'Cancelled',  'value' => 'cancelled', 'active' => 'bg-rose-500 text-white'],
-                ];
-            @endphp
-            @foreach($tabs as $tab)
-                <a href="{{ route('orders.index', array_merge(request()->query(), ['status' => $tab['value']])) }}"
-                   class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors {{ request('status') === $tab['value'] || ($tab['value'] === null && !request('status')) ? $tab['active'] : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200/70 dark:hover:bg-neutral-700' }}">
-                    {{ $tab['label'] }}
-                </a>
-            @endforeach
-        </div>
-
-        <form method="GET" action="{{ route('orders.index') }}" class="relative w-full lg:w-72">
-            @if(request('status'))
-                <input type="hidden" name="status" value="{{ request('status') }}">
-            @endif
-            <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-neutral-500">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            </span>
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Order #, SKU, customer..."
-                   class="w-full pl-10 pr-4 py-2.5 bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 rounded-xl text-sm apple-focus-ring">
-        </form>
-    </div>
+    @include('partials.table-toolbar', [
+        'action' => route('orders.index'),
+        'search' => request('search'),
+        'searchPlaceholder' => 'Order #, SKU, customer...',
+        'resetUrl' => route('orders.index'),
+        'filters' => [
+            ['name' => 'status', 'selected' => request('status'), 'options' => ['' => 'All Statuses', 'reserved' => 'Reserved', 'paid' => 'Paid', 'fulfilled' => 'Fulfilled', 'cancelled' => 'Cancelled']],
+            ['name' => 'type', 'selected' => request('type'), 'options' => ['' => 'All Channels', 'live_stream' => 'Live Stream', 'walkin_pos' => 'POS Walk-In']],
+        ],
+    ])
 
     {{-- Table --}}
     <div class="app-card overflow-hidden">
@@ -63,19 +42,20 @@
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                     <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
-                        <th class="py-3 px-4 font-semibold">Order &amp; Date</th>
-                        <th class="py-3 px-4 font-semibold">Item Specs</th>
+                        @include('partials.sortable-th', ['column' => 'order_number', 'label' => 'Order & Date'])
+                        <th class="py-3 px-4 font-semibold">Items</th>
                         <th class="py-3 px-4 font-semibold">Customer</th>
-                        <th class="py-3 px-4 font-semibold">Staff Awarded</th>
-                        <th class="py-3 px-4 font-semibold text-right">Awarded Price</th>
-                        <th class="py-3 px-4 font-semibold text-center">Status</th>
+                        <th class="py-3 px-4 font-semibold">Sold By</th>
+                        @include('partials.sortable-th', ['column' => 'awarded_price', 'label' => 'Order Total', 'align' => 'right'])
+                        @include('partials.sortable-th', ['column' => 'status', 'label' => 'Status', 'align' => 'center'])
                         <th class="py-3 px-4 font-semibold text-center">Settlement</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800/60">
-                    @forelse($orders as $ord)
-                    @php($isFocused = $focus && $focus === $ord->order_number)
+                @forelse($orders as $ord)
+                @php($isFocused = $focus && $focus === $ord->order_number)
+                <tbody x-data="{ open: false }" class="divide-y divide-neutral-100 dark:divide-neutral-800/60">
                     <tr id="order-{{ $ord->order_number }}"
+                        @if($isFocused) data-scroll-to @endif
                         class="app-row hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30 {{ $isFocused ? 'ring-2 ring-inset ring-[#0071E3] bg-[#0071E3]/5 dark:bg-[#0A84FF]/10' : '' }}">
                         <td class="py-3.5 px-4">
                             <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF] block">{{ $ord->order_number }}</span>
@@ -85,16 +65,20 @@
                             </span>
                         </td>
                         <td class="py-3.5 px-4">
-                            @php($firstPair = $ord->items->first())
-                            <div class="font-semibold text-neutral-800 dark:text-neutral-200">{{ $firstPair?->brand }} {{ $firstPair?->model }}</div>
-                            <span class="text-xs text-neutral-500 font-mono">{{ $firstPair?->sku }} • Size {{ $firstPair?->size }}</span>
-                            @if($ord->items->count() > 1)
-                                <span class="badge badge-neutral mt-1">+{{ $ord->items->count() - 1 }} more pair(s)</span>
-                            @endif
+                            <div class="flex items-center gap-2">
+                                <span class="badge badge-neutral">{{ $ord->items->count() }} {{ $ord->items->count() === 1 ? 'pair' : 'pairs' }}</span>
+                                <button type="button" @click="open = !open"
+                                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] text-[11px] font-semibold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    <span x-text="open ? 'Hide' : 'View'"></span>
+                                </button>
+                            </div>
                         </td>
                         <td class="py-3.5 px-4">
-                            <div class="font-semibold text-neutral-800 dark:text-neutral-200">{{ $ord->customer->name }}</div>
-                            <span class="text-xs text-neutral-500 font-mono">{{ $ord->customer->messenger_contact }}</span>
+                            <div class="font-semibold text-neutral-800 dark:text-neutral-200">{{ $ord->customer->display_handle }}</div>
+                            @if($ord->customer->messenger_contact && $ord->customer->messenger_contact !== $ord->customer->name)
+                                <span class="text-xs text-neutral-500">{{ $ord->customer->name }}</span>
+                            @endif
                         </td>
                         <td class="py-3.5 px-4 text-neutral-700 dark:text-neutral-300">{{ $ord->staff->name }}</td>
                         <td class="py-3.5 px-4 text-right font-mono font-bold text-neutral-900 dark:text-white">₱{{ number_format($ord->awarded_price, 2) }}</td>
@@ -105,7 +89,10 @@
                             @if($ord->payment)
                                 <div class="inline-flex flex-col items-center gap-1">
                                     <span class="badge {{ $ord->payment->method === 'gcash' ? 'badge-paid' : 'badge-neutral' }}">{{ strtoupper($ord->payment->method) }}</span>
-                                    <span class="max-w-[140px] truncate font-mono text-xs text-neutral-500 dark:text-neutral-400">{{ $ord->payment->reference_no }}</span>
+                                    @if($ord->payment->method === 'gcash')
+                                        <span class="max-w-[140px] truncate font-mono text-xs text-neutral-500 dark:text-neutral-400">{{ $ord->payment->reference_no }}</span>
+                                    @endif
+                                    <a href="{{ route('orders.receipt', $ord) }}" class="text-[11px] font-semibold text-[#0071E3] dark:text-[#0A84FF] hover:underline">Receipt</a>
                                 </div>
                             @elseif($ord->status === 'reserved')
                                 <span class="badge badge-pending">Awaiting Payment</span>
@@ -114,7 +101,75 @@
                             @endif
                         </td>
                     </tr>
-                    @empty
+                    <tr x-show="open" x-cloak>
+                        <td colspan="7" class="p-0">
+                            <div class="border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-800/20">
+                                <div class="px-4 py-2.5 flex items-center justify-between gap-3 border-b border-neutral-200 dark:border-neutral-800">
+                                    <span class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">Order Details</span>
+                                    @if($ord->payment)
+                                    <a href="{{ route('orders.receipt', $ord) }}" class="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0071E3] dark:text-[#0A84FF] hover:underline">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                        Print receipt
+                                    </a>
+                                    @endif
+                                </div>
+
+                                <div class="grid grid-cols-1 lg:grid-cols-5 gap-5 p-4">
+                                    <div class="lg:col-span-3">
+                                        <div class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 mb-2">Purchased Pairs ({{ $ord->items->count() }})</div>
+                                        <div class="rounded-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden divide-y divide-neutral-100 dark:divide-neutral-800/60">
+                                            @foreach($ord->items as $item)
+                                            <div class="flex items-center gap-3 px-3.5 py-2.5 bg-white dark:bg-[#1C1C1E]">
+                                                <span class="w-9 h-9 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center shrink-0 text-neutral-500">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M3 15s1-2 3-2 2.5 1 4 1 3-1 5-1 4 1 6 3v1a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M3 13c1.5-1 2.5-3 4-3s2 1 3 2 2 2 4 2"/></svg>
+                                                </span>
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="font-semibold text-neutral-800 dark:text-neutral-200 truncate">{{ $item->brand }} {{ $item->model }}</div>
+                                                    <div class="text-xs text-neutral-500 font-mono">{{ $item->sku }} · Size {{ $item->size }} · {{ $item->condition }}</div>
+                                                </div>
+                                                <span class="font-mono font-semibold text-neutral-900 dark:text-white shrink-0">₱{{ number_format((float) ($item->pivot->awarded_price ?? $item->listed_price), 2) }}</span>
+                                            </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+
+                                    <div class="lg:col-span-2 space-y-3">
+                                        <div class="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#1C1C1E] p-3.5">
+                                            <div class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 mb-1.5">Buyer</div>
+                                            <div class="font-semibold text-neutral-800 dark:text-neutral-200">{{ $ord->customer->display_handle }}</div>
+                                            @if($ord->customer->name !== $ord->customer->display_handle)<div class="text-xs text-neutral-500">{{ $ord->customer->name }}</div>@endif
+                                            @if($ord->customer->phone)<div class="text-xs text-neutral-500 font-mono">{{ $ord->customer->phone }}</div>@endif
+                                        </div>
+
+                                        <div class="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#1C1C1E] p-3.5">
+                                            <div class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 mb-1.5">Payment</div>
+                                            @if($ord->payment)
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-sm font-semibold text-neutral-800 dark:text-neutral-200">{{ strtoupper($ord->payment->method) }}</span>
+                                                    <span class="font-mono text-sm font-bold text-neutral-900 dark:text-white">₱{{ number_format($ord->payment->amount, 2) }}</span>
+                                                </div>
+                                                @if($ord->payment->method === 'gcash' && $ord->payment->reference_no)
+                                                    <div class="mt-0.5 text-xs text-neutral-500 font-mono break-all">{{ $ord->payment->reference_no }}</div>
+                                                @endif
+                                            @else
+                                                <div class="text-sm text-neutral-500">Unpaid — awaiting settlement</div>
+                                            @endif
+                                        </div>
+
+                                        @if($ord->notes)
+                                        <div class="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#1C1C1E] p-3.5">
+                                            <div class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 mb-1.5">Notes</div>
+                                            <div class="text-xs text-neutral-600 dark:text-neutral-300">{{ $ord->notes }}</div>
+                                        </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+                @empty
+                <tbody>
                     <tr>
                         <td colspan="7">
                             <div class="app-empty">
@@ -123,8 +178,8 @@
                             </div>
                         </td>
                     </tr>
-                    @endforelse
                 </tbody>
+                @endforelse
             </table>
         </div>
 
@@ -137,12 +192,4 @@
 
 </div>
 
-@if($focus)
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var el = document.getElementById('order-' + {{ Js::from($focus) }});
-        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-    });
-</script>
-@endif
 @endsection

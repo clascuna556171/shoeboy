@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\SortsQueries;
 use App\Models\Batch;
 use App\Models\Item;
 use App\Services\AuditService;
@@ -12,10 +13,12 @@ use Illuminate\View\View;
 
 class ItemController extends Controller
 {
+    use SortsQueries;
+
     public function index(Request $request): View
     {
         $batches = Batch::latest()->get();
-        $selectedBatchId = $request->query('batch_id', $batches->first()?->id);
+        $selectedBatchId = $request->query('batch_id');
 
         $query = Item::with('batch');
 
@@ -35,7 +38,8 @@ class ItemController extends Controller
             });
         }
 
-        $items = $query->latest()->paginate(25)->withQueryString();
+        $this->applySort($query, ['sku', 'brand', 'model', 'size', 'condition', 'listed_price', 'status', 'created_at'], 'created_at', 'desc');
+        $items = $query->paginate(25)->withQueryString();
 
         return view('items.index', compact('items', 'batches', 'selectedBatchId'));
     }
@@ -47,7 +51,6 @@ class ItemController extends Controller
             'sku' => ['nullable', 'string', 'max:50', 'unique:items,sku'],
             'brand' => ['required', 'string', 'max:100'],
             'model' => ['required', 'string', 'max:150'],
-            'price_tier' => ['required', 'string'],
             'listed_price' => ['required', 'numeric', 'min:0'],
             'condition' => ['required', 'string'],
             'size' => ['required', 'string'],
@@ -75,24 +78,42 @@ class ItemController extends Controller
 
     public function update(Request $request, Item $item): RedirectResponse
     {
+        if (! $item->isEditable()) {
+            return back()->with('error', "Item {$item->sku} has already been {$item->status} and can no longer be edited.");
+        }
+
         $validated = $request->validate([
-            'price_tier' => ['required', 'string'],
+            'brand' => ['sometimes', 'string', 'max:100'],
+            'model' => ['sometimes', 'string', 'max:150'],
             'listed_price' => ['required', 'numeric', 'min:0'],
             'condition' => ['required', 'string'],
             'size' => ['required', 'string'],
             'status' => ['required', 'in:available,reserved,sold'],
             'repair_cost' => ['nullable', 'numeric', 'min:0'],
+            'category' => ['nullable', 'string', 'max:50'],
         ]);
 
         $item->update($validated);
 
-        AuditService::log('item_updated', $item, $validated);
+        AuditService::log('item_updated', $item, array_merge([
+            'sku' => $item->sku,
+            'brand' => $item->brand,
+            'model' => $item->model,
+        ], $validated));
 
         return back()->with('success', "Item {$item->sku} updated.");
     }
 
     public function updateTriage(Request $request, Item $item): JsonResponse|RedirectResponse
     {
+        if ($item->status === 'sold') {
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => "Item {$item->sku} is already sold."], 422);
+            }
+
+            return back()->with('error', "Item {$item->sku} is already sold and cannot be re-triaged.");
+        }
+
         $validated = $request->validate([
             'status' => ['nullable', 'in:available,reserved,sold'],
             'condition' => ['nullable', 'string'],
@@ -101,7 +122,11 @@ class ItemController extends Controller
 
         $item->update($validated);
 
-        AuditService::log('item_triage_updated', $item, $validated);
+        AuditService::log('item_triage_updated', $item, array_merge([
+            'sku' => $item->sku,
+            'brand' => $item->brand,
+            'model' => $item->model,
+        ], $validated));
 
         if ($request->wantsJson()) {
             return response()->json(['success' => true, 'item' => $item]);

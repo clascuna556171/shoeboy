@@ -165,7 +165,7 @@
                             </p>
 
                             <div class="mt-3
-                                        text-3xl sm:text-4xl
+                                        text-5xl sm:text-5xl
                                         font-bold tracking-tight
                                         font-mono
                                         {{ $netPositive
@@ -883,7 +883,7 @@
                                 <span>
                                     Buyer:
                                     <strong class="font-medium text-neutral-700 dark:text-neutral-300">
-                                        {{ $tx->customer->name }}
+                                        {{ $tx->customer->display_handle }}
                                     </strong>
                                 </span>
 
@@ -1052,47 +1052,50 @@
 
                     @forelse($recentAuditLogs as $log)
 
-                    <div class="relative pl-6 py-2.5">
+                    <div class="relative pl-6 py-3" x-data="{ rawOpen: false }">
 
-                        <span class="absolute left-0 top-3
+                        <span class="absolute left-0 top-3.5
                                      w-[7px] h-[7px] rounded-full
-                                     bg-neutral-300 dark:bg-neutral-600
-                                     ring-4 ring-white dark:ring-[#1C1C1E]"></span>
+                                     ring-4 ring-white dark:ring-[#1C1C1E]
+                                     {{ $log->category === 'security' ? 'bg-indigo-400'
+                                        : ($log->category === 'inventory' ? 'bg-emerald-400'
+                                        : ($log->category === 'sales' ? 'bg-rose-400'
+                                        : ($log->category === 'finance' ? 'bg-amber-400'
+                                        : ($log->category === 'admin' ? 'bg-violet-400' : 'bg-neutral-400')))) }}"></span>
 
-                        <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-start justify-between gap-3">
 
-                            <span class="font-mono text-xs font-semibold
-                                         text-neutral-800 dark:text-neutral-200">
-                                {{ $log->action }}
-                            </span>
+                            <p class="text-sm leading-snug text-neutral-700 dark:text-neutral-200">
+                                {{ $log->sentence }}
+                            </p>
 
-                            <span class="shrink-0 text-xs
-                                         text-neutral-500 dark:text-neutral-500">
+                            <span class="shrink-0 whitespace-nowrap text-xs text-neutral-500 dark:text-neutral-500">
                                 {{ $log->created_at->diffForHumans() }}
                             </span>
 
                         </div>
 
-                        <p class="mt-0.5 text-xs
-                                  text-neutral-500 dark:text-neutral-400">
-
-                            Actor:
-
-                            <strong class="font-medium
-                                           text-neutral-700 dark:text-neutral-300">
-                                {{ $log->user?->name ?? 'System' }}
-                            </strong>
-
-                            @if($log->details)
-
-                            <span class="ml-1.5 font-mono text-[10px]
-                                         text-neutral-500 dark:text-neutral-500">
-                                {{ json_encode($log->details) }}
-                            </span>
-
+                        <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-neutral-500">
+                            <span>{{ $log->context_line }}</span>
+                            @if($log->detail_items)
+                                <span class="text-neutral-300 dark:text-neutral-700">•</span>
+                                <button type="button" @click="rawOpen = !rawOpen"
+                                        class="font-semibold text-[#0071E3] dark:text-[#0A84FF] hover:underline"
+                                        x-text="rawOpen ? 'Hide details' : 'Details'"></button>
                             @endif
+                        </div>
 
-                        </p>
+                        <div x-show="rawOpen" x-cloak
+                             class="mt-2 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-800/30 p-2.5">
+                            <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
+                                @foreach($log->detail_items as $detail)
+                                <div class="flex items-center justify-between gap-2">
+                                    <dt class="text-neutral-500">{{ $detail['label'] }}</dt>
+                                    <dd class="text-right font-medium text-neutral-700 dark:text-neutral-200">{{ $detail['value'] }}</dd>
+                                </div>
+                                @endforeach
+                            </dl>
+                        </div>
 
                     </div>
 

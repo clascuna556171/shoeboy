@@ -5,8 +5,7 @@
 @section('content')
 <div class="space-y-6"
      x-data="{
-         activeTab: 'claims', // 'claims', 'pos', 'triage'
-         activeBatchCode: '{{ $activeBatch?->batch_code ?? 'B04' }}',
+         activeTab: @js(request('tab', 'claims')), // 'claims', 'pos', 'triage'
          
          // Live Claims State
          claimInput: '',
@@ -92,7 +91,17 @@
                 <span class="w-2 h-2 rounded-full bg-rose-500"></span>
                 <span class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Live Operations Console</span>
                 <span class="text-neutral-300 dark:text-neutral-600">•</span>
-                <span class="text-xs text-neutral-500">Active Batch: <strong class="text-neutral-700 dark:text-neutral-300">{{ $activeBatch?->batch_code }}</strong> ({{ $activeBatch?->supplier?->name }})</span>
+                <form method="GET" action="{{ route('dashboard') }}" class="flex items-center gap-1.5">
+                    <input type="hidden" name="tab" :value="activeTab">
+                    <label for="batch-picker" class="text-xs text-neutral-500">Batch:</label>
+                    <select id="batch-picker" name="batch" onchange="this.form.requestSubmit()"
+                            class="app-select app-input-sm !w-auto font-semibold">
+                        <option value="all" {{ $activeBatch === null ? 'selected' : '' }}>All batches</option>
+                        @foreach($batches as $b)
+                            <option value="{{ $b->id }}" {{ $activeBatch && $activeBatch->id === $b->id ? 'selected' : '' }}>{{ $b->batch_code }} — {{ $b->supplier?->name }}</option>
+                        @endforeach
+                    </select>
+                </form>
             </div>
             <h1 class="text-xl md:text-2xl font-bold tracking-tight text-[#1D1D1F] dark:text-white mt-1">Multi-Channel Order & Claim Console</h1>
         </div>
@@ -104,6 +113,9 @@
                     class="px-4 py-2 rounded-lg text-sm transition-all flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                 <span>Live Claims</span>
+                <template x-if="claimCart.length > 0">
+                    <span class="px-1.5 py-0.5 rounded-full text-[11px] font-mono bg-neutral-900 text-white dark:bg-white dark:text-neutral-900" x-text="claimCart.length"></span>
+                </template>
             </button>
 
             <button type="button"
@@ -187,7 +199,7 @@
                                x-model="claimInput"
                                @input="handleSearch(claimInput)"
                                placeholder="Type short code (e.g. B04-001, Panda, Kobe, Wade)..."
-                               class="w-full px-4 py-3.5 bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200 dark:border-neutral-700 rounded-2xl text-sm font-medium text-[#1D1D1F] dark:text-white placeholder-neutral-400 apple-focus-ring">
+                               class="app-input">
                     </div>
 
                     <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
@@ -247,10 +259,7 @@
                             <button type="button"
                                     @click="addToClaim(selectedClaimShoe)"
                                     :disabled="claimCart.some(i => i.id === selectedClaimShoe.id)"
-                                    :class="claimCart.some(i => i.id === selectedClaimShoe.id)
-                                        ? 'border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] text-neutral-500 cursor-not-allowed'
-                                        : 'border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200'"
-                                    class="w-full py-3 rounded-2xl font-bold text-sm shadow-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+                                    class="app-btn app-btn-primary w-full py-3">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                                 <span x-text="claimCart.some(i => i.id === selectedClaimShoe.id) ? 'Added to Claim Ticket' : 'Add to Claim Ticket'"></span>
                             </button>
@@ -316,11 +325,11 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div class="space-y-1">
                                 <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Buyer FB Handle:</label>
-                                <input type="text" name="messenger_contact" x-model="buyerHandle" required placeholder="@username (e.g. @ken_hoops23)" class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-sm apple-focus-ring">
+                                <input type="text" name="messenger_contact" x-model="buyerHandle" required placeholder="@username (e.g. @ken_hoops23)" class="app-input">
                             </div>
                             <div class="space-y-1">
                                 <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Customer Full Name:</label>
-                                <input type="text" name="customer_name" x-model="buyerName" required placeholder="e.g. Ken Hoops" class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-sm apple-focus-ring">
+                                <input type="text" name="customer_name" x-model="buyerName" required placeholder="e.g. Ken Hoops" class="app-input">
                             </div>
                         </div>
 
@@ -334,7 +343,7 @@
                                             <div class="text-[11px] text-neutral-500 font-mono" x-text="item.sku + ' • ' + item.size"></div>
                                         </div>
                                         <div class="flex items-center gap-2">
-                                            <input type="number" step="0.01" min="0" x-model="item.price" class="w-24 px-2 py-1 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg font-mono text-xs text-right">
+                                            <input type="number" step="0.01" min="0" x-model="item.price" class="app-input app-input-sm font-mono text-right w-24">
                                             <button type="button" @click="removeFromClaim(item.id)" class="text-neutral-500 hover:text-rose-500">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                             </button>
@@ -350,7 +359,7 @@
                         <div class="flex items-end justify-between gap-3 pt-2 border-t border-neutral-100 dark:border-neutral-800">
                             <div>
                                 <span class="text-xs text-neutral-500 block">Reservation Window:</span>
-                                <select name="reservation_minutes" x-model="claimReservation" class="mt-1 px-3 py-2 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-sm apple-focus-ring">
+                                <select name="reservation_minutes" x-model="claimReservation" class="app-select mt-1">
                                     <option value="120">2 Hours (Standard Live Window)</option>
                                     <option value="60">1 Hour (Flash Claim)</option>
                                     <option value="1440">24 Hours (Next Day Settlement)</option>
@@ -364,10 +373,7 @@
 
                         <button type="submit"
                                 :disabled="claimCart.length === 0"
-                                :class="claimCart.length === 0
-                                    ? 'border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] text-neutral-500 cursor-not-allowed'
-                                    : 'border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200'"
-                                class="w-full py-3 rounded-2xl font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2">
+                                class="app-btn app-btn-primary w-full py-3">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                             <span x-text="claimCart.length === 0 ? 'Add a pair to start' : 'Lock Reservation · ' + claimCart.length + ' pair(s)'"></span>
                         </button>
@@ -400,7 +406,7 @@
                                         @endif
                                     </div>
                                     <div class="flex items-center gap-2 mt-0.5 text-xs">
-                                        <span class="font-semibold text-amber-700 dark:text-amber-400">{{ $claim->customer->messenger_contact }}</span>
+                                        <span class="font-semibold text-amber-700 dark:text-amber-400">{{ $claim->customer->display_handle }}</span>
                                         <span class="text-neutral-500">Size {{ $claimFirst?->size }}</span>
                                     </div>
                                 </div>
@@ -424,7 +430,7 @@
                                 <form action="{{ route('orders.cancel', $claim->id) }}" method="POST" class="inline">
                                     @csrf
                                     <button type="submit"
-                                            onclick="return confirm('Release this reservation back to stock?')"
+                                            @click.prevent="$store.dialog.show({ variant: 'danger', title: 'Release this reservation?', message: 'The pair returns to available stock and the claim is cancelled.', confirmLabel: 'Release' }).then(ok => ok && $el.closest('form').submit())"
                                             class="inline-flex items-center justify-center min-h-8 px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] text-neutral-600 dark:text-neutral-300 text-xs font-medium hover:text-rose-600 hover:border-rose-200 dark:hover:border-rose-900/60 transition-colors">
                                         Release
                                     </button>
@@ -460,7 +466,7 @@
                     <input type="text"
                            x-model="posSearch"
                            placeholder="Filter catalog by brand, model or SKU..."
-                           class="w-full px-4 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl text-sm apple-focus-ring">
+                           class="app-input">
 
                     <div class="flex flex-wrap items-center gap-1.5 text-xs">
                         <span class="text-xs text-neutral-500 font-medium mr-1">Brand:</span>
@@ -493,7 +499,7 @@
                                 <span class="font-mono font-bold text-base text-[#1D1D1F] dark:text-white" x-text="'₱' + Number(shoe.listed_price).toLocaleString()"></span>
                                 <button @click="addToPos(shoe)"
                                         type="button"
-                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] text-neutral-700 dark:text-neutral-200 text-xs font-semibold hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                                        class="app-btn app-btn-primary app-btn-sm">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                                     Add
                                 </button>
@@ -549,11 +555,11 @@
                         <div class="grid grid-cols-2 gap-2">
                             <div>
                                 <label class="block text-xs text-neutral-500 font-medium mb-1">Discount (₱):</label>
-                                <input type="number" x-model="posDiscount" placeholder="0.00" class="w-full px-3 py-1.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-sm font-mono apple-focus-ring">
+                                <input type="number" x-model="posDiscount" placeholder="0.00" class="app-input app-input-sm font-mono">
                             </div>
                             <div>
                                 <label class="block text-xs text-neutral-500 font-medium mb-1">Reason / Note:</label>
-                                <input type="text" x-model="posDiscountNote" placeholder="Regular buyer" class="w-full px-3 py-1.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-sm apple-focus-ring">
+                                <input type="text" x-model="posDiscountNote" placeholder="Regular buyer" class="app-input app-input-sm">
                             </div>
                         </div>
 
@@ -595,7 +601,7 @@
                             <div class="p-3 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/60 text-sm space-y-2">
                                 <div class="flex items-center justify-between">
                                     <label class="text-neutral-500">Cash Received (₱):</label>
-                                    <input type="number" x-model="posCashTendered" name="cash_tendered" class="w-28 px-2 py-1 bg-white dark:bg-neutral-900 border rounded font-mono text-right">
+                                    <input type="number" x-model="posCashTendered" name="cash_tendered" class="app-input app-input-sm font-mono text-right w-28">
                                 </div>
                                 <div class="flex items-center justify-between pt-1 border-t border-neutral-200 dark:border-neutral-700">
                                     <span class="text-sm text-neutral-500">Change:</span>
@@ -607,16 +613,13 @@
                         <template x-if="posPaymentMethod === 'gcash'">
                             <div class="p-3 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/60 text-sm space-y-1">
                                 <label class="text-neutral-500 block">GCash Reference No:</label>
-                                <input type="text" x-model="posGcashRef" name="gcash_ref" placeholder="e.g. 1092837482" class="w-full px-3 py-1.5 bg-white dark:bg-neutral-900 border rounded font-mono">
+                                <input type="text" x-model="posGcashRef" name="gcash_ref" placeholder="e.g. 1092837482" class="app-input app-input-sm font-mono">
                             </div>
                         </template>
 
                         <button type="submit"
                                 :disabled="posCart.length === 0"
-                                :class="posCart.length === 0
-                                    ? 'border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] text-neutral-500 dark:text-neutral-400 cursor-not-allowed'
-                                    : 'bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200'"
-                                class="w-full py-3.5 rounded-2xl font-bold text-sm shadow-sm transition-all flex items-center justify-center gap-2">
+                                class="app-btn app-btn-primary w-full py-3.5">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                             <span x-text="posCart.length === 0 ? 'Add a pair to start' : 'Complete Sale · ₱' + posFinal.toLocaleString()"></span>
                         </button>
@@ -633,7 +636,7 @@
         <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 shadow-sm space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-neutral-200/80 dark:border-neutral-800">
                 <div>
-                    <h3 class="font-bold text-base text-[#1D1D1F] dark:text-white">Batch {{ $activeBatch?->batch_code }} Serialized Pair Triage</h3>
+                    <h3 class="font-bold text-base text-[#1D1D1F] dark:text-white">{{ $activeBatch?->batch_code ?? 'All Batches' }} Serialized Pair Triage</h3>
                     <p class="text-xs text-neutral-500">Manage individual pair statuses, condition grading, and repair costs.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
@@ -677,10 +680,14 @@
                                     @method('PATCH')
                                     @if($item->status === 'available')
                                         <input type="hidden" name="status" value="reserved">
-                                        <button type="submit" class="inline-flex items-center justify-center min-h-8 px-3 py-1.5 rounded-lg border text-xs font-semibold border-amber-200 dark:border-amber-900/60 bg-white dark:bg-[#1C1C1E] text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors">Hold</button>
+                                        <button type="submit"
+                                                @click.prevent="$store.dialog.show({ variant: 'warning', title: 'Put this pair on hold?', message: '{{ $item->sku }} will be marked as reserved and held out of available stock.', confirmLabel: 'Hold pair' }).then(ok => ok && $el.closest('form').submit())"
+                                                class="inline-flex items-center justify-center min-h-8 px-3 py-1.5 rounded-lg border text-xs font-semibold border-amber-200 dark:border-amber-900/60 bg-white dark:bg-[#1C1C1E] text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition-colors">Hold</button>
                                     @elseif($item->status === 'reserved')
                                         <input type="hidden" name="status" value="available">
-                                        <button type="submit" class="inline-flex items-center justify-center min-h-8 px-3 py-1.5 rounded-lg border text-xs font-semibold border-emerald-200 dark:border-emerald-900/60 bg-white dark:bg-[#1C1C1E] text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors">Release</button>
+                                        <button type="submit"
+                                                @click.prevent="$store.dialog.show({ variant: 'success', title: 'Release this pair?', message: '{{ $item->sku }} will return to available stock.', confirmLabel: 'Release pair' }).then(ok => ok && $el.closest('form').submit())"
+                                                class="inline-flex items-center justify-center min-h-8 px-3 py-1.5 rounded-lg border text-xs font-semibold border-emerald-200 dark:border-emerald-900/60 bg-white dark:bg-[#1C1C1E] text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors">Release</button>
                                     @endif
                                 </form>
                             </td>
@@ -702,18 +709,8 @@
     </div>
 
     {{-- Modal para bayad --}}
-    <div x-show="showPayModal"
-         x-cloak
-         class="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div class="app-modal-panel bg-white dark:bg-[#1C1C1E] border border-neutral-200 dark:border-neutral-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-neutral-800">
-                <div class="flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                    <h3 class="font-bold text-base text-[#1D1D1F] dark:text-white">Verify Payment</h3>
-                </div>
-                <button @click="showPayModal = false" class="text-neutral-500 hover:text-neutral-600 text-sm">✕</button>
-            </div>
-
+    <x-modal title="Verify Payment" accent="emerald" close="showPayModal = false"
+             x-show="showPayModal" x-cloak @keydown.escape.window="showPayModal = false">
             <form action="{{ route('payments.verify') }}" method="POST" class="space-y-4 text-sm">
                 @csrf
                 <input type="hidden" name="order_id" :value="payOrder ? payOrder.id : ''">
@@ -724,34 +721,33 @@
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Payment Amount (₱):</label>
-                    <input type="number" step="0.01" name="amount" x-model="payAmount" required class="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-800 border rounded-xl font-mono text-sm apple-focus-ring">
+                    <label class="app-label">Payment Amount (₱)</label>
+                    <input type="number" step="0.01" name="amount" x-model="payAmount" required class="app-input font-mono">
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Payment Method:</label>
-                    <select name="method" x-model="payMethod" class="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-800 border rounded-xl text-sm apple-focus-ring">
+                    <label class="app-label">Payment Method</label>
+                    <select name="method" x-model="payMethod" class="app-select">
                         <option value="gcash">GCash Transfer</option>
                         <option value="cash">Cash Drawer</option>
                     </select>
                 </div>
 
                 <div x-show="payMethod === 'gcash'">
-                    <label class="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">GCash Reference Number:</label>
-                    <input type="text" name="reference_no" x-model="payRef" placeholder="e.g. 1092837482" class="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-800 border rounded-xl font-mono text-sm uppercase apple-focus-ring">
-                    <span class="text-xs text-neutral-500 mt-0.5 block">Unique reference check is enforced.</span>
+                    <label class="app-label">GCash Reference Number</label>
+                    <input type="text" name="reference_no" x-model="payRef" placeholder="e.g. 1092837482" class="app-input font-mono uppercase">
+                    <span class="text-xs text-neutral-500 mt-1 block">Unique reference check is enforced.</span>
                 </div>
 
-                <div class="flex gap-2 pt-2">
-                    <button type="button" @click="showPayModal = false" class="flex-1 py-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-semibold">Cancel</button>
-                    <button type="submit" class="flex-1 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-900/60 bg-white dark:bg-[#1C1C1E] text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 font-semibold flex items-center justify-center gap-1.5 transition-colors">
+                <div class="flex gap-2 pt-4">
+                    <button type="button" @click="showPayModal = false" class="app-btn app-btn-secondary flex-1">Cancel</button>
+                    <button type="submit" class="app-btn app-btn-emerald flex-1">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                         <span>Confirm Paid</span>
                     </button>
                 </div>
             </form>
-        </div>
-    </div>
+    </x-modal>
 
 </div>
 @endsection

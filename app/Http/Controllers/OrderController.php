@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\SortsQueries;
 use App\Models\Customer;
 use App\Models\Item;
 use App\Models\Order;
@@ -16,6 +17,8 @@ use Illuminate\View\View;
 
 class OrderController extends Controller
 {
+    use SortsQueries;
+
     public function __construct(
         protected OrderService $orderService,
         protected PaymentService $paymentService
@@ -29,8 +32,7 @@ class OrderController extends Controller
         $search = $request->query('search');
         $focus = $request->query('focus');
 
-        $query = Order::with(['items.batch', 'customer', 'staff', 'payment', 'delivery'])
-            ->latest('date_awarded');
+        $query = Order::with(['items.batch', 'customer', 'staff', 'payment', 'delivery']);
 
         if ($status) {
             $query->where('status', $status);
@@ -53,6 +55,8 @@ class OrderController extends Controller
             $query->reorder()
                 ->orderByRaw('CASE WHEN order_number = ? THEN 0 ELSE 1 END', [$focus])
                 ->orderByDesc('date_awarded');
+        } else {
+            $this->applySort($query, ['order_number', 'awarded_price', 'status', 'order_type', 'date_awarded', 'created_at'], 'date_awarded', 'desc');
         }
 
         $orders = $query->paginate(20)->withQueryString();
@@ -207,7 +211,16 @@ class OrderController extends Controller
             ]);
         }
 
-        return back()->with('success', "POS sale completed ({$order->items->count()} pair(s)) and inventory updated.");
+        return redirect()->route('orders.receipt', $order)
+            ->with('success', "POS sale completed ({$order->items->count()} pair(s)) and inventory updated.");
+    }
+
+    // Printable receipt for any order
+    public function receipt(Order $order): View
+    {
+        $order->load(['items.batch', 'customer', 'staff', 'payment', 'delivery']);
+
+        return view('orders.receipt', compact('order'));
     }
 
     // Kansela ang order

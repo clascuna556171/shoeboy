@@ -13,6 +13,14 @@ class Item extends Model
 {
     use HasFactory;
 
+    /**
+     * Price tiers by target listed price (₱).
+     * Tier 1: below ₱1,000 | Tier 2: ₱1,000–₱1,999.99 | Tier 3: ₱2,000 and up.
+     */
+    public const TIER_1 = 'Tier 1';
+    public const TIER_2 = 'Tier 2';
+    public const TIER_3 = 'Tier 3';
+
     protected $fillable = [
         'batch_id',
         'sku',
@@ -34,6 +42,33 @@ class Item extends Model
             'listed_price' => 'decimal:2',
             'repair_cost' => 'decimal:2',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (Item $item) {
+            if ($item->listed_price !== null) {
+                $item->price_tier = static::tierForPrice((float) $item->listed_price);
+            }
+        });
+    }
+
+    public static function tierForPrice(float $price): string
+    {
+        if ($price < 1000) {
+            return self::TIER_1;
+        }
+
+        if ($price < 2000) {
+            return self::TIER_2;
+        }
+
+        return self::TIER_3;
+    }
+
+    public function isEditable(): bool
+    {
+        return $this->status === 'available';
     }
 
     public function batch(): BelongsTo

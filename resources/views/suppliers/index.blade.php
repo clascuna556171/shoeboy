@@ -3,7 +3,7 @@
 @section('title', 'Supplier Records')
 
 @section('content')
-<div class="space-y-6" x-data="{ showSupplierModal: false, view: 'cards' }">
+<div class="space-y-6" x-data="{ showSupplierModal: false, view: 'cards', editingSupplier: null }">
 
     {{-- Page header --}}
     <div class="app-card p-5 lg:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -39,6 +39,14 @@
         </div>
     </div>
 
+    @include('partials.table-toolbar', [
+        'action' => route('suppliers.index'),
+        'search' => $search,
+        'searchPlaceholder' => 'Search supplier name or contact...',
+        'resetUrl' => route('suppliers.index'),
+        'filters' => [],
+    ])
+
     {{-- Cards --}}
     <div x-show="view === 'cards'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         @forelse($suppliers as $sup)
@@ -65,10 +73,16 @@
             </div>
 
             <div class="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-end gap-2 text-xs">
+                <button type="button"
+                        @click="editingSupplier = {{ Js::from(['id' => $sup->id, 'name' => $sup->name, 'contact_number' => $sup->contact_number, 'notes' => $sup->notes]) }}"
+                        class="px-2.5 py-1 rounded-lg font-semibold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
+                    Edit
+                </button>
                 <form action="{{ route('suppliers.destroy', $sup->id) }}" method="POST" class="inline">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" onclick="return confirm('Delete this supplier record?')"
+                    <button type="submit"
+                            @click.prevent="$store.dialog.show({ variant: 'danger', title: 'Delete this supplier?', message: 'You can undo this right after from the notification toast.', confirmLabel: 'Delete' }).then(ok => ok && $el.closest('form').submit())"
                             class="px-2.5 py-1 rounded-lg font-semibold text-neutral-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors">
                         Delete
                     </button>
@@ -91,11 +105,11 @@
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                     <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
-                        <th class="py-3 px-4 font-semibold">Supplier</th>
-                        <th class="py-3 px-4 font-semibold">Contact Number</th>
-                        <th class="py-3 px-4 text-center font-semibold">Batches</th>
+                        @include('partials.sortable-th', ['column' => 'name', 'label' => 'Supplier'])
+                        @include('partials.sortable-th', ['column' => 'contact_number', 'label' => 'Contact Number'])
+                        @include('partials.sortable-th', ['column' => 'batches_count', 'label' => 'Batches', 'align' => 'center'])
                         <th class="py-3 px-4 font-semibold">Notes</th>
-                        <th class="py-3 px-4 text-right font-semibold">Actions</th>
+                        <th class="py-3 px-4 font-semibold text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800/60">
@@ -111,14 +125,22 @@
                         <td class="py-3.5 px-4 text-center"><span class="badge badge-neutral">{{ $sup->batches_count }}</span></td>
                         <td class="py-3.5 px-4"><span class="block max-w-[260px] truncate text-neutral-500 dark:text-neutral-400">{{ $sup->notes ?? '—' }}</span></td>
                         <td class="py-3.5 px-4 text-right">
-                            <form action="{{ route('suppliers.destroy', $sup->id) }}" method="POST" class="inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" onclick="return confirm('Delete this supplier record?')"
-                                        class="px-2.5 py-1.5 rounded-lg font-semibold text-neutral-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors">
-                                    Delete
+                            <div class="inline-flex items-center gap-1.5">
+                                <button type="button"
+                                        @click="editingSupplier = {{ Js::from(['id' => $sup->id, 'name' => $sup->name, 'contact_number' => $sup->contact_number, 'notes' => $sup->notes]) }}"
+                                        class="px-2.5 py-1.5 rounded-lg font-semibold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
+                                    Edit
                                 </button>
-                            </form>
+                                <form action="{{ route('suppliers.destroy', $sup->id) }}" method="POST" class="inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit"
+                                            @click.prevent="$store.dialog.show({ variant: 'danger', title: 'Delete this supplier?', message: 'You can undo this right after from the notification toast.', confirmLabel: 'Delete' }).then(ok => ok && $el.closest('form').submit())"
+                                            class="px-2.5 py-1.5 rounded-lg font-semibold text-neutral-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors">
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     @empty
@@ -136,40 +158,61 @@
     </div>
 
     {{-- Modal --}}
-    <div x-show="showSupplierModal"
-         x-cloak
-         class="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div class="app-modal-panel bg-white dark:bg-[#1C1C1E] border border-neutral-200 dark:border-neutral-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-neutral-800">
-                <h3 class="font-bold text-base text-[#1D1D1F] dark:text-white">Add Supplier Record</h3>
-                <button @click="showSupplierModal = false" class="text-neutral-500 hover:text-neutral-600 text-sm">✕</button>
-            </div>
-
+    <x-modal title="Add Supplier Record" accent="teal" close="showSupplierModal = false"
+             x-show="showSupplierModal" x-cloak @keydown.escape.window="showSupplierModal = false">
             <form action="{{ route('suppliers.store') }}" method="POST" class="space-y-3.5 text-sm">
                 @csrf
 
-                <div class="space-y-1">
-                    <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Supplier Name:</label>
-                    <input type="text" name="name" required placeholder="e.g. Suntop Bales Warehouse" class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl apple-focus-ring">
+                <div>
+                    <label class="app-label">Supplier Name</label>
+                    <input type="text" name="name" required placeholder="e.g. Suntop Bales Warehouse" class="app-input">
                 </div>
 
-                <div class="space-y-1">
-                    <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Contact Number (Optional, Numeric):</label>
-                    <input type="text" name="contact_number" placeholder="09171234567" class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl apple-focus-ring">
+                <div>
+                    <label class="app-label">Contact Number (optional, numeric)</label>
+                    <input type="text" name="contact_number" placeholder="09171234567" class="app-input">
                 </div>
 
-                <div class="space-y-1">
-                    <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Notes &amp; Inspection Terms:</label>
-                    <textarea name="notes" rows="3" placeholder="Inspection terms, return policy, bale quality notes..." class="w-full px-3.5 py-2.5 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl apple-focus-ring"></textarea>
+                <div>
+                    <label class="app-label">Notes &amp; Inspection Terms</label>
+                    <textarea name="notes" rows="3" placeholder="Inspection terms, return policy, bale quality notes..." class="app-textarea"></textarea>
                 </div>
 
-                <div class="flex gap-2 pt-2">
-                    <button type="button" @click="showSupplierModal = false" class="flex-1 py-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-semibold">Cancel</button>
-                    <button type="submit" class="flex-1 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold">Save Supplier</button>
+                <div class="flex gap-2 pt-4">
+                    <button type="button" @click="showSupplierModal = false" class="app-btn app-btn-secondary flex-1">Cancel</button>
+                    <button type="submit" class="app-btn app-btn-teal flex-1">Save Supplier</button>
                 </div>
             </form>
-        </div>
-    </div>
+    </x-modal>
+
+    {{-- Edit supplier modal --}}
+    <x-modal title="Edit Supplier" accent="teal" close="editingSupplier = null"
+             x-show="editingSupplier" x-cloak @keydown.escape.window="editingSupplier = null">
+            <form :action="editingSupplier ? '/suppliers/' + editingSupplier.id : '#'" method="POST" class="space-y-3.5 text-sm">
+                @csrf
+                @method('PUT')
+
+                <div>
+                    <label class="app-label">Supplier Name</label>
+                    <input type="text" name="name" :value="editingSupplier?.name" required class="app-input">
+                </div>
+
+                <div>
+                    <label class="app-label">Contact Number (optional)</label>
+                    <input type="text" name="contact_number" :value="editingSupplier?.contact_number" class="app-input">
+                </div>
+
+                <div>
+                    <label class="app-label">Notes &amp; Inspection Terms</label>
+                    <textarea name="notes" rows="3" class="app-textarea" x-text="editingSupplier?.notes"></textarea>
+                </div>
+
+                <div class="flex gap-2 pt-4">
+                    <button type="button" @click="editingSupplier = null" class="app-btn app-btn-secondary flex-1">Cancel</button>
+                    <button type="submit" class="app-btn app-btn-teal flex-1">Save changes</button>
+                </div>
+            </form>
+    </x-modal>
 
 </div>
 @endsection

@@ -22,115 +22,97 @@
                 <span>Outlay <strong class="font-mono text-neutral-700 dark:text-neutral-300">₱{{ number_format($batch->total_cost, 2) }}</strong></span>
                 <span class="hidden sm:inline text-neutral-300 dark:text-neutral-600">•</span>
                 <span>Base Unit Cost <strong class="font-mono text-emerald-600 dark:text-emerald-400">₱{{ number_format($batch->average_item_cost, 2) }}</strong></span>
+                <span class="hidden sm:inline text-neutral-300 dark:text-neutral-600">•</span>
+                <span>{{ $batch->total_sacks }} sack(s)</span>
             </div>
         </div>
 
-        <button type="button"
-                @click="showAddItemModal = true"
-                class="px-5 py-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold text-sm shadow-sm flex items-center gap-2 transition-all shrink-0">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-            <span>Add Pair to Batch</span>
-        </button>
+        <div class="flex items-center gap-2 shrink-0">
+            <a href="{{ route('items.index', ['batch_id' => $batch->id]) }}"
+               class="px-5 py-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold text-sm shadow-sm flex items-center gap-2 transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h10M4 18h10"/></svg>
+                <span>Manage Pairs in Inventory</span>
+            </a>
+            <button type="button"
+                    @click="showAddItemModal = true"
+                    class="px-5 py-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold text-sm shadow-sm flex items-center gap-2 transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span>Add Pair</span>
+            </button>
+        </div>
     </div>
 
-    {{-- Pairs table --}}
-    <div class="app-card overflow-hidden">
-        <div class="flex items-center justify-between px-5 py-3.5 border-b border-neutral-200 dark:border-neutral-800">
-            <h3 class="font-bold text-base text-[#1D1D1F] dark:text-white">Serialized Pairs</h3>
-            <span class="badge badge-neutral">{{ $items->total() }} pairs</span>
+    {{-- Batch summary hub --}}
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="app-card p-5">
+            <div class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">Stock Logged</div>
+            <div class="mt-1 font-mono text-2xl font-bold text-[#1D1D1F] dark:text-white">{{ $stats['logged'] }}<span class="text-neutral-400 text-lg"> / {{ $stats['total_pairs'] }}</span></div>
+            <p class="text-xs text-neutral-500 mt-1">Pairs serialized into this batch.</p>
         </div>
+        <div class="app-card p-5">
+            <div class="text-[11px] font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Available</div>
+            <div class="mt-1 font-mono text-2xl font-bold text-emerald-700 dark:text-emerald-300">{{ $stats['available'] }}</div>
+            <p class="text-xs text-neutral-500 mt-1">Ready to sell or claim.</p>
+        </div>
+        <div class="app-card p-5">
+            <div class="text-[11px] font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">Reserved</div>
+            <div class="mt-1 font-mono text-2xl font-bold text-amber-700 dark:text-amber-300">{{ $stats['reserved'] }}</div>
+            <p class="text-xs text-neutral-500 mt-1">Held by active claims.</p>
+        </div>
+        <div class="app-card p-5">
+            <div class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">Sold</div>
+            <div class="mt-1 font-mono text-2xl font-bold text-neutral-800 dark:text-neutral-200">{{ $stats['sold'] }}</div>
+            <p class="text-xs text-neutral-500 mt-1">Settled and paid out.</p>
+        </div>
+    </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
-                <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
-                    <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
-                        <th class="py-3 px-4 font-semibold">SKU</th>
-                        <th class="py-3 px-4 font-semibold">Brand &amp; Model</th>
-                        <th class="py-3 px-4 font-semibold">Size</th>
-                        <th class="py-3 px-4 font-semibold">Condition</th>
-                        <th class="py-3 px-4 font-semibold text-right">Base Cost</th>
-                        <th class="py-3 px-4 font-semibold text-right">Repair</th>
-                        <th class="py-3 px-4 font-semibold text-right">Listed Price</th>
-                        <th class="py-3 px-4 font-semibold text-center">Status</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800/60">
-                    @forelse($items as $item)
-                    <tr class="app-row hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30">
-                        <td class="py-3.5 px-4 font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $item->sku }}</td>
-                        <td class="py-3.5 px-4 font-semibold text-neutral-800 dark:text-neutral-200">{{ $item->brand }} {{ $item->model }}</td>
-                        <td class="py-3.5 px-4 font-mono text-neutral-600 dark:text-neutral-300">{{ $item->size }}</td>
-                        <td class="py-3.5 px-4 text-neutral-600 dark:text-neutral-300">{{ $item->condition }}</td>
-                        <td class="py-3.5 px-4 text-right font-mono text-neutral-500">₱{{ number_format($batch->average_item_cost, 2) }}</td>
-                        <td class="py-3.5 px-4 text-right font-mono text-neutral-500">₱{{ number_format($item->repair_cost, 2) }}</td>
-                        <td class="py-3.5 px-4 text-right font-mono font-bold text-neutral-900 dark:text-white">₱{{ number_format($item->listed_price, 2) }}</td>
-                        <td class="py-3.5 px-4 text-center">
-                            <span class="badge badge-{{ $item->status }}">{{ strtoupper($item->status) }}</span>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="8">
-                            <div class="app-empty">
-                                <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                                <span class="text-xs font-medium">No shoes added to this batch yet.</span>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+    {{-- Manage prompt --}}
+    <div class="app-card p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div>
+            <div class="text-sm font-semibold text-neutral-900 dark:text-white">Editing &amp; triage happen in Inventory</div>
+            <p class="text-xs text-neutral-500 mt-0.5">The Inventory page is the single place to edit pair details, grade conditions, and manage status for this batch.</p>
         </div>
-
-        @if($items->hasPages())
-        <div class="px-4 py-3 border-t border-neutral-100 dark:border-neutral-800">
-            {{ $items->links() }}
-        </div>
-        @endif
+        <a href="{{ route('items.index', ['batch_id' => $batch->id]) }}"
+           class="px-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold text-sm shadow-sm transition-all shrink-0">
+            Open Inventory for {{ $batch->batch_code }}
+        </a>
     </div>
 
     {{-- Add pair modal --}}
-    <div x-show="showAddItemModal"
-         x-cloak
-         class="app-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div class="app-modal-panel bg-white dark:bg-[#1C1C1E] border border-neutral-200 dark:border-neutral-800 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <div class="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-neutral-800">
-                <h3 class="font-bold text-base text-[#1D1D1F] dark:text-white">Add Pair to Batch {{ $batch->batch_code }}</h3>
-                <button @click="showAddItemModal = false" class="text-neutral-500 hover:text-neutral-600 text-sm">✕</button>
-            </div>
-
+    <x-modal title="Add Pair to Batch {{ $batch->batch_code }}" accent="amber" close="showAddItemModal = false"
+             x-show="showAddItemModal" x-cloak @keydown.escape.window="showAddItemModal = false">
             <form action="{{ route('items.store') }}" method="POST" class="space-y-3.5 text-sm">
                 @csrf
                 <input type="hidden" name="batch_id" value="{{ $batch->id }}">
 
-                <div class="grid grid-cols-2 gap-2">
-                    <div class="space-y-1">
-                        <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Brand:</label>
-                        <input type="text" name="brand" required placeholder="Li-Ning, Nike..." class="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl apple-focus-ring">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="app-label">Brand</label>
+                        <input type="text" name="brand" required placeholder="Li-Ning, Nike..." class="app-input">
                     </div>
-                    <div class="space-y-1">
-                        <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Model Name:</label>
-                        <input type="text" name="model" required placeholder="Way of Wade 10..." class="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl apple-focus-ring">
+                    <div>
+                        <label class="app-label">Model Name</label>
+                        <input type="text" name="model" required placeholder="Way of Wade 10..." class="app-input">
                     </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-2">
-                    <div class="space-y-1">
-                        <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Size:</label>
-                        <input type="text" name="size" required placeholder="US 10.5" class="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-mono apple-focus-ring">
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="app-label">Size</label>
+                        <input type="text" name="size" required placeholder="US 10.5" class="app-input font-mono">
                     </div>
-                    <div class="space-y-1">
-                        <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Condition:</label>
-                        <select name="condition" class="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl apple-focus-ring">
+                    <div>
+                        <label class="app-label">Condition</label>
+                        <select name="condition" class="app-select">
                             <option value="Pristine">Pristine</option>
                             <option value="Good" selected>Good</option>
                             <option value="Fair">Fair</option>
                             <option value="Needs Repair">Needs Repair</option>
                         </select>
                     </div>
-                    <div class="space-y-1">
-                        <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Status:</label>
-                        <select name="status" class="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl apple-focus-ring">
+                    <div>
+                        <label class="app-label">Status</label>
+                        <select name="status" class="app-select">
                             <option value="available" selected>Available</option>
                             <option value="reserved">Reserved</option>
                             <option value="sold">Sold</option>
@@ -138,39 +120,29 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-2">
-                    <div class="space-y-1">
-                        <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Price Tier:</label>
-                        <select name="price_tier" class="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl apple-focus-ring">
-                            <option value="Tier 1 (High Value)">Tier 1 (High Value: >₱4000)</option>
-                            <option value="Tier 2 (Mid Range)">Tier 2 (Mid Range: ₱2500–₱3900)</option>
-                            <option value="Tier 3 (Budget/Fair)">Tier 3 (Budget/Fair: <₱2500)</option>
-                        </select>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="app-label">Target Listed Price (₱)</label>
+                        <input type="number" step="0.01" name="listed_price" required placeholder="3500.00" class="app-input font-mono">
+                        <p class="mt-1 text-[11px] text-neutral-500">Tier auto-assigns — T1 &lt; ₱1k · T2 ₱1k–2k · T3 ₱2k+</p>
                     </div>
-                    <div class="space-y-1">
-                        <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Target Listed Price (₱):</label>
-                        <input type="number" step="0.01" name="listed_price" required placeholder="3500.00" class="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-mono apple-focus-ring">
+                    <div>
+                        <label class="app-label">Repair Cost (₱)</label>
+                        <input type="number" step="0.01" name="repair_cost" value="0.00" class="app-input font-mono">
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-2">
-                    <div class="space-y-1">
-                        <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Custom SKU (Optional):</label>
-                        <input type="text" name="sku" placeholder="Auto-generated if empty" class="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-mono uppercase apple-focus-ring">
-                    </div>
-                    <div class="space-y-1">
-                        <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Repair Cost (₱):</label>
-                        <input type="number" step="0.01" name="repair_cost" value="0.00" class="w-full px-3 py-2 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-xl font-mono apple-focus-ring">
-                    </div>
+                <div>
+                    <label class="app-label">Custom SKU (optional)</label>
+                    <input type="text" name="sku" placeholder="Auto-generated if empty" class="app-input font-mono uppercase">
                 </div>
 
-                <div class="flex gap-2 pt-2">
-                    <button type="button" @click="showAddItemModal = false" class="flex-1 py-2.5 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-semibold">Cancel</button>
-                    <button type="submit" class="flex-1 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold">Save Pair</button>
+                <div class="flex gap-2 pt-4">
+                    <button type="button" @click="showAddItemModal = false" class="app-btn app-btn-secondary flex-1">Cancel</button>
+                    <button type="submit" class="app-btn app-btn-amber flex-1">Save Pair</button>
                 </div>
             </form>
-        </div>
-    </div>
+    </x-modal>
 
 </div>
 @endsection
