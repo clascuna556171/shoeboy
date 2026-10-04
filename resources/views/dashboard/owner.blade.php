@@ -975,7 +975,7 @@
                     border border-neutral-200 dark:border-neutral-800
                     bg-white dark:bg-[#1C1C1E]
                     shadow-sm overflow-hidden"
-             x-data="{ open: false }">
+             x-data="{ open: false, selectedId: null }">
 
         <div class="w-full px-6 py-4 flex items-center justify-between gap-4 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/40">
 
@@ -1076,7 +1076,7 @@
 
                     @forelse($recentAuditLogs as $log)
 
-                    <div class="relative pl-6 py-3" x-data="{ rawOpen: false }">
+                    <div class="relative pl-6 py-3">
 
                         <span class="absolute left-0 top-3.5
                                      w-[7px] h-[7px] rounded-full
@@ -1097,17 +1097,11 @@
 
                         <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-neutral-500">
                             <span>{{ $log->context_line }}</span>
-                            @if($log->detail_items)
-                                <span class="text-neutral-300 dark:text-neutral-700">•</span>
-                                <button type="button" @click="rawOpen = !rawOpen"
-                                        class="font-semibold text-[#0071E3] dark:text-[#0A84FF] hover:underline"
-                                        x-text="rawOpen ? 'Hide details' : 'Details'"></button>
-                            @endif
-                        </div>
-
-                        <div x-show="rawOpen" x-cloak
-                             class="mt-2 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/70 dark:bg-neutral-800/30 p-2.5">
-                            <x-audit-details :log="$log" class="text-[11px] gap-x-4 gap-y-1" />
+                            <span class="text-neutral-300 dark:text-neutral-700">•</span>
+                            <button type="button" @click="selectedId = {{ $log->id }}"
+                                    class="font-semibold text-[#0071E3] dark:text-[#0A84FF] hover:underline">
+                                View details
+                            </button>
                         </div>
 
                     </div>
@@ -1125,6 +1119,11 @@
             </div>
 
         </div>
+
+        {{-- Audit detail modals (shared component) --}}
+        @foreach($recentAuditLogs as $log)
+            <x-audit-log-modal :log="$log" x-show="selectedId === {{ $log->id }}" close="selectedId = null" />
+        @endforeach
 
     </section>
 
