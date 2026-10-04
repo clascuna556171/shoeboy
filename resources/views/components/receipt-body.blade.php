@@ -58,6 +58,31 @@
             <span class="font-mono text-neutral-700 dark:text-neutral-200">{{ $order->payment->reference_no }}</span>
         </div>
         @endif
+        @if($order->payment)
+        <div class="flex items-center justify-between text-xs">
+            <span class="text-neutral-500">Amount Paid</span>
+            <span class="font-mono font-bold text-neutral-900 dark:text-white"><x-money :value="$order->payment->amount" /></span>
+        </div>
+        @php($balance = round((float) $order->awarded_price - (float) $order->payment->amount, 2))
+        @if(abs($balance) > 0.005)
+        <div class="flex items-center justify-between text-xs">
+            <span class="text-neutral-500">{{ $balance > 0 ? 'Balance Due' : 'Overpaid' }}</span>
+            <span class="font-mono font-bold {{ $balance > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400' }}"><x-money :value="abs($balance)" /></span>
+        </div>
+        @endif
+        @if($order->payment->date_paid)
+        <div class="flex items-center justify-between text-xs">
+            <span class="text-neutral-500">Paid on</span>
+            <span class="font-mono text-neutral-700 dark:text-neutral-200">{{ $order->payment->date_paid->format('M d, Y H:i') }}</span>
+        </div>
+        @endif
+        @if($order->payment->verifier)
+        <div class="flex items-center justify-between text-xs">
+            <span class="text-neutral-500">Verified by</span>
+            <span class="text-neutral-700 dark:text-neutral-200">{{ $order->payment->verifier->name }}</span>
+        </div>
+        @endif
+        @endif
     </div>
 
     @if($order->notes)

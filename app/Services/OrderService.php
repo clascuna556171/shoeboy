@@ -32,15 +32,22 @@ class OrderService
             $total = 0.0;
 
             foreach (array_values($items) as $index => $item) {
-                // I-lock ang row para iwas double claim
-                $lockedItem = Item::where('id', $item->id)->lockForUpdate()->firstOrFail();
+                // Atomic claim: only succeed if the pair is still available. The condition
+                // and the write are a single statement, so it is race-safe even on SQLite
+                // (which ignores row locks).
+                $claimed = Item::whereKey($item->id)
+                    ->where('status', 'available')
+                    ->update(['status' => 'reserved']);
 
-                if ($lockedItem->status !== 'available') {
+                if ($claimed === 0) {
+                    $sku = Item::whereKey($item->id)->value('sku') ?? $item->sku;
+
                     throw ValidationException::withMessages([
-                        'item_ids' => ["Item {$lockedItem->sku} has already been {$lockedItem->status} and cannot be awarded."],
+                        'item_ids' => ["Item {$sku} is no longer available and cannot be awarded."],
                     ]);
                 }
 
+                $lockedItem = Item::findOrFail($item->id);
                 $price = (float) ($prices[$index] ?? $lockedItem->listed_price);
                 $lines[] = ['item' => $lockedItem, 'price' => $price];
                 $total += $price;
@@ -64,9 +71,6 @@ class OrderService
                     'item_id' => $line['item']->id,
                     'awarded_price' => round($line['price'], 2),
                 ]);
-
-                // Reserved na
-                $line['item']->update(['status' => 'reserved']);
             }
 
             AuditService::log('order_awarded', $order, [

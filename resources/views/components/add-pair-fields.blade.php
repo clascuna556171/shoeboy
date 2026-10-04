@@ -32,7 +32,7 @@
     </div>
 </div>
 
-<div class="grid grid-cols-3 gap-3">
+<div class="grid grid-cols-2 gap-3">
     <div>
         <label class="app-label">Size <span class="app-req">*</span></label>
         <input type="text" name="size" required placeholder="US 10.5" class="app-input font-mono">
@@ -44,14 +44,6 @@
             <option value="Good" selected>Good</option>
             <option value="Fair">Fair</option>
             <option value="Needs Repair">Needs Repair</option>
-        </select>
-    </div>
-    <div>
-        <label class="app-label">Status <span class="app-req">*</span></label>
-        <select name="status" required class="app-select">
-            <option value="available" selected>Available</option>
-            <option value="reserved">Reserved</option>
-            <option value="sold">Sold</option>
         </select>
     </div>
 </div>

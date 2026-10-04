@@ -958,4 +958,201 @@ class ShoeBoySystemTest extends TestCase
             ->assertSee('Pending', false)
             ->assertSee('Shipped', false);
     }
+
+    public function test_payment_verify_rejects_amount_below_order_total(): void
+    {
+        $orderService = app(OrderService::class);
+        $order = $orderService->awardItem($this->item, $this->customer, $this->staff, 4500.00);
+
+        $response = $this->actingAs($this->staff)->post('/payments/verify', [
+            'order_id' => $order->id,
+            'amount' => 3000.00,
+            'method' => 'cash',
+        ]);
+
+        $response->assertSessionHasErrors('amount');
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'reserved']);
+        $this->assertDatabaseHas('items', ['id' => $this->item->id, 'status' => 'reserved']);
+    }
+
+    public function test_payment_verify_rejects_amount_above_order_total(): void
+    {
+        $orderService = app(OrderService::class);
+        $order = $orderService->awardItem($this->item, $this->customer, $this->staff, 4500.00);
+
+        $response = $this->actingAs($this->staff)->post('/payments/verify', [
+            'order_id' => $order->id,
+            'amount' => 5000.00,
+            'method' => 'cash',
+        ]);
+
+        $response->assertSessionHasErrors('amount');
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'reserved']);
+    }
+
+    public function test_payment_verify_accepts_exact_total_and_receipt_shows_paid_amount(): void
+    {
+        $orderService = app(OrderService::class);
+        $order = $orderService->awardItem($this->item, $this->customer, $this->staff, 4500.00);
+
+        $response = $this->actingAs($this->staff)->post('/payments/verify', [
+            'order_id' => $order->id,
+            'amount' => 4500.00,
+            'method' => 'cash',
+        ]);
+
+        $response->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'paid']);
+        $this->assertDatabaseHas('items', ['id' => $this->item->id, 'status' => 'sold']);
+
+        $receipt = $this->actingAs($this->staff)->get("/orders/{$order->id}/receipt");
+        $receipt->assertOk();
+        $receipt->assertSee('Amount Paid', false);
+    }
+
+    public function test_pos_cash_shortfall_preserves_ticket_input(): void
+    {
+        $response = $this->actingAs($this->staff)->from('/')->post('/orders/pos-checkout', [
+            'item_ids' => [$this->item->id],
+            'discount' => 100,
+            'discount_note' => 'Regular',
+            'payment_method' => 'cash',
+            'cash_tendered' => 100,
+        ]);
+
+        $response->assertSessionHasErrors('cash_tendered');
+        $response->assertSessionHasInput('item_ids');
+        $response->assertSessionHasInput('discount');
+        $this->assertDatabaseHas('items', ['id' => $this->item->id, 'status' => 'available']);
+    }
+
+    public function test_claim_award_validation_error_preserves_input(): void
+    {
+        $response = $this->actingAs($this->staff)->from('/')->post('/orders/award', [
+            'customer_name' => 'Test Buyer',
+            'messenger_contact' => '@testbuyer',
+        ]);
+
+        $response->assertSessionHasErrors('item_ids');
+        $response->assertSessionHasInput('customer_name');
+        $response->assertSessionHasInput('messenger_contact');
+    }
+
+    public function test_deactivated_user_is_denied_protected_routes(): void
+    {
+        $this->actingAs($this->staff);
+        $this->staff->update(['is_active' => false]);
+
+        $this->get('/items')->assertRedirect('/login');
+        $this->get('/')->assertRedirect('/login');
+    }
+
+    public function test_login_is_throttled(): void
+    {
+        $status = null;
+
+        for ($i = 0; $i < 6; $i++) {
+            $response = $this->from('/login')->post('/login', [
+                'email' => 'nobody@test.com',
+                'password' => 'wrong-password',
+            ]);
+            $status = $response->getStatusCode();
+        }
+
+        $this->assertSame(429, $status);
+    }
+
+    public function test_item_status_cannot_be_changed_through_the_edit_form(): void
+    {
+        $response = $this->actingAs($this->staff)->put("/items/{$this->item->id}", [
+            'brand' => 'Li-Ning',
+            'model' => 'Way of Wade 10',
+            'listed_price' => 4600.00,
+            'condition' => 'Pristine',
+            'size' => 'US 10.5',
+            'status' => 'sold',
+            'repair_cost' => 0,
+        ]);
+
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('items', ['id' => $this->item->id, 'status' => 'available']);
+        $this->assertEquals(4600.00, (float) $this->item->fresh()->listed_price);
+    }
+
+    public function test_awarding_an_unavailable_item_is_rejected(): void
+    {
+        $this->item->update(['status' => 'reserved']);
+
+        $response = $this->actingAs($this->staff)->from('/')->post('/orders/award', [
+            'item_ids' => [$this->item->id],
+            'customer_name' => 'Test Buyer',
+            'messenger_contact' => '@testbuyer',
+        ]);
+
+        $response->assertSessionHasErrors('item_ids');
+        $this->assertDatabaseHas('items', ['id' => $this->item->id, 'status' => 'reserved']);
+    }
+
+    public function test_delivery_cannot_be_completed_for_an_unpaid_order(): void
+    {
+        $orderService = app(OrderService::class);
+        $order = $orderService->awardItem($this->item, $this->customer, $this->staff, 4500.00);
+
+        $delivery = Delivery::create([
+            'order_id' => $order->id,
+            'method' => 'pickup',
+            'status' => 'pending',
+        ]);
+
+        $response = $this->actingAs($this->staff)->put("/deliveries/{$delivery->id}", [
+            'method' => 'pickup',
+            'status' => 'completed',
+        ]);
+
+        $response->assertSessionHas('error');
+        $this->assertEquals('reserved', $order->fresh()->status);
+    }
+
+    public function test_reports_reject_invalid_dates(): void
+    {
+        $response = $this->actingAs($this->owner)->get('/reports?start_date=notadate');
+
+        $response->assertSessionHasErrors('start_date');
+    }
+
+    public function test_not_found_page_is_branded(): void
+    {
+        $response = $this->actingAs($this->staff)->get('/this-route-does-not-exist');
+
+        $response->assertNotFound();
+        $response->assertSee('Page not found');
+        $response->assertSee('THE SHOE BOY');
+    }
+
+    public function test_forbidden_page_is_branded(): void
+    {
+        $response = $this->actingAs($this->staff)->get('/reports');
+
+        $response->assertForbidden();
+        $response->assertSee('Access denied');
+    }
+
+    public function test_new_items_are_always_created_as_available(): void
+    {
+        $response = $this->actingAs($this->staff)->post('/items', [
+            'batch_id' => $this->batch->id,
+            'brand' => 'Nike',
+            'model' => 'Air Max',
+            'listed_price' => 3000.00,
+            'condition' => 'Good',
+            'size' => 'US 9',
+            'status' => 'sold',
+            'repair_cost' => 0,
+        ]);
+
+        $response->assertSessionHas('success');
+
+        $item = Item::where('brand', 'Nike')->where('model', 'Air Max')->firstOrFail();
+        $this->assertSame('available', $item->status);
+    }
 }

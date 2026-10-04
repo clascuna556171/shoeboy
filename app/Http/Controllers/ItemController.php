@@ -64,10 +64,11 @@ class ItemController extends Controller
             'listed_price' => ['required', 'numeric', 'min:0'],
             'condition' => ['required', 'string'],
             'size' => ['required', 'string'],
-            'status' => ['required', 'in:available,reserved,sold'],
             'repair_cost' => ['nullable', 'numeric', 'min:0'],
             'category' => ['nullable', 'string', 'max:50'],
         ]);
+
+        $validated['status'] = 'available';
 
         $batch = Batch::findOrFail($validated['batch_id']);
 
@@ -104,7 +105,6 @@ class ItemController extends Controller
             'listed_price' => ['required', 'numeric', 'min:0'],
             'condition' => ['required', 'string'],
             'size' => ['required', 'string'],
-            'status' => ['required', 'in:available,reserved,sold'],
             'repair_cost' => ['nullable', 'numeric', 'min:0'],
             'category' => ['nullable', 'string', 'max:50'],
         ]);

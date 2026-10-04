@@ -73,11 +73,10 @@
                                                   'model' => $item->model,
                                                   'size' => $item->size,
                                                   'condition' => $item->condition,
-                                                  'listed_price' => $item->listed_price,
-                                                  'repair_cost' => $item->repair_cost,
-                                                  'status' => $item->status,
-                                                  'category' => $item->category,
-                                              ]) }}">Edit</x-action-btn>
+                                                   'listed_price' => $item->listed_price,
+                                                   'repair_cost' => $item->repair_cost,
+                                                   'category' => $item->category,
+                                               ]) }}">Edit</x-action-btn>
                             @elseif($item->status === 'sold' && ($soldOrder = $item->orders->whereIn('status', ['paid', 'fulfilled'])->sortByDesc('date_awarded')->first()))
                                 <div x-data="{ open: false }" class="inline-block">
                                     <x-action-btn icon="eye" tone="secondary" @click="open = true">View</x-action-btn>
@@ -169,19 +168,10 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="app-label">Status <span class="app-req">*</span></label>
-                        <select name="status" required class="app-select">
-                            <option value="available">Available</option>
-                            <option value="reserved">Reserved</option>
-                            <option value="sold">Sold</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="app-label">Category <span class="app-optional">(optional)</span></label>
-                        <input type="text" name="category" :value="editItem?.category" class="app-input">
-                    </div>
+                <div>
+                    <label class="app-label">Category <span class="app-optional">(optional)</span></label>
+                    <input type="text" name="category" :value="editItem?.category" class="app-input">
+                    <p class="mt-1 text-[11px] text-neutral-500">Status is set automatically when a pair is awarded or sold.</p>
                 </div>
 
                 <div class="flex gap-2 pt-4">

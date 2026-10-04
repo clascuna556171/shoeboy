@@ -10,14 +10,38 @@
              this.activeTab = tab;
              localStorage.setItem('shoeboy.staff.tab', tab);
          },
+
+         // Restore tickets after a validation error (old input survives the redirect).
+         init() {
+             const oldIds = @js(array_map('intval', old('item_ids', [])));
+             if (oldIds.length) {
+                 if (@js(old('payment_method') !== null)) {
+                     this.posCart = oldIds
+                         .map((id) => this.shoes.find((s) => s.id === id))
+                         .filter(Boolean);
+                 } else if (@js(old('order_type') === 'live_stream')) {
+                     const oldPrices = @js(old('prices', []));
+                     this.claimCart = oldIds
+                         .map((id, i) => {
+                             const s = this.shoes.find((sh) => sh.id === id);
+                             if (!s) return null;
+                             return {
+                                 id: s.id, sku: s.sku, brand: s.brand, model: s.model,
+                                 size: s.size, price: oldPrices[i] ?? s.listed_price, batch: s.batch,
+                             };
+                         })
+                         .filter(Boolean);
+                 }
+             }
+         },
          
          // Live Claims State
          claimInput: '',
-         buyerName: '',
-         buyerHandle: '',
+         buyerName: @js(old('customer_name', '')),
+         buyerHandle: @js(old('messenger_contact', '')),
          selectedClaimShoe: null,
          claimCart: [],
-         claimReservation: '120',
+         claimReservation: @js(old('reservation_minutes', '120')),
          shoes: {{ Js::from($items) }},
 
          // Triage Table State
@@ -32,11 +56,28 @@
          posSearch: '',
          posBrandFilter: 'All',
          posCart: [],
-         posDiscount: 0,
-         posDiscountNote: '',
-         posPaymentMethod: 'cash',
-         posCashTendered: '',
-         posGcashRef: '',
+         posDiscount: @js(old('discount', '')),
+         posDiscountNote: @js(old('discount_note', '')),
+         posPaymentMethod: @js(old('payment_method', 'cash')),
+         posCashTendered: @js(old('cash_tendered', '')),
+         posGcashRef: @js(old('gcash_ref', '')),
+         posError: '',
+
+         submitPos(event) {
+             this.posError = '';
+             if (this.posCart.length === 0) {
+                 event.preventDefault();
+                 return;
+             }
+             if (this.posPaymentMethod === 'cash') {
+                 const tendered = parseFloat(this.posCashTendered) || 0;
+                 if (tendered + 0.001 < this.posFinal) {
+                     event.preventDefault();
+                     this.posError = 'Cash received is less than the amount due (₱' + this.posFinal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ').';
+                     window.dispatchEvent(new CustomEvent('toast', { detail: { type: 'error', message: this.posError } }));
+                 }
+             }
+         },
 
          // Payment Modal State
          showPayModal: false,
@@ -651,7 +692,7 @@
                         </div>
                     </div>
 
-                    <form action="{{ route('orders.pos-checkout') }}" method="POST" class="space-y-3 pt-2">
+                    <form action="{{ route('orders.pos-checkout') }}" method="POST" class="space-y-3 pt-2" @submit="submitPos($event)">
                         @csrf
                         <template x-for="item in posCart" :key="item.id">
                             <input type="hidden" name="item_ids[]" :value="item.id">
@@ -683,8 +724,11 @@
                             <div class="p-3 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/60 text-sm space-y-2">
                                 <div class="flex items-center justify-between">
                                     <label class="text-neutral-500">Cash Received (₱) <span class="app-req">*</span>:</label>
-                                    <input type="number" step="0.01" min="0" x-model="posCashTendered" name="cash_tendered" :required="posPaymentMethod === 'cash'" class="app-input app-input-sm font-mono text-right w-28">
+                                    <input type="number" step="0.01" min="0" x-model="posCashTendered" @input="posError = ''" name="cash_tendered" :required="posPaymentMethod === 'cash'" class="app-input app-input-sm font-mono text-right w-28">
                                 </div>
+                                <template x-if="posError">
+                                    <p class="text-[11px] font-medium text-rose-600 dark:text-rose-400" x-text="posError"></p>
+                                </template>
                                 <div class="flex items-center justify-between pt-1 border-t border-neutral-200 dark:border-neutral-700">
                                     <span class="text-sm text-neutral-500">Change:</span>
                                     <span class="font-mono text-lg font-bold text-emerald-600 dark:text-emerald-400" x-text="'₱' + posChange.toLocaleString()"></span>
@@ -848,8 +892,11 @@
                 </div>
 
                 <div>
-                    <label class="app-label">Payment Amount (₱) <span class="app-req">*</span></label>
-                    <input type="number" step="0.01" name="amount" x-model="payAmount" required class="app-input font-mono">
+                    <label class="app-label">Payment Amount (₱)</label>
+                    <div class="app-input font-mono flex items-center justify-between bg-neutral-100/70 dark:bg-neutral-800/60 cursor-not-allowed"
+                         x-text="'₱' + Number(payAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></div>
+                    <input type="hidden" name="amount" :value="payAmount">
+                    <span class="text-xs text-neutral-500 mt-1 block">Locked to the order total.</span>
                 </div>
 
                 <div>

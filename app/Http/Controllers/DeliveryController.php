@@ -79,6 +79,10 @@ class DeliveryController extends Controller
             'status' => $validated['status'],
         ];
 
+        if ($validated['status'] === 'completed' && ! in_array($delivery->order->status, ['paid', 'fulfilled'], true)) {
+            return back()->with('error', "Order {$delivery->order->order_number} must be paid before the delivery can be completed.");
+        }
+
         if ($validated['status'] === 'completed' && ! $delivery->date_completed) {
             $data['date_completed'] = Carbon::now();
 

@@ -16,6 +16,11 @@ class ReportController extends Controller
 
     public function index(Request $request): View
     {
+        $request->validate([
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date'],
+        ]);
+
         $startDate = $request->query('start_date');
         $endDate = $request->query('end_date');
 
@@ -87,6 +92,9 @@ class ReportController extends Controller
             'inventory_status' => ['nullable', 'in:all,available,reserved,sold'],
             'batch_id' => ['nullable', 'integer', 'exists:batches,id'],
             'staff_id' => ['nullable', 'integer', 'exists:users,id'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date'],
+            'preset' => ['nullable', 'in:all,today,week,month,last30,year,custom'],
         ]);
 
         return [

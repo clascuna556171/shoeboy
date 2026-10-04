@@ -38,6 +38,13 @@ class PaymentService
                 ]);
             }
 
+            // The verified amount must match the agreed order total.
+            if (abs($amount - (float) $lockedOrder->awarded_price) > 0.01) {
+                throw ValidationException::withMessages([
+                    'amount' => ['Payment amount (₱' . number_format($amount, 2) . ') must match the order total (₱' . number_format((float) $lockedOrder->awarded_price, 2) . ').'],
+                ]);
+            }
+
             if ($method === 'gcash') {
                 if (empty($referenceNo) || trim($referenceNo) === '') {
                     throw ValidationException::withMessages([
