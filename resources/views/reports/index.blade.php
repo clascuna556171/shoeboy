@@ -10,25 +10,11 @@
 @section('content')
 <div class="space-y-6" x-data="{
         reportTab: @js(request('reportTab', 'batches')),
-        showExportModal: false,
-        exportPreset: 'all',
-        exportContent: 'all',
-        exportSections: { summary: true, transactions: true, batches: true, tiers: true, expenses: true, inventory: true },
         setReportTab(key) {
             this.reportTab = key;
             const u = new URL(location.href);
             u.searchParams.set('reportTab', key);
             history.replaceState(null, '', u);
-        },
-        applyContent(mode) {
-            this.exportContent = mode;
-            if (mode === 'sales') {
-                this.exportSections = { summary: true, transactions: true, batches: true, tiers: true, expenses: false, inventory: false };
-            } else if (mode === 'expenses') {
-                this.exportSections = { summary: true, transactions: false, batches: false, tiers: false, expenses: true, inventory: false };
-            } else {
-                this.exportSections = { summary: true, transactions: true, batches: true, tiers: true, expenses: true, inventory: true };
-            }
         }
      }">
 
@@ -41,7 +27,7 @@
                 </div>
         </div>
 
-        <button type="button" @click="showExportModal = true"
+        <button type="button" @click="$store.exportModal.open = true"
                 class="px-5 py-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold text-sm shadow-sm flex items-center gap-2 transition-all shrink-0">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             <span>Export Report</span>
@@ -359,69 +345,8 @@
         </div>
     </div>
 
-    {{-- Export modal --}}
-    <x-modal eyebrow="Custom Export" title="Build your report" accent="indigo" size="lg" scroll
-             close="showExportModal = false"
-             x-show="showExportModal" x-cloak @keydown.escape.window="showExportModal = false">
-            <form method="GET" action="{{ route('reports.export') }}" data-progress="download" class="space-y-4">
-                <div>
-                    <label class="app-label">Date Range</label>
-                    <select name="preset" x-model="exportPreset" class="app-select">
-                        <option value="all">All Time</option>
-                        <option value="today">Today</option>
-                        <option value="week">This Week</option>
-                        <option value="month">This Month</option>
-                        <option value="last30">Last 30 Days</option>
-                        <option value="year">This Year</option>
-                        <option value="custom">Custom Range…</option>
-                    </select>
-                </div>
-
-                <div x-show="exportPreset === 'custom'" x-cloak class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="app-label">Start Date <span class="app-req">*</span></label>
-                        <input type="date" name="start_date" :required="exportPreset === 'custom'" class="app-input">
-                    </div>
-                    <div>
-                        <label class="app-label">End Date <span class="app-req">*</span></label>
-                        <input type="date" name="end_date" :required="exportPreset === 'custom'" class="app-input">
-                    </div>
-                </div>
-
-                <div>
-                    <label class="app-label">Content Preset</label>
-                    <div class="flex items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl text-xs">
-                        <button type="button" @click="applyContent('all')" :class="exportContent === 'all' ? 'bg-white dark:bg-[#2C2C2E] shadow-sm font-bold text-[#1D1D1F] dark:text-white' : 'text-neutral-500'" class="flex-1 px-3 py-2 rounded-lg transition-all">Everything</button>
-                        <button type="button" @click="applyContent('sales')" :class="exportContent === 'sales' ? 'bg-white dark:bg-[#2C2C2E] shadow-sm font-bold text-[#1D1D1F] dark:text-white' : 'text-neutral-500'" class="flex-1 px-3 py-2 rounded-lg transition-all">Sales only</button>
-                        <button type="button" @click="applyContent('expenses')" :class="exportContent === 'expenses' ? 'bg-white dark:bg-[#2C2C2E] shadow-sm font-bold text-[#1D1D1F] dark:text-white' : 'text-neutral-500'" class="flex-1 px-3 py-2 rounded-lg transition-all">Expenses only</button>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="app-label">Sections to include</label>
-                    <div class="grid grid-cols-2 gap-2 text-sm">
-                        @foreach([
-                            'summary' => 'Sales & Executive Summary',
-                            'transactions' => 'Transactions Ledger',
-                            'batches' => 'Batch Profitability',
-                            'tiers' => 'Price Tier Performance',
-                            'expenses' => 'Operating Expenses',
-                            'inventory' => 'Inventory Snapshot',
-                        ] as $key => $label)
-                        <label class="flex items-center gap-2 px-3 py-2 rounded-xl border border-neutral-200 dark:border-neutral-800 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
-                            <input type="checkbox" name="sections[]" value="{{ $key }}" x-model="exportSections.{{ $key }}" class="w-4 h-4 rounded text-[#0071E3] border-neutral-300 dark:border-neutral-700 focus:ring-[#0071E3]">
-                            <span class="text-neutral-700 dark:text-neutral-200">{{ $label }}</span>
-                        </label>
-                        @endforeach
-                    </div>
-                </div>
-
-                <div class="flex gap-2 pt-4">
-                    <button type="button" @click="showExportModal = false" class="app-btn app-btn-secondary flex-1">Cancel</button>
-                    <button type="submit" class="app-btn app-btn-indigo flex-1">Download Excel</button>
-                </div>
-            </form>
-    </x-modal>
+    {{-- Export modal (shared component) --}}
+    <x-export-report-modal />
 
 </div>
 @endsection

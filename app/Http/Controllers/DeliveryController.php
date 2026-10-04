@@ -20,7 +20,8 @@ class DeliveryController extends Controller
         $method = $request->query('method');
         $search = $request->query('search');
 
-        $query = Delivery::with(['order.items', 'order.customer', 'order.payment', 'order.staff']);
+        $query = Delivery::with(['order.items', 'order.customer', 'order.payment', 'order.staff'])
+            ->whereHas('order', fn ($oq) => $oq->where('order_type', '!=', 'walkin_pos'));
 
         if ($status) {
             $query->where('status', $status);
@@ -45,9 +46,14 @@ class DeliveryController extends Controller
         $this->applySort($query, ['status', 'method', 'tracking_number', 'date_completed', 'created_at'], 'created_at', 'desc');
         $deliveries = $query->paginate(20)->withQueryString();
 
-        $pendingCount = Delivery::where('status', 'pending')->count();
-        $shippedCount = Delivery::where('status', 'shipped')->count();
-        $completedCount = Delivery::where('status', 'completed')->count();
+        $counts = Delivery::whereHas('order', fn ($oq) => $oq->where('order_type', '!=', 'walkin_pos'))
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $pendingCount = (int) ($counts['pending'] ?? 0);
+        $shippedCount = (int) ($counts['shipped'] ?? 0);
+        $completedCount = (int) ($counts['completed'] ?? 0);
 
         return view('deliveries.index', compact('deliveries', 'status', 'method', 'search', 'pendingCount', 'shippedCount', 'completedCount'));
     }
@@ -60,8 +66,11 @@ class DeliveryController extends Controller
 
         $validated = $request->validate([
             'method' => ['required', 'in:pickup,jnt_delivery'],
-            'tracking_number' => ['nullable', 'string', 'max:100'],
+            'tracking_number' => ['nullable', 'string', 'max:100', 'required_if:method,jnt_delivery', 'regex:/^[A-Za-z0-9\-]{6,40}$/'],
             'status' => ['required', 'in:pending,shipped,completed'],
+        ], [
+            'tracking_number.required_if' => 'A tracking / waybill number is required for J&T delivery.',
+            'tracking_number.regex' => 'Tracking number must be 6–40 letters, numbers or dashes.',
         ]);
 
         $data = [

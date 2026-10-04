@@ -92,6 +92,7 @@
                                                   class="{{ $user->is_active ? 'text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/60' : 'text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/60' }}"
                                                   data-confirm="{{ $user->is_active ? 'Deactivate' : 'Reactivate' }} {{ $user->name }}?"
                                                   data-confirm-variant="{{ $user->is_active ? 'warning' : 'success' }}"
+                                                  data-confirm-icon="{{ $user->is_active ? 'user-x' : 'user-check' }}"
                                                   data-confirm-message="{{ $user->is_active ? 'They will no longer be able to sign in.' : 'They will regain access to the console.' }}"
                                                   data-confirm-label="{{ $user->is_active ? 'Deactivate' : 'Reactivate' }}">{{ $user->is_active ? 'Deactivate' : 'Reactivate' }}</x-action-btn>
                                 </form>

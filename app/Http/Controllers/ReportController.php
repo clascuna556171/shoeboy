@@ -40,22 +40,71 @@ class ReportController extends Controller
 
     public function exportExcel(Request $request): Response
     {
-        [$startDate, $endDate] = $this->resolveRange($request);
-        $sections = (array) $request->query('sections', []);
+        $options = $this->exportOptions($request);
 
-        $content = $this->reportingService->generateExcelExport($startDate, $endDate, $sections);
-        $suffix = ($startDate || $endDate) ? '_' . ($startDate ?: 'start') . '_to_' . ($endDate ?: 'today') : '';
-        $filename = 'The_Shoe_Boy_Profit_Report' . $suffix . '_' . date('Ymd_His') . '.xls';
+        $content = $this->reportingService->generateExcelExport($options);
+        $suffix = ($options['start_date'] || $options['end_date'])
+            ? '_' . ($options['start_date'] ?: 'start') . '_to_' . ($options['end_date'] ?: 'today')
+            : '';
+        $filename = 'The_Shoe_Boy_Profit_Report' . $suffix . '_' . date('Ymd_His') . '.xlsx';
 
         return $this->excelResponse($content, $filename);
     }
 
     public function exportAllExcel(): Response
     {
-        $content = $this->reportingService->generateExcelExport();
-        $filename = 'The_Shoe_Boy_Profit_Report_All_' . date('Ymd_His') . '.xls';
+        $content = $this->reportingService->generateExcelExport([
+            'sections' => ['summary', 'sales', 'expenses', 'sessions', 'batches', 'tiers', 'inventory'],
+            'order_status' => 'paid_fulfilled',
+            'sales_granularity' => 'pair',
+            'inventory_status' => 'all',
+            'include_repair' => true,
+            'include_payment_ref' => true,
+            'include_customer' => true,
+            'include_notes' => true,
+        ]);
+        $filename = 'The_Shoe_Boy_Profit_Report_All_' . date('Ymd_His') . '.xlsx';
 
         return $this->excelResponse($content, $filename);
+    }
+
+    /**
+     * Assemble validated export options from the request.
+     *
+     * @return array<string, mixed>
+     */
+    protected function exportOptions(Request $request): array
+    {
+        [$startDate, $endDate] = $this->resolveRange($request);
+
+        $validated = $request->validate([
+            'sections' => ['nullable', 'array'],
+            'sections.*' => ['in:summary,sales,expenses,sessions,batches,tiers,inventory'],
+            'channel' => ['nullable', 'in:all,live_stream,walkin_pos'],
+            'payment_method' => ['nullable', 'in:all,cash,gcash'],
+            'order_status' => ['nullable', 'in:paid_fulfilled,fulfilled'],
+            'sales_granularity' => ['nullable', 'in:pair,order'],
+            'inventory_status' => ['nullable', 'in:all,available,reserved,sold'],
+            'batch_id' => ['nullable', 'integer', 'exists:batches,id'],
+            'staff_id' => ['nullable', 'integer', 'exists:users,id'],
+        ]);
+
+        return [
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'sections' => (array) $request->query('sections', []),
+            'channel' => $validated['channel'] ?? 'all',
+            'payment_method' => $validated['payment_method'] ?? 'all',
+            'order_status' => $validated['order_status'] ?? 'paid_fulfilled',
+            'sales_granularity' => $validated['sales_granularity'] ?? 'pair',
+            'inventory_status' => $validated['inventory_status'] ?? 'all',
+            'batch_id' => $validated['batch_id'] ?? null,
+            'staff_id' => $validated['staff_id'] ?? null,
+            'include_repair' => $request->has('include_repair') ? $request->boolean('include_repair') : true,
+            'include_payment_ref' => $request->has('include_payment_ref') ? $request->boolean('include_payment_ref') : true,
+            'include_customer' => $request->has('include_customer') ? $request->boolean('include_customer') : true,
+            'include_notes' => $request->has('include_notes') ? $request->boolean('include_notes') : false,
+        ];
     }
 
     /**
@@ -82,7 +131,7 @@ class ReportController extends Controller
     protected function excelResponse(string $content, string $filename): Response
     {
         return response($content, 200, [
-            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
             'Pragma' => 'no-cache',
             'Expires' => '0',

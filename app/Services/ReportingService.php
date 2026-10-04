@@ -7,6 +7,7 @@ use App\Models\Expense;
 use App\Models\Item;
 use App\Models\Order;
 use App\Models\Payment;
+use App\Support\XlsxWriter;
 use Illuminate\Support\Carbon;
 
 class ReportingService
@@ -329,17 +330,35 @@ class ReportingService
      * Build an Excel workbook (SpreadsheetML 2003) string for the requested range/sections.
      * One worksheet per section with fixed column widths so Excel renders readable columns.
      */
-    public function generateExcelExport(?string $startDate = null, ?string $endDate = null, array $sections = []): string
+    public function generateExcelExport(array $options = []): string
     {
-        $available = ['summary', 'transactions', 'batches', 'tiers', 'expenses', 'inventory'];
+        $available = ['summary', 'sales', 'expenses', 'sessions', 'batches', 'tiers', 'inventory'];
+        $sections = $options['sections'] ?? [];
         $sections = empty($sections) ? $available : array_values(array_intersect($available, $sections));
         $has = fn (string $key) => in_array($key, $sections, true);
+
+        $startDate = $options['start_date'] ?? null;
+        $endDate = $options['end_date'] ?? null;
+        $channel = $options['channel'] ?? 'all';
+        $paymentMethod = $options['payment_method'] ?? 'all';
+        $batchId = ! empty($options['batch_id']) ? (int) $options['batch_id'] : null;
+        $staffId = ! empty($options['staff_id']) ? (int) $options['staff_id'] : null;
+        $orderStatus = $options['order_status'] ?? 'paid_fulfilled';
+        $granularity = $options['sales_granularity'] ?? 'pair';
+        $inventoryStatus = $options['inventory_status'] ?? 'all';
+
+        $includeRepair = (bool) ($options['include_repair'] ?? true);
+        $includePaymentRef = (bool) ($options['include_payment_ref'] ?? true);
+        $includeCustomer = (bool) ($options['include_customer'] ?? true);
+        $includeNotes = (bool) ($options['include_notes'] ?? false);
 
         $now = Carbon::now();
         $metrics = $this->getOverallFinancialMetrics();
 
+        $statuses = $orderStatus === 'fulfilled' ? ['fulfilled'] : ['paid', 'fulfilled'];
+
         $ordersQuery = Order::with(['items.batch', 'customer', 'staff', 'payment'])
-            ->whereIn('status', ['paid', 'fulfilled'])
+            ->whereIn('status', $statuses)
             ->orderByDesc('date_awarded');
 
         if ($startDate) {
@@ -348,12 +367,42 @@ class ReportingService
         if ($endDate) {
             $ordersQuery->whereDate('date_awarded', '<=', $endDate);
         }
+        if ($channel !== 'all') {
+            $ordersQuery->where('order_type', $channel);
+        }
+        if ($paymentMethod !== 'all') {
+            $ordersQuery->whereHas('payment', fn ($q) => $q->where('method', $paymentMethod));
+        }
+        if ($staffId) {
+            $ordersQuery->where('staff_id', $staffId);
+        }
+        if ($batchId) {
+            $ordersQuery->whereHas('items', fn ($q) => $q->where('batch_id', $batchId));
+        }
 
         $paidOrders = $ordersQuery->get();
 
-        $rangeLabel = ($startDate || $endDate)
-            ? 'Filtered range: ' . ($startDate ?: 'Start') . ' to ' . ($endDate ?: 'Today')
-            : 'All time';
+        $filters = [];
+        $filters[] = ($startDate || $endDate)
+            ? 'range ' . ($startDate ?: 'start') . ' → ' . ($endDate ?: 'today')
+            : 'all time';
+        if ($channel !== 'all') {
+            $filters[] = 'channel: ' . ($channel === 'walkin_pos' ? 'Walk-in POS' : 'Live Stream');
+        }
+        if ($paymentMethod !== 'all') {
+            $filters[] = 'payment: ' . strtoupper($paymentMethod);
+        }
+        if ($orderStatus === 'fulfilled') {
+            $filters[] = 'fulfilled only';
+        }
+        if ($staffId) {
+            $filters[] = 'staff #' . $staffId;
+        }
+        if ($batchId) {
+            $batchCode = Batch::whereKey($batchId)->value('batch_code');
+            $filters[] = 'batch ' . ($batchCode ?? ('#' . $batchId));
+        }
+        $rangeLabel = ucfirst(implode(' · ', $filters));
 
         $sheets = [];
 
@@ -390,7 +439,11 @@ class ReportingService
             $rows = [
                 ['style' => 'sHeader', 'cells' => ['Batch Code', 'Supplier', 'Date Acquired', 'Total Sacks', 'Total Pairs', 'Batch Cost (PHP)', 'Sold Pairs', 'Realized Revenue (PHP)', 'Order Profit Sum (PHP)', 'Expenses (PHP)', 'Net Proceeds (PHP)']],
             ];
-            foreach ($this->getBatchProfitSummary() as $b) {
+            $batchRows = $this->getBatchProfitSummary();
+            if ($batchId) {
+                $batchRows = array_values(array_filter($batchRows, fn ($b) => (int) $b['batch_id'] === $batchId));
+            }
+            foreach ($batchRows as $b) {
                 $rows[] = ['cells' => [
                     $b['batch_code'], $b['supplier_name'], (string) $b['date_acquired'],
                     $this->n($b['total_sacks']), $this->n($b['total_pairs']), $this->cur($b['total_cost']),
@@ -414,29 +467,148 @@ class ReportingService
             $sheets[] = ['name' => 'Price Tiers', 'widths' => [180, 90, 90, 140, 150, 140], 'rows' => $rows];
         }
 
-        if ($has('transactions')) {
+        if ($has('sessions')) {
             $rows = [
-                ['style' => 'sHeader', 'cells' => ['Order No', 'Date', 'Channel', 'SKU', 'Brand & Model', 'Size', 'Condition', 'Awarded Price (PHP)', 'Repair Cost (PHP)', 'Unit Profit (PHP)', 'Customer', 'Payment Method', 'Payment Ref', 'Staff']],
+                ['style' => 'sHeader', 'cells' => ['Date', 'Orders', 'Pairs', 'Gross Sales (PHP)', 'Net Profit (PHP)', 'Cash (PHP)', 'GCash (PHP)']],
             ];
-            foreach ($paidOrders as $o) {
-                foreach ($o->items as $item) {
-                    $awarded = (float) ($item->pivot->awarded_price ?? 0);
-                    $avgCost = $item->batch?->average_item_cost ?? 0;
-                    $repair = (float) $item->repair_cost;
-                    $rows[] = ['cells' => [
-                        $o->order_number, (string) $o->date_awarded, $o->order_type === 'walkin_pos' ? 'POS Walk-In' : 'Live Stream',
-                        $item->sku, trim(($item->brand ?? '') . ' ' . ($item->model ?? '')), $item->size, $item->condition,
-                        $this->cur($awarded), $this->cur($repair), $this->cur($awarded - $avgCost - $repair),
-                        $o->customer?->display_handle, $o->payment?->method ? strtoupper($o->payment->method) : '', $o->payment?->reference_no, $o->staff?->name,
-                    ]];
+            $grouped = $paidOrders->groupBy(fn ($o) => Carbon::parse($o->date_awarded)->format('Y-m-d'));
+            foreach ($grouped as $date => $dayOrders) {
+                $sales = 0.0;
+                $profit = 0.0;
+                $cash = 0.0;
+                $gcash = 0.0;
+                $pairs = 0;
+                foreach ($dayOrders as $ord) {
+                    foreach ($ord->items as $item) {
+                        $awarded = (float) ($item->pivot->awarded_price ?? 0);
+                        $avgCost = $item->batch?->average_item_cost ?? 0;
+                        $sales += $awarded;
+                        $profit += $awarded - $avgCost - (float) $item->repair_cost;
+                        $pairs++;
+                    }
+                    $orderTotal = (float) $ord->awarded_price;
+                    if ($ord->payment?->method === 'gcash') {
+                        $gcash += $orderTotal;
+                    } else {
+                        $cash += $orderTotal;
+                    }
                 }
+                $rows[] = ['cells' => [
+                    $date, $this->n($dayOrders->count()), $this->n($pairs),
+                    $this->cur($sales), $this->cur($profit), $this->cur($cash), $this->cur($gcash),
+                ]];
             }
-            $sheets[] = ['name' => 'Transactions', 'widths' => [150, 140, 110, 90, 260, 80, 100, 130, 110, 120, 150, 110, 150, 130], 'rows' => $rows];
+            $sheets[] = ['name' => 'Session Summary', 'widths' => [130, 80, 80, 150, 150, 130, 130], 'rows' => $rows];
+        }
+
+        if ($has('sales')) {
+            if ($granularity === 'order') {
+                $header = ['Order No', 'Date', 'Channel', 'Pairs', 'Brands', 'Awarded Price (PHP)', 'Order Profit (PHP)'];
+                if ($includeCustomer) {
+                    $header[] = 'Customer';
+                }
+                $header[] = 'Payment Method';
+                if ($includePaymentRef) {
+                    $header[] = 'Payment Ref';
+                }
+                $header[] = 'Staff';
+                if ($includeNotes) {
+                    $header[] = 'Notes';
+                }
+
+                $rows = [['style' => 'sHeader', 'cells' => $header]];
+                foreach ($paidOrders as $o) {
+                    $total = 0.0;
+                    $profit = 0.0;
+                    foreach ($o->items as $item) {
+                        $awarded = (float) ($item->pivot->awarded_price ?? 0);
+                        $avgCost = $item->batch?->average_item_cost ?? 0;
+                        $total += $awarded;
+                        $profit += $awarded - $avgCost - (float) $item->repair_cost;
+                    }
+                    $brands = $o->items->pluck('brand')->filter()->unique()->take(3)->implode(', ');
+
+                    $line = [
+                        $o->order_number, (string) $o->date_awarded,
+                        $o->order_type === 'walkin_pos' ? 'POS Walk-In' : 'Live Stream',
+                        $this->n($o->items->count()), $brands !== '' ? $brands : 'Mixed',
+                        $this->cur($total), $this->cur($profit),
+                    ];
+                    if ($includeCustomer) {
+                        $line[] = $o->customer?->display_handle;
+                    }
+                    $line[] = $o->payment?->method ? strtoupper($o->payment->method) : '';
+                    if ($includePaymentRef) {
+                        $line[] = $o->payment?->reference_no;
+                    }
+                    $line[] = $o->staff?->name;
+                    if ($includeNotes) {
+                        $line[] = $o->notes;
+                    }
+                    $rows[] = ['cells' => $line];
+                }
+                $sheets[] = ['name' => 'Sales Ledger', 'widths' => array_fill(0, count($header), 140), 'rows' => $rows];
+            } else {
+                $header = ['Order No', 'Date', 'Channel', 'SKU', 'Brand & Model', 'Size', 'Condition'];
+                if ($includeRepair) {
+                    $header[] = 'Repair Cost (PHP)';
+                }
+                $header[] = 'Awarded Price (PHP)';
+                $header[] = 'Unit Profit (PHP)';
+                if ($includeCustomer) {
+                    $header[] = 'Customer';
+                }
+                $header[] = 'Payment Method';
+                if ($includePaymentRef) {
+                    $header[] = 'Payment Ref';
+                }
+                $header[] = 'Staff';
+                if ($includeNotes) {
+                    $header[] = 'Notes';
+                }
+
+                $rows = [['style' => 'sHeader', 'cells' => $header]];
+                foreach ($paidOrders as $o) {
+                    foreach ($o->items as $item) {
+                        $awarded = (float) ($item->pivot->awarded_price ?? 0);
+                        $avgCost = $item->batch?->average_item_cost ?? 0;
+                        $repair = (float) $item->repair_cost;
+
+                        $line = [
+                            $o->order_number, (string) $o->date_awarded,
+                            $o->order_type === 'walkin_pos' ? 'POS Walk-In' : 'Live Stream',
+                            $item->sku, trim(($item->brand ?? '') . ' ' . ($item->model ?? '')), $item->size, $item->condition,
+                        ];
+                        if ($includeRepair) {
+                            $line[] = $this->cur($repair);
+                        }
+                        $line[] = $this->cur($awarded);
+                        $line[] = $this->cur($awarded - $avgCost - $repair);
+                        if ($includeCustomer) {
+                            $line[] = $o->customer?->display_handle;
+                        }
+                        $line[] = $o->payment?->method ? strtoupper($o->payment->method) : '';
+                        if ($includePaymentRef) {
+                            $line[] = $o->payment?->reference_no;
+                        }
+                        $line[] = $o->staff?->name;
+                        if ($includeNotes) {
+                            $line[] = $o->notes;
+                        }
+                        $rows[] = ['cells' => $line];
+                    }
+                }
+                $widths = [150, 140, 110, 90, 240, 70, 90];
+                for ($i = 7; $i < count($header); $i++) {
+                    $widths[] = 130;
+                }
+                $sheets[] = ['name' => 'Sales Ledger', 'widths' => $widths, 'rows' => $rows];
+            }
         }
 
         if ($has('expenses')) {
             $rows = [
-                ['style' => 'sHeader', 'cells' => ['Operating Expenses']],
+                ['style' => 'sHeader', 'cells' => ['Operating Expense Ledger']],
                 ['style' => 'sHeader', 'cells' => ['Date', 'Category', 'Description', 'Reference No', 'Batch', 'Amount (PHP)']],
             ];
             $expenseQuery = Expense::with('batch')->orderByDesc('date');
@@ -446,39 +618,46 @@ class ReportingService
             if ($endDate) {
                 $expenseQuery->whereDate('date', '<=', $endDate);
             }
+            if ($batchId) {
+                $expenseQuery->where('batch_id', $batchId);
+            }
+            $expenseTotal = 0.0;
             foreach ($expenseQuery->get() as $e) {
+                $expenseTotal += (float) $e->amount;
                 $rows[] = ['cells' => [
                     (string) $e->date, $e->category, $e->description, (string) ($e->reference_no ?? ''),
                     $e->batch?->batch_code ?? 'General', $this->cur($e->amount),
                 ]];
             }
-            $sheets[] = ['name' => 'Expenses', 'widths' => [120, 160, 280, 150, 110, 130], 'rows' => $rows];
+            $rows[] = ['style' => 'sHeader', 'cells' => ['', '', '', '', 'Total (PHP)', $this->cur($expenseTotal)]];
+            $sheets[] = ['name' => 'Expense Ledger', 'widths' => [120, 160, 280, 150, 110, 130], 'rows' => $rows];
         }
 
         if ($has('inventory')) {
-            $sheets[] = [
-                'name' => 'Inventory',
-                'widths' => [180, 90],
-                'rows' => [
-                    ['style' => 'sHeader', 'cells' => ['Metric', 'Count']],
-                    ['cells' => ['Total Pairs', $this->n($metrics['total_inventory'])]],
-                    ['cells' => ['Available', $this->n($metrics['available_inventory'])]],
-                    ['cells' => ['Reserved', $this->n($metrics['reserved_inventory'])]],
-                    ['cells' => ['Sold', $this->n($metrics['sold_inventory'])]],
-                ],
-            ];
+            $invQuery = Item::query();
+            if ($batchId) {
+                $invQuery->where('batch_id', $batchId);
+            }
+            $invTotal = (clone $invQuery)->count();
+            $invAvailable = (clone $invQuery)->where('status', 'available')->count();
+            $invReserved = (clone $invQuery)->where('status', 'reserved')->count();
+            $invSold = (clone $invQuery)->where('status', 'sold')->count();
+
+            $invRows = [['style' => 'sHeader', 'cells' => ['Metric', 'Count']]];
+            if ($inventoryStatus === 'all') {
+                $invRows[] = ['cells' => ['Total Pairs', $this->n($invTotal)]];
+                $invRows[] = ['cells' => ['Available', $this->n($invAvailable)]];
+                $invRows[] = ['cells' => ['Reserved', $this->n($invReserved)]];
+                $invRows[] = ['cells' => ['Sold', $this->n($invSold)]];
+            } else {
+                $map = ['available' => $invAvailable, 'reserved' => $invReserved, 'sold' => $invSold];
+                $invRows[] = ['cells' => [ucfirst($inventoryStatus), $this->n($map[$inventoryStatus] ?? 0)]];
+            }
+
+            $sheets[] = ['name' => 'Inventory', 'widths' => [180, 90], 'rows' => $invRows];
         }
 
-        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-        $xml .= '<?mso-application progid="Excel.Sheet"?>' . "\n";
-        $xml .= '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">';
-        $xml .= $this->excelStyles();
-        foreach ($sheets as $sheet) {
-            $xml .= $this->renderWorksheet($sheet['name'], $sheet['widths'], $sheet['rows']);
-        }
-        $xml .= '</Workbook>';
-
-        return $xml;
+        return (new XlsxWriter())->write($sheets);
     }
 
     private function n($value): array
@@ -489,72 +668,5 @@ class ReportingService
     private function cur($value): array
     {
         return ['v' => $value, 'num' => true, 'cur' => true];
-    }
-
-    private function excelStyles(): string
-    {
-        return '<Styles>'
-            . '<Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Center"/><Font ss:FontName="Calibri" ss:Size="11"/></Style>'
-            . '<Style ss:ID="sTitle"><Font ss:Bold="1" ss:Size="14" ss:Color="#1D1D1F"/><Alignment ss:Vertical="Center"/></Style>'
-            . '<Style ss:ID="sHeader"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1D1D1F" ss:Pattern="Solid"/><Alignment ss:Vertical="Center" ss:WrapText="1"/></Style>'
-            . '<Style ss:ID="sNumber"><NumberFormat ss:Format="#,##0"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/></Style>'
-            . '<Style ss:ID="sText"><Alignment ss:Vertical="Center" ss:WrapText="1"/></Style>'
-            . '<Style ss:ID="sCurrency"><NumberFormat ss:Format="&quot;₱&quot;#,##0.00"/><Alignment ss:Horizontal="Right" ss:Vertical="Center"/></Style>'
-            . '</Styles>';
-    }
-
-    /**
-     * @param  array<int, int|float>  $widths
-     * @param  array<int, array{cells?: array, style?: string}>  $rows
-     */
-    private function renderWorksheet(string $name, array $widths, array $rows): string
-    {
-        $out = '<Worksheet ss:Name="' . $this->xml($name) . '"><Table ss:DefaultRowHeight="16">';
-        foreach ($widths as $width) {
-            $out .= '<Column ss:AutoFitWidth="0" ss:Width="' . (int) $width . '"/>';
-        }
-        foreach ($rows as $row) {
-            $rowStyle = $row['style'] ?? null;
-            $out .= '<Row>';
-            foreach (array_values($row['cells'] ?? []) as $cell) {
-                $out .= $this->renderCell($cell, $rowStyle);
-            }
-            $out .= '</Row>';
-        }
-        $out .= '</Table></Worksheet>';
-
-        return $out;
-    }
-
-    private function renderCell(mixed $cell, ?string $rowStyle): string
-    {
-        if (is_array($cell)) {
-            $value = $cell['v'] ?? '';
-            $isNumber = $cell['num'] ?? false;
-            $isCurrency = $cell['cur'] ?? false;
-        } else {
-            $value = $cell;
-            $isNumber = false;
-            $isCurrency = false;
-        }
-
-        $value = $value === null ? '' : $value;
-
-        if ($value === '') {
-            return $rowStyle ? '<Cell ss:StyleID="' . $rowStyle . '"/>' : '<Cell/>';
-        }
-
-        if ($isNumber) {
-            $style = $isCurrency ? 'sCurrency' : 'sNumber';
-            return '<Cell ss:StyleID="' . $style . '"><Data ss:Type="Number">' . (0 + $value) . '</Data></Cell>';
-        }
-
-        $attr = $rowStyle ? ' ss:StyleID="' . $rowStyle . '"' : '';
-        return '<Cell' . $attr . '><Data ss:Type="String">' . $this->xml((string) $value) . '</Data></Cell>';
-    }
-
-    private function xml(string $value): string
-    {
-        return htmlspecialchars($value, ENT_QUOTES | ENT_XML1, 'UTF-8');
     }
 }

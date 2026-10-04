@@ -26,6 +26,7 @@
          triageSort: 'sku',
          triageDir: 'asc',
          selectedSoldId: null,
+         selectedReservedId: null,
          
          // POS State
          posSearch: '',
@@ -478,6 +479,7 @@
                                     <x-action-btn tone="secondary" type="submit"
                                                   data-confirm="Release this reservation?"
                                                   data-confirm-variant="danger"
+                                                  data-confirm-icon="unlock"
                                                   data-confirm-message="The pair returns to available stock and the claim is cancelled."
                                                   data-confirm-label="Release">Release</x-action-btn>
                                 </form>
@@ -527,11 +529,12 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 max-h-[600px] overflow-y-auto pr-1">
                     <template x-for="shoe in shoes.filter(s => s.status === 'available' && (posBrandFilter === 'All' || s.brand === posBrandFilter) && (!posSearch.trim() || `${s.sku} ${s.brand} ${s.model}`.toLowerCase().includes(posSearch.toLowerCase())))" :key="shoe.id">
-                        <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 hover:border-[#0071E3]/50 rounded-2xl p-4 shadow-sm transition-all flex flex-col justify-between gap-3">
+                        <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 hover:border-[#0071E3]/50 rounded-2xl p-4 shadow-sm transition-all flex flex-col justify-between gap-3"
+                             :class="posCart.some(i => i.id === shoe.id) ? 'opacity-50 grayscale pointer-events-none' : ''">
                             <div>
                                 <div class="flex items-center justify-between text-xs mb-1">
                                     <span class="font-mono font-semibold text-[#0071E3] dark:text-[#0A84FF]" x-text="shoe.sku"></span>
-                                    <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold badge-available">Available</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold" :class="posCart.some(i => i.id === shoe.id) ? 'badge-neutral' : 'badge-available'" x-text="posCart.some(i => i.id === shoe.id) ? 'In ticket' : 'Available'"></span>
                                 </div>
                                 <h4 class="font-bold text-sm text-[#1D1D1F] dark:text-white line-clamp-1" x-text="shoe.brand + ' ' + shoe.model"></h4>
                                 <div class="flex items-center gap-2 text-xs text-neutral-500 mt-1">
@@ -546,9 +549,10 @@
                                 <span class="font-mono font-bold text-base text-[#1D1D1F] dark:text-white" x-text="'₱' + Number(shoe.listed_price).toLocaleString()"></span>
                                 <button @click="addToPos(shoe)"
                                         type="button"
-                                        class="app-btn app-btn-primary app-btn-sm">
+                                        :disabled="posCart.some(i => i.id === shoe.id)"
+                                        class="app-btn app-btn-primary app-btn-sm disabled:opacity-60 disabled:cursor-not-allowed">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                    Add
+                                    <span x-text="posCart.some(i => i.id === shoe.id) ? 'Added' : 'Add'"></span>
                                 </button>
                             </div>
                         </div>
@@ -769,7 +773,10 @@
                                 <template x-if="item.status === 'sold'">
                                     <x-action-btn icon="eye" tone="secondary" @click="selectedSoldId = item.id">View</x-action-btn>
                                 </template>
-                                <template x-if="item.status !== 'sold'">
+                                <template x-if="item.status === 'reserved'">
+                                    <x-action-btn icon="eye" tone="secondary" @click="selectedReservedId = item.id">View</x-action-btn>
+                                </template>
+                                <template x-if="item.status === 'available'">
                                     <span class="text-xs text-neutral-400 dark:text-neutral-600">—</span>
                                 </template>
                             </td>
@@ -790,9 +797,13 @@
     </div>
 
     @foreach($items as $item)
-        @php($soldOrder = $item->status === 'sold' ? $item->orders->first() : null)
+        @php($soldOrder = $item->status === 'sold' ? $item->orders->whereIn('status', ['paid', 'fulfilled'])->sortByDesc('date_awarded')->first() : null)
         @if($soldOrder)
             <x-order-modal :order="$soldOrder" x-show="selectedSoldId === {{ $item->id }}" close="selectedSoldId = null" />
+        @endif
+        @php($reservedOrder = $item->status === 'reserved' ? $item->orders->where('status', 'reserved')->sortByDesc('date_awarded')->first() : null)
+        @if($reservedOrder)
+            <x-order-modal :order="$reservedOrder" x-show="selectedReservedId === {{ $item->id }}" close="selectedReservedId = null" />
         @endif
     @endforeach
 

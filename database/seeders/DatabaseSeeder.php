@@ -236,13 +236,13 @@ class DatabaseSeeder extends Seeder
         ]);
         $orderAj->items()->attach($itemsB04['B04-005']->id, ['awarded_price' => 5800.00]);
 
-        // E. Air Max 1 (walk-in POS, cash, pickup PENDING) — B05
+        // E. Air Max 1 (walk-in POS, cash, pickup completed) — B05
         $orderMax = Order::create([
             'order_number' => 'ORD-' . date('Ymd') . '-MX003',
             'customer_id' => $walkinCustomer->id,
             'staff_id' => $staff->id,
             'awarded_price' => 6100.00,
-            'status' => 'paid',
+            'status' => 'fulfilled',
             'order_type' => 'walkin_pos',
             'date_awarded' => Carbon::now()->subHours(5),
             'expires_at' => null,
@@ -256,7 +256,8 @@ class DatabaseSeeder extends Seeder
         ]);
         Delivery::create([
             'order_id' => $orderMax->id, 'method' => 'pickup',
-            'tracking_number' => null, 'status' => 'pending',
+            'tracking_number' => null, 'status' => 'completed',
+            'date_completed' => Carbon::now()->subHours(5)->addMinutes(2),
         ]);
 
         // F. Saucony Shadow (live stream, GCash, J&T SHIPPED) — B05

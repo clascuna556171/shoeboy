@@ -17,6 +17,7 @@ use App\Services\PaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
+use ZipArchive;
 
 class ShoeBoySystemTest extends TestCase
 {
@@ -127,6 +128,12 @@ class ShoeBoySystemTest extends TestCase
 
         $responseStaff = $this->actingAs($this->owner)->get('/staff');
         $responseStaff->assertStatus(200);
+    }
+
+    public function test_workspaces_render_for_owner_and_staff(): void
+    {
+        $this->actingAs($this->owner)->get('/')->assertOk();
+        $this->actingAs($this->staff)->get('/')->assertOk();
     }
 
     public function test_staff_is_forbidden_from_reports_and_staff_management(): void
@@ -422,6 +429,59 @@ class ShoeBoySystemTest extends TestCase
         $this->assertEquals('JNT-0001', $delivery->fresh()->tracking_number);
     }
 
+    public function test_jnt_delivery_requires_a_valid_tracking_number(): void
+    {
+        $order = app(OrderService::class)->awardItem(
+            item: $this->item,
+            customer: $this->customer,
+            staff: $this->staff,
+            awardedPrice: 4500.00
+        );
+        app(PaymentService::class)->recordPayment($order, 4500.00, 'cash', null, $this->staff);
+        $delivery = Delivery::where('order_id', $order->id)->first();
+
+        // Missing tracking on a J&T delivery is rejected.
+        $this->actingAs($this->staff)->put("/deliveries/{$delivery->id}", [
+            'method' => 'jnt_delivery',
+            'status' => 'shipped',
+        ])->assertSessionHasErrors('tracking_number');
+
+        // Too short / invalid characters are rejected.
+        $this->actingAs($this->staff)->put("/deliveries/{$delivery->id}", [
+            'method' => 'jnt_delivery',
+            'tracking_number' => 'abc',
+            'status' => 'shipped',
+        ])->assertSessionHasErrors('tracking_number');
+
+        // A valid waybill is accepted.
+        $this->actingAs($this->staff)->put("/deliveries/{$delivery->id}", [
+            'method' => 'jnt_delivery',
+            'tracking_number' => 'JNT-PH-99887766',
+            'status' => 'shipped',
+        ])->assertSessionHas('success');
+
+        $this->assertEquals('shipped', $delivery->fresh()->status);
+    }
+
+    public function test_deliveries_page_excludes_walkin_pos_orders(): void
+    {
+        $this->actingAs($this->staff)->post('/orders/pos-checkout', [
+            'item_ids' => [$this->item->id],
+            'payment_method' => 'cash',
+            'cash_tendered' => 5000.00,
+        ])->assertSessionHas('success');
+
+        $posOrder = Order::where('order_type', 'walkin_pos')->latest('id')->firstOrFail();
+
+        // POS is fulfilled at the counter and its delivery is auto-completed.
+        $this->assertEquals('fulfilled', $posOrder->status);
+        $this->assertEquals('completed', $posOrder->delivery->status);
+
+        $this->actingAs($this->owner)->get('/deliveries')
+            ->assertOk()
+            ->assertDontSee($posOrder->order_number);
+    }
+
     public function test_item_price_tier_is_auto_assigned_from_target_price(): void
     {
         $tierOne = Item::create([
@@ -514,14 +574,16 @@ class ShoeBoySystemTest extends TestCase
         $response = $this->actingAs($this->owner)->get('/reports/export-all');
 
         $response->assertStatus(200);
-        $content = $response->getContent();
+        $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $this->assertStringStartsWith('PK', $response->getContent());
 
-        $this->assertStringContainsString('<Workbook', $content);
-        $this->assertStringContainsString('Total Sales', $content);
-        $this->assertStringContainsString('Total Expenses', $content);
-        $this->assertStringContainsString('Sales Today', $content);
-        $this->assertStringContainsString('Operating Expenses', $content);
-        $this->assertStringContainsString('Batch Profitability', $content);
+        $xml = $this->xlsxXml($response);
+        $this->assertStringContainsString('Total Sales', $xml);
+        $this->assertStringContainsString('Total Expenses', $xml);
+        $this->assertStringContainsString('Sales Today', $xml);
+        $this->assertStringContainsString('Operating Expense Ledger', $xml);
+        $this->assertStringContainsString('Batch Profitability', $xml);
+        $this->assertStringContainsString('Sales Ledger', $xml);
     }
 
     public function test_custom_export_includes_only_selected_sections(): void
@@ -529,12 +591,37 @@ class ShoeBoySystemTest extends TestCase
         $response = $this->actingAs($this->owner)->get('/reports/export?preset=all&sections[]=summary');
 
         $response->assertStatus(200);
-        $content = $response->getContent();
+        $this->assertStringStartsWith('PK', $response->getContent());
 
-        $this->assertStringContainsString('<Workbook', $content);
-        $this->assertStringContainsString('Total Sales', $content);
-        $this->assertStringNotContainsString('Operating Expenses', $content);
-        $this->assertStringNotContainsString('Batch Profitability', $content);
+        $xml = $this->xlsxXml($response);
+        $this->assertStringContainsString('Total Sales', $xml);
+        $this->assertStringNotContainsString('Operating Expense Ledger', $xml);
+        $this->assertStringNotContainsString('Batch Profitability', $xml);
+    }
+
+    /**
+     * Collect the XML parts from a generated .xlsx (a ZIP) for assertions.
+     */
+    private function xlsxXml($response): string
+    {
+        $tmp = tempnam(sys_get_temp_dir(), 'xlsx');
+        file_put_contents($tmp, $response->getContent());
+
+        $zip = new ZipArchive();
+        $zip->open($tmp);
+
+        $xml = '';
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $name = $zip->getNameIndex($i);
+            if (str_starts_with((string) $name, 'xl/')) {
+                $xml .= $zip->getFromIndex($i);
+            }
+        }
+
+        $zip->close();
+        @unlink($tmp);
+
+        return $xml;
     }
 
     public function test_inventory_defaults_to_all_batches(): void
