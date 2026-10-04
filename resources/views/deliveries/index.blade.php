@@ -114,24 +114,24 @@
                                   @submit.prevent="status === 'completed'
                                       ? $store.dialog.show({ variant: 'success', icon: 'truck', title: 'Complete this delivery?', message: 'Marking as completed is permanent and cannot be undone. The order will be marked as fulfilled.', confirmLabel: 'Complete permanently' }).then(ok => ok && $el.submit())
                                       : $el.submit()"
-                                  class="flex flex-wrap items-center justify-end gap-1.5">
+                                  class="relative flex items-center justify-end gap-1.5 whitespace-nowrap">
                                 @csrf
                                 @method('PUT')
-                                <select name="method" x-model="method" @change="if (method === 'pickup') tracking = null" class="app-select app-input-sm !w-auto">
+                                <select name="method" x-model="method" @change="if (method === 'pickup') tracking = null" class="app-select app-input-sm !w-auto shrink-0">
                                     <option value="pickup">Pickup</option>
                                     <option value="jnt_delivery">J&amp;T</option>
                                 </select>
                                 <input type="text" name="tracking_number" x-model="tracking" x-show="method === 'jnt_delivery'" x-cloak
                                        :required="method === 'jnt_delivery'" minlength="6" maxlength="40"
-                                       placeholder="Tracking / waybill #" class="app-input app-input-sm !w-40 font-mono">
-                                <select name="status" x-model="status" class="app-select app-input-sm !w-auto">
+                                       placeholder="Tracking / waybill #" class="app-input app-input-sm !w-36 shrink-0 font-mono">
+                                <select name="status" x-model="status" class="app-select app-input-sm !w-auto shrink-0">
                                     <option value="pending">Pending</option>
                                     <option value="shipped">Shipped</option>
                                     <option value="completed">Completed</option>
                                 </select>
                                 <button type="submit" :disabled="!changed"
-                                        class="app-btn app-btn-sm app-btn-primary">Save</button>
-                                <span x-show="changed" x-cloak class="w-full text-right text-[11px] font-medium text-amber-600 dark:text-amber-400">Unsaved changes</span>
+                                        class="app-btn app-btn-sm app-btn-primary shrink-0">Save</button>
+                                <span x-show="changed" x-cloak class="absolute right-0 top-full mt-1 text-[11px] font-medium text-amber-600 dark:text-amber-400">Unsaved changes</span>
                             </form>
                             @endif
                         </td>

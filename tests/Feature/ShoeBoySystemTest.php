@@ -1155,4 +1155,38 @@ class ShoeBoySystemTest extends TestCase
         $item = Item::where('brand', 'Nike')->where('model', 'Air Max')->firstOrFail();
         $this->assertSame('available', $item->status);
     }
+
+    public function test_live_stream_payment_defaults_delivery_to_jnt(): void
+    {
+        $orderService = app(OrderService::class);
+        $paymentService = app(PaymentService::class);
+
+        $order = $orderService->awardItem($this->item, $this->customer, $this->staff, 4500.00, 'live_stream');
+
+        $paymentService->recordPayment($order, 4500.00, 'gcash', 'GCASH-JNT-1', $this->staff);
+
+        $this->assertDatabaseHas('deliveries', [
+            'order_id' => $order->id,
+            'method' => 'jnt_delivery',
+            'status' => 'pending',
+        ]);
+    }
+
+    public function test_pos_payment_defaults_delivery_to_pickup(): void
+    {
+        $response = $this->actingAs($this->staff)->post('/orders/pos-checkout', [
+            'item_ids' => [$this->item->id],
+            'payment_method' => 'cash',
+            'cash_tendered' => 5000.00,
+        ]);
+
+        $response->assertSessionHas('success');
+
+        $order = Order::where('order_type', 'walkin_pos')->latest('id')->firstOrFail();
+        $this->assertDatabaseHas('deliveries', [
+            'order_id' => $order->id,
+            'method' => 'pickup',
+            'status' => 'completed',
+        ]);
+    }
 }

@@ -85,7 +85,7 @@ class PaymentService
                 'status' => 'sold',
             ]);
 
-            // Andam daan delivery entry (walk-in POS is fulfilled on the spot)
+            // Andam daan delivery entry (walk-in POS is fulfilled on the spot; live orders ship via J&T)
             Delivery::firstOrCreate(
                 ['order_id' => $lockedOrder->id],
                 $immediateFulfillment
@@ -95,7 +95,7 @@ class PaymentService
                         'date_completed' => Carbon::now(),
                     ]
                     : [
-                        'method' => 'pickup',
+                        'method' => $lockedOrder->order_type === 'walkin_pos' ? 'pickup' : 'jnt_delivery',
                         'status' => 'pending',
                     ]
             );
