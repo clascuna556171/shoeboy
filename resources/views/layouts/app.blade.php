@@ -242,6 +242,7 @@
     <div x-data
          x-show="$store.dialog.open"
          x-cloak
+         x-effect="$store.dialog.open ? window.appScrollLock?.lock() : window.appScrollLock?.unlock()"
          @keydown.escape.window="$store.dialog.cancel()"
          class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/30 dark:bg-black/50 backdrop-blur-[2px] app-modal-backdrop">
         <div class="app-modal-panel w-full max-w-sm bg-white dark:bg-[#1C1C1E] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6"
