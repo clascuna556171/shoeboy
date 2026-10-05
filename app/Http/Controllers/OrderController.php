@@ -11,7 +11,6 @@ use App\Services\PaymentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -23,8 +22,7 @@ class OrderController extends Controller
     public function __construct(
         protected OrderService $orderService,
         protected PaymentService $paymentService
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): View
     {
@@ -194,7 +192,7 @@ class OrderController extends Controller
             $tendered = (float) ($validated['cash_tendered'] ?? 0);
             if ($tendered + 0.001 < $due) {
                 throw ValidationException::withMessages([
-                    'cash_tendered' => 'Cash received (₱' . number_format($tendered, 2) . ') is less than the amount due (₱' . number_format($due, 2) . ').',
+                    'cash_tendered' => 'Cash received (₱'.number_format($tendered, 2).') is less than the amount due (₱'.number_format($due, 2).').',
                 ]);
             }
         }
@@ -207,14 +205,14 @@ class OrderController extends Controller
                 staff: $staff,
                 orderType: 'walkin_pos',
                 reservationMinutes: null,
-                notes: $discountNote ? "POS Sale. Discount note: {$discountNote}" : "POS Walk-In Sale"
+                notes: $discountNote ? "POS Sale. Discount note: {$discountNote}" : 'POS Walk-In Sale'
             );
 
             $total = (float) $order->awarded_price;
 
             $refNo = $paymentMethod === 'gcash'
                 ? $gcashRef
-                : 'CASH-' . $order->order_number;
+                : 'CASH-'.$order->order_number;
 
             $this->paymentService->recordPayment(
                 order: $order,

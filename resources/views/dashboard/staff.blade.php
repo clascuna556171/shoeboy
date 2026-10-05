@@ -11,6 +11,17 @@
              localStorage.setItem('shoeboy.staff.tab', tab);
          },
 
+         // Resolve the relevant order id for an item so the shared lazy panel can
+         // be opened (and preloaded on hover) without pre-rendering modals.
+         orderPanelUrl(item, kind) {
+             const orders = item.orders || [];
+             const match = kind === 'sold'
+                 ? orders.filter((o) => o.status === 'paid' || o.status === 'fulfilled')
+                 : orders.filter((o) => o.status === 'reserved');
+             const order = match.slice().sort((a, b) => new Date(b.date_awarded) - new Date(a.date_awarded))[0];
+             return order ? '{{ url('/panel/order') }}/' + order.id : '';
+         },
+
          // Restore tickets after a validation error (old input survives the redirect).
          init() {
              const oldIds = @js(array_map('intval', old('item_ids', [])));
@@ -49,8 +60,6 @@
          triageStatus: 'all',
          triageSort: 'sku',
          triageDir: 'asc',
-         selectedSoldId: null,
-         selectedReservedId: null,
          
          // POS State
          posSearch: '',
@@ -225,7 +234,7 @@
         </div>
 
         {{-- Live Claims how-to (steps inside header) --}}
-        <div x-show="activeTab === 'claims'" x-cloak
+        <div x-show="activeTab === 'claims'" data-tab-panel="claims"
              class="flex flex-wrap items-center gap-x-3 gap-y-2 pt-3 border-t border-neutral-100 dark:border-neutral-800 text-sm">
             <span class="flex items-center gap-2 text-neutral-600 dark:text-neutral-300">
                 <span class="w-5 h-5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 ring-1 ring-inset ring-neutral-200 dark:ring-neutral-700 text-[11px] font-bold flex items-center justify-center">1</span>
@@ -244,7 +253,7 @@
         </div>
 
         {{-- POS how-to (steps inside header) --}}
-        <div x-show="activeTab === 'pos'" x-cloak
+        <div x-show="activeTab === 'pos'" data-tab-panel="pos"
              class="flex flex-wrap items-center gap-x-3 gap-y-2 pt-3 border-t border-neutral-100 dark:border-neutral-800 text-sm">
             <span class="flex items-center gap-2 text-neutral-600 dark:text-neutral-300">
                 <span class="w-5 h-5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 ring-1 ring-inset ring-neutral-200 dark:ring-neutral-700 text-[11px] font-bold flex items-center justify-center">1</span>
@@ -264,7 +273,7 @@
     </div>
 
     {{-- Tab 1: Live Selling Claims --}}
-    <div x-show="activeTab === 'claims'" x-cloak class="space-y-6">
+    <div x-show="activeTab === 'claims'" data-tab-panel="claims" class="space-y-6">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
             <div class="lg:col-span-7 space-y-4">
@@ -574,7 +583,7 @@
     </div>
 
     {{-- Tab 2: Walk-In POS --}}
-    <div x-show="activeTab === 'pos'" x-cloak class="space-y-6">
+    <div x-show="activeTab === 'pos'" data-tab-panel="pos" class="space-y-6">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
             <div class="lg:col-span-7 space-y-4">
@@ -758,7 +767,7 @@
     </div>
 
     {{-- Tab 3: Triage Table --}}
-    <div x-show="activeTab === 'triage'" x-cloak class="space-y-6">
+    <div x-show="activeTab === 'triage'" data-tab-panel="triage" class="space-y-6">
         <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 shadow-sm space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-neutral-200/80 dark:border-neutral-800">
                 <div>
@@ -843,10 +852,10 @@
                             </td>
                             <td class="py-3 px-3 text-right">
                                 <template x-if="item.status === 'sold'">
-                                    <x-action-btn icon="eye" tone="secondary" @click="selectedSoldId = item.id">View</x-action-btn>
+                                    <x-action-btn icon="eye" tone="secondary" x-bind:data-panel-url="orderPanelUrl(item, 'sold')">View</x-action-btn>
                                 </template>
                                 <template x-if="item.status === 'reserved'">
-                                    <x-action-btn icon="eye" tone="secondary" @click="selectedReservedId = item.id">View</x-action-btn>
+                                    <x-action-btn icon="eye" tone="secondary" x-bind:data-panel-url="orderPanelUrl(item, 'reserved')">View</x-action-btn>
                                 </template>
                                 <template x-if="item.status === 'available'">
                                     <span class="text-xs text-neutral-400 dark:text-neutral-600">—</span>
@@ -867,17 +876,6 @@
             </div>
         </div>
     </div>
-
-    @foreach($items as $item)
-        @php($soldOrder = $item->status === 'sold' ? $item->orders->whereIn('status', ['paid', 'fulfilled'])->sortByDesc('date_awarded')->first() : null)
-        @if($soldOrder)
-            <x-order-modal :order="$soldOrder" x-show="selectedSoldId === {{ $item->id }}" close="selectedSoldId = null" />
-        @endif
-        @php($reservedOrder = $item->status === 'reserved' ? $item->orders->where('status', 'reserved')->sortByDesc('date_awarded')->first() : null)
-        @if($reservedOrder)
-            <x-order-modal :order="$reservedOrder" x-show="selectedReservedId === {{ $item->id }}" close="selectedReservedId = null" />
-        @endif
-    @endforeach
 
     {{-- Modal para bayad --}}
     <x-modal title="Verify Payment" accent="emerald" close="showPayModal = false"
@@ -922,6 +920,18 @@
                 </div>
             </form>
     </x-modal>
+
+    {{-- Show the correct tab before Alpine boots (avoids the whole-panel pop). --}}
+    <script>
+        (function () {
+            var tab = new URLSearchParams(location.search).get('tab')
+                || localStorage.getItem('shoeboy.staff.tab')
+                || 'claims';
+            document.querySelectorAll('[data-tab-panel]').forEach(function (el) {
+                el.style.display = el.getAttribute('data-tab-panel') === tab ? '' : 'none';
+            });
+        })();
+    </script>
 
 </div>
 @endsection

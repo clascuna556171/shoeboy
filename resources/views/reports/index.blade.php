@@ -92,7 +92,7 @@
     </div>
 
     {{-- Breakdown tabs --}}
-    <div class="app-card overflow-hidden">
+    <div class="app-card">
         <div class="p-4 border-b border-neutral-200 dark:border-neutral-800">
             <div class="mb-3">
                 <div class="text-sm font-semibold text-neutral-900 dark:text-white">Breakdown</div>
@@ -127,7 +127,7 @@
 
         {{-- By batch --}}
         <div x-show="reportTab === 'batches'">
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto lg:overflow-visible">
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                         <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
@@ -170,7 +170,7 @@
 
         {{-- By session --}}
         <div x-show="reportTab === 'sessions'" x-cloak>
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto lg:overflow-visible">
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                         <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
@@ -209,7 +209,7 @@
 
         {{-- By tier --}}
         <div x-show="reportTab === 'tiers'" x-cloak>
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto lg:overflow-visible">
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                         <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
@@ -239,7 +239,7 @@
         @php($salesGross = collect($salesLedger)->sum('awarded_price'))
         @php($salesProfit = collect($salesLedger)->sum('unit_profit'))
         <div x-show="reportTab === 'sales'" x-cloak>
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto lg:overflow-visible">
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                         <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
@@ -299,7 +299,7 @@
         {{-- Expenses ledger --}}
         @php($expenseTotal = collect($expenseLedger)->sum('amount'))
         <div x-show="reportTab === 'expenses'" x-cloak>
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto lg:overflow-visible">
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                         <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">

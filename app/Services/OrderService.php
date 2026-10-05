@@ -25,7 +25,7 @@ class OrderService
         ?string $notes = null
     ): Order {
         return DB::transaction(function () use ($items, $prices, $customer, $staff, $orderType, $reservationMinutes, $notes) {
-            $orderNumber = 'ORD-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -5));
+            $orderNumber = 'ORD-'.date('Ymd').'-'.strtoupper(substr(uniqid(), -5));
             $expiresAt = $reservationMinutes ? Carbon::now()->addMinutes($reservationMinutes) : null;
 
             $lines = [];
@@ -120,7 +120,7 @@ class OrderService
 
             $lockedOrder->update([
                 'status' => 'cancelled',
-                'notes' => $lockedOrder->notes ? $lockedOrder->notes . ' | Cancellation: ' . $reason : 'Cancellation: ' . $reason,
+                'notes' => $lockedOrder->notes ? $lockedOrder->notes.' | Cancellation: '.$reason : 'Cancellation: '.$reason,
             ]);
 
             $itemIds = OrderItem::where('order_id', $lockedOrder->id)->pluck('item_id');

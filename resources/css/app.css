@@ -48,19 +48,25 @@
 ::-webkit-scrollbar-thumb { background: rgba(134, 134, 139, 0.3); border-radius: 9999px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(134, 134, 139, 0.5); }
 
+/* Reserve scrollbar space on the page so content never shifts when it appears */
+html { scrollbar-gutter: stable; }
+
+/* Lazy modal: keep content width stable when its scrollbar appears, and
+   isolate layout while its height animates. */
+[data-lazy-panel] { scrollbar-gutter: stable; }
+.lazy-modal-body { contain: layout; }
+
 /* Alpine: hide until initialised */
 [x-cloak] { display: none !important; }
 
 @layer components {
     /* Custom Apple Glass & Surface Utilities */
     .apple-glass {
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        background-color: rgba(255, 255, 255, 0.85);
+        background-color: rgba(255, 255, 255, 0.97);
         border-color: rgba(229, 229, 234, 0.8);
     }
     .dark .apple-glass {
-        background-color: rgba(28, 28, 30, 0.85);
+        background-color: rgba(28, 28, 30, 0.97);
         border-color: rgba(44, 44, 46, 0.8);
     }
 
@@ -78,6 +84,7 @@
     .dark .app-card {
         background-color: var(--color-apple-card-dark);
         border-color: var(--color-apple-border-dark);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
     }
     .app-card-hover:hover {
         box-shadow: 0 16px 40px -20px rgba(0, 0, 0, 0.22);
@@ -269,8 +276,8 @@
 
     .app-btn-primary { background-color: #1D1D1F; color: #ffffff; }
     .app-btn-primary:hover { background-color: #000000; }
-    .dark .app-btn-primary { background-color: #ffffff; color: #1D1D1F; }
-    .dark .app-btn-primary:hover { background-color: #e5e5e5; }
+    .dark .app-btn-primary { background-color: #3A3A3C; color: #F5F5F7; }
+    .dark .app-btn-primary:hover { background-color: #48484A; }
 
     .app-btn-secondary { background-color: #ffffff; border-color: #e5e5ea; color: #404040; }
     .app-btn-secondary:hover { background-color: #f5f5f5; }
@@ -297,6 +304,24 @@
     .app-btn-teal:hover { background-color: #0f766e; }
     .app-btn-blue { background-color: #0071E3; color: #ffffff; }
     .app-btn-blue:hover { background-color: #0058B8; }
+
+    /* Deeper accent tones for dark surfaces so CTAs don't glare */
+    .dark .app-btn-emerald { background-color: #047857; }
+    .dark .app-btn-emerald:hover { background-color: #065F46; }
+    .dark .app-btn-amber { background-color: #B45309; }
+    .dark .app-btn-amber:hover { background-color: #92400E; }
+    .dark .app-btn-rose { background-color: #BE123C; }
+    .dark .app-btn-rose:hover { background-color: #9F1239; }
+    .dark .app-btn-sky { background-color: #0369A1; }
+    .dark .app-btn-sky:hover { background-color: #075985; }
+    .dark .app-btn-indigo { background-color: #4338CA; }
+    .dark .app-btn-indigo:hover { background-color: #3730A3; }
+    .dark .app-btn-violet { background-color: #6D28D9; }
+    .dark .app-btn-violet:hover { background-color: #5B21B6; }
+    .dark .app-btn-teal { background-color: #0F766E; }
+    .dark .app-btn-teal:hover { background-color: #115E59; }
+    .dark .app-btn-blue { background-color: #0A84FF; }
+    .dark .app-btn-blue:hover { background-color: #0071E3; }
 
     .app-btn-ghost { background-color: transparent; color: #525252; }
     .app-btn-ghost:hover { background-color: #f5f5f5; }
@@ -325,8 +350,8 @@
         box-shadow: 0 0 8px rgba(0, 0, 0, 0.35), 0 0 3px rgba(0, 0, 0, 0.25);
     }
     .dark .app-progress__bar {
-        background-color: #FFFFFF;
-        box-shadow: 0 0 8px rgba(255, 255, 255, 0.5), 0 0 3px rgba(255, 255, 255, 0.4);
+        background-color: #0A84FF;
+        box-shadow: 0 0 8px rgba(10, 132, 255, 0.5), 0 0 3px rgba(10, 132, 255, 0.4);
     }
 
     /* ---- Button loading spinner -------------------------------------- */
@@ -360,6 +385,22 @@
         border-radius: 9999px;
         animation: app-spin 0.6s linear infinite;
     }
+
+    /* ---- Sticky table headers (parked below the top nav) ------------- */
+    main thead th {
+        position: sticky;
+        top: var(--app-header-h, 3.5rem);
+        z-index: 30;
+        background-color: #FAFAFA;
+    }
+    .dark main thead th { background-color: #202022; }
+    /* Match the card's rounded top corners now that it no longer clips
+       (only for tables that sit flush at the top of their card) */
+    main .app-card > .overflow-x-auto:first-child > table thead th:first-child { border-top-left-radius: 1.5rem; }
+    main .app-card > .overflow-x-auto:first-child > table thead th:last-child  { border-top-right-radius: 1.5rem; }
+
+    /* Anchored targets clear the sticky nav + header */
+    [data-scroll-to] { scroll-margin-top: calc(var(--app-header-h, 3.5rem) + 1rem); }
 }
 
 /* Respect reduced motion */

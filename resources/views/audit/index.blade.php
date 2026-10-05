@@ -32,8 +32,8 @@
                      ]" />
 
     {{-- Table --}}
-    <div class="app-card overflow-hidden" x-data="{ selectedId: null }">
-        <div class="overflow-x-auto">
+    <div class="app-card">
+        <div class="overflow-x-auto lg:overflow-visible">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                     <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
@@ -66,7 +66,7 @@
                         </td>
                         <td class="py-3.5 px-4 font-mono text-xs text-neutral-500 whitespace-nowrap">{{ $log->ip_address ?? '—' }}</td>
                         <td class="py-3.5 px-4 text-right">
-                            <button type="button" @click="selectedId = {{ $log->id }}"
+                            <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'audit', 'id' => $log->id]) }}"
                                     class="app-btn app-btn-sm app-btn-secondary">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                 View
@@ -93,10 +93,6 @@
         </div>
         @endif
 
-        {{-- Detail modals (owner-only page) --}}
-        @foreach($logs as $log)
-            <x-audit-log-modal :log="$log" x-show="selectedId === {{ $log->id }}" close="selectedId = null" />
-        @endforeach
     </div>
 
 </div>

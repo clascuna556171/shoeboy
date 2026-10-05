@@ -18,7 +18,9 @@ class Item extends Model
      * Tier 1: below ₱1,000 | Tier 2: ₱1,000–₱1,999.99 | Tier 3: ₱2,000 and up.
      */
     public const TIER_1 = 'Tier 1';
+
     public const TIER_2 = 'Tier 2';
+
     public const TIER_3 = 'Tier 3';
 
     protected $fillable = [

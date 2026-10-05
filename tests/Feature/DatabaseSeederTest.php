@@ -7,6 +7,7 @@ use App\Models\Batch;
 use App\Models\Item;
 use App\Models\Order;
 use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -16,7 +17,7 @@ class DatabaseSeederTest extends TestCase
 
     public function test_database_seeder_produces_a_coherent_dataset(): void
     {
-        $this->seed(\Database\Seeders\DatabaseSeeder::class);
+        $this->seed(DatabaseSeeder::class);
 
         $this->assertSame(2, User::count());
         $this->assertSame(2, Batch::count());

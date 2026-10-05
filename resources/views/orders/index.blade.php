@@ -30,8 +30,8 @@
                      ]" />
 
     {{-- Table --}}
-    <div class="app-card overflow-hidden">
-        <div class="overflow-x-auto">
+    <div class="app-card">
+        <div class="overflow-x-auto lg:overflow-visible">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                     <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
@@ -46,7 +46,7 @@
                 </thead>
                 @forelse($orders as $ord)
                 @php($isFocused = $focus && $focus === $ord->order_number)
-                <tbody x-data="{ open: false, receiptOpen: false }" class="divide-y divide-neutral-100 dark:divide-neutral-800/60">
+                <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800/60">
                     <tr id="order-{{ $ord->order_number }}"
                         @if($isFocused) data-scroll-to @endif
                         class="app-row hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30 {{ $isFocused ? 'ring-2 ring-inset ring-[#0071E3] bg-[#0071E3]/5 dark:bg-[#0A84FF]/10' : '' }}">
@@ -58,7 +58,7 @@
                         <td class="py-3.5 px-4">
                             <div class="flex items-center gap-2">
                                 <span class="badge badge-neutral">{{ $ord->items->count() }} {{ $ord->items->count() === 1 ? 'pair' : 'pairs' }}</span>
-                                <button type="button" @click="open = true"
+                                <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $ord->id]) }}"
                                         class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] text-[11px] font-semibold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                     <span>View</span>
@@ -83,7 +83,7 @@
                                     @if($ord->payment->method === 'gcash')
                                         <span class="max-w-[140px] truncate font-mono text-xs text-neutral-500 dark:text-neutral-400">{{ $ord->payment->reference_no }}</span>
                                     @endif
-                                    <button type="button" @click="receiptOpen = true" class="text-[11px] font-semibold text-[#0071E3] dark:text-[#0A84FF] hover:underline">Receipt</button>
+                                    <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'receipt', 'id' => $ord->id]) }}" class="text-[11px] font-semibold text-[#0071E3] dark:text-[#0A84FF] hover:underline">Receipt</button>
                                 </div>
                             @elseif($ord->status === 'reserved')
                                 <span class="badge badge-pending">Awaiting Payment</span>
@@ -92,8 +92,6 @@
                             @endif
                         </td>
                     </tr>
-                    <x-order-modal :order="$ord" x-show="open" close="open = false" />
-                    <x-receipt-modal :order="$ord" x-show="receiptOpen" close="receiptOpen = false" />
                 </tbody>
                 @empty
                 <tbody>

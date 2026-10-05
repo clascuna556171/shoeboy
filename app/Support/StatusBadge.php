@@ -9,34 +9,34 @@ class StatusBadge
      */
     protected const MAP = [
         'order' => [
-            'reserved'  => ['badge-pending', 'Reserved'],
-            'paid'      => ['badge-paid', 'Paid'],
+            'reserved' => ['badge-pending', 'Reserved'],
+            'paid' => ['badge-paid', 'Paid'],
             'fulfilled' => ['badge-fulfilled', 'Fulfilled'],
             'cancelled' => ['badge-cancelled', 'Cancelled'],
         ],
         'item' => [
             'available' => ['badge-available', 'Available'],
-            'reserved'  => ['badge-reserved', 'Reserved'],
-            'repair'    => ['badge-repair', 'Repair'],
-            'sold'      => ['badge-sold', 'Sold'],
-            'washing'   => ['badge-washing', 'Washing'],
+            'reserved' => ['badge-reserved', 'Reserved'],
+            'repair' => ['badge-repair', 'Repair'],
+            'sold' => ['badge-sold', 'Sold'],
+            'washing' => ['badge-washing', 'Washing'],
         ],
         'delivery' => [
-            'pending'   => ['badge-pending', 'Pending'],
-            'shipped'   => ['badge-shipped', 'Shipped'],
+            'pending' => ['badge-pending', 'Pending'],
+            'shipped' => ['badge-shipped', 'Shipped'],
             'completed' => ['badge-fulfilled', 'Completed'],
         ],
         'payment' => [
             'gcash' => ['badge-gcash', 'GCash'],
-            'cash'  => ['badge-cash', 'Cash'],
+            'cash' => ['badge-cash', 'Cash'],
         ],
         'channel' => [
             'live_stream' => ['badge-live', 'Live Stream'],
-            'walkin_pos'  => ['badge-pos', 'POS Walk-In'],
+            'walkin_pos' => ['badge-pos', 'POS Walk-In'],
         ],
         'method' => [
             'jnt_delivery' => ['badge-jnt', 'J&T Express'],
-            'pickup'       => ['badge-pickup', 'Store Pickup'],
+            'pickup' => ['badge-pickup', 'Store Pickup'],
         ],
         'role' => [
             'owner' => ['badge-owner', 'Owner'],

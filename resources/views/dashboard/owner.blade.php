@@ -802,9 +802,7 @@
 
                 @php($isGcash = $tx->payment?->method === 'gcash')
 
-                <div x-data="{ open: false }"
-                     @click="open = true"
-                     @keydown.enter="open = true"
+                <div data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $tx->id]) }}"
                      role="button"
                      tabindex="0"
                      class="group cursor-pointer rounded-xl
@@ -903,7 +901,6 @@
                         <svg class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </div>
 
-                    <x-order-modal :order="$tx" :delivery="$tx->delivery" x-show="open" close="open = false" />
                 </div>
 
                 @empty
@@ -1079,7 +1076,7 @@
                         <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-neutral-500">
                             <span>{{ $log->context_line }}</span>
                             <span class="text-neutral-300 dark:text-neutral-700">•</span>
-                            <button type="button" @click="selectedId = {{ $log->id }}"
+                            <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'audit', 'id' => $log->id]) }}"
                                     class="font-semibold text-[#0071E3] dark:text-[#0A84FF] hover:underline">
                                 View details
                             </button>
@@ -1100,11 +1097,6 @@
             </div>
 
         </div>
-
-        {{-- Audit detail modals (shared component) --}}
-        @foreach($recentAuditLogs as $log)
-            <x-audit-log-modal :log="$log" x-show="selectedId === {{ $log->id }}" close="selectedId = null" />
-        @endforeach
 
     </section>
 

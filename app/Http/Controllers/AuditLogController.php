@@ -38,7 +38,7 @@ class AuditLogController extends Controller
         if (! empty($prefixes)) {
             $query->where(function ($q) use ($prefixes) {
                 foreach ($prefixes as $prefix) {
-                    $q->orWhere('action', 'like', $prefix . '%');
+                    $q->orWhere('action', 'like', $prefix.'%');
                 }
             });
         }

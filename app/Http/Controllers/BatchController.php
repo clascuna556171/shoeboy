@@ -108,10 +108,24 @@ class BatchController extends Controller
         }
 
         $code = $batch->batch_code;
+        $id = $batch->id;
         $batch->delete();
 
         AuditService::log('batch_deleted', null, ['batch_code' => $code]);
 
-        return back()->with('success', "Batch {$code} deleted.");
+        return back()->with('undo', [
+            'message' => "Batch {$code} deleted.",
+            'url' => route('batches.restore', $id),
+        ]);
+    }
+
+    public function restore(int $id): RedirectResponse
+    {
+        $batch = Batch::withTrashed()->findOrFail($id);
+        $batch->restore();
+
+        AuditService::log('batch_restored', $batch, ['batch_code' => $batch->batch_code]);
+
+        return back()->with('success', "Batch {$batch->batch_code} restored.");
     }
 }

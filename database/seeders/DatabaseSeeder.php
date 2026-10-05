@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\AuditLog;
 use App\Models\Batch;
 use App\Models\Customer;
 use App\Models\Delivery;
@@ -210,7 +209,7 @@ class DatabaseSeeder extends Seeder
 
         // C. Active reservation (pending GCash) — KT 8
         $orderKt = Order::create([
-            'order_number' => 'ORD-' . date('Ymd') . '-KT002',
+            'order_number' => 'ORD-'.date('Ymd').'-KT002',
             'customer_id' => $customer2->id,
             'staff_id' => $staff->id,
             'awarded_price' => 3200.00,
@@ -224,7 +223,7 @@ class DatabaseSeeder extends Seeder
 
         // D. Active reservation (pending GCash) — Jordan 1
         $orderAj = Order::create([
-            'order_number' => 'ORD-' . date('Ymd') . '-AJ005',
+            'order_number' => 'ORD-'.date('Ymd').'-AJ005',
             'customer_id' => $customer3->id,
             'staff_id' => $staff->id,
             'awarded_price' => 5800.00,
@@ -238,7 +237,7 @@ class DatabaseSeeder extends Seeder
 
         // E. Air Max 1 (walk-in POS, cash, pickup completed) — B05
         $orderMax = Order::create([
-            'order_number' => 'ORD-' . date('Ymd') . '-MX003',
+            'order_number' => 'ORD-'.date('Ymd').'-MX003',
             'customer_id' => $walkinCustomer->id,
             'staff_id' => $staff->id,
             'awarded_price' => 6100.00,
@@ -251,7 +250,7 @@ class DatabaseSeeder extends Seeder
         $orderMax->items()->attach($itemsB05['B05-003']->id, ['awarded_price' => 6100.00]);
         Payment::create([
             'order_id' => $orderMax->id, 'amount' => 6100.00, 'method' => 'cash',
-            'reference_no' => 'CASH-' . $orderMax->order_number, 'verified_by' => $staff->id,
+            'reference_no' => 'CASH-'.$orderMax->order_number, 'verified_by' => $staff->id,
             'date_paid' => Carbon::now()->subHours(5),
         ]);
         Delivery::create([
@@ -262,7 +261,7 @@ class DatabaseSeeder extends Seeder
 
         // F. Saucony Shadow (live stream, GCash, J&T SHIPPED) — B05
         $orderSaucony = Order::create([
-            'order_number' => 'ORD-' . date('Ymd') . '-SC006',
+            'order_number' => 'ORD-'.date('Ymd').'-SC006',
             'customer_id' => $customer2->id,
             'staff_id' => $staff->id,
             'awarded_price' => 3600.00,

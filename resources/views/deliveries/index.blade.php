@@ -30,8 +30,8 @@
                      ]" />
 
     {{-- Table --}}
-    <div class="app-card overflow-hidden">
-        <div class="overflow-x-auto">
+    <div class="app-card">
+        <div class="overflow-x-auto lg:overflow-visible">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                     <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
@@ -45,7 +45,6 @@
                 </thead>
                 @forelse($deliveries as $del)
                 <tbody x-data="{
-                        open: false,
                         orig: { method: @js($del->method), tracking: @js($del->tracking_number), status: @js($del->status) },
                         method: @js($del->method),
                         tracking: @js($del->tracking_number),
@@ -64,7 +63,7 @@
                             <div class="flex flex-wrap items-center gap-2">
                                 <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $del->order->order_number }}</span>
                                 <span class="badge badge-neutral">{{ $pairs->count() }} {{ $pairs->count() === 1 ? 'pair' : 'pairs' }}</span>
-                                <button type="button" @click="open = true"
+                                <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $del->order->id]) }}"
                                         class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] text-[11px] font-semibold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                     <span>Details</span>
@@ -113,7 +112,7 @@
                             <form action="{{ route('deliveries.update', $del->id) }}" method="POST"
                                   @submit.prevent="status === 'completed'
                                       ? $store.dialog.show({ variant: 'success', icon: 'truck', title: 'Complete this delivery?', message: 'Marking as completed is permanent and cannot be undone. The order will be marked as fulfilled.', confirmLabel: 'Complete permanently' }).then(ok => ok && $el.submit())
-                                      : $el.submit()"
+                                      : (window.appLoading.start($event.submitter), $el.submit())"
                                   class="relative flex items-center justify-end gap-1.5 whitespace-nowrap">
                                 @csrf
                                 @method('PUT')
@@ -121,7 +120,8 @@
                                     <option value="pickup">Pickup</option>
                                     <option value="jnt_delivery">J&amp;T</option>
                                 </select>
-                                <input type="text" name="tracking_number" x-model="tracking" x-show="method === 'jnt_delivery'" x-cloak
+                                <input type="text" name="tracking_number" x-model="tracking" x-show="method === 'jnt_delivery'"
+                                       @if($del->method !== 'jnt_delivery') style="display:none" @endif
                                        :required="method === 'jnt_delivery'" minlength="6" maxlength="40"
                                        placeholder="Tracking / waybill #" class="app-input app-input-sm !w-36 shrink-0 font-mono">
                                 <select name="status" x-model="status" class="app-select app-input-sm !w-auto shrink-0">
@@ -136,7 +136,6 @@
                             @endif
                         </td>
                     </tr>
-                    <x-order-modal :order="$del->order" :delivery="$del" x-show="open" close="open = false" />
                 </tbody>
                 @empty
                 <tbody>

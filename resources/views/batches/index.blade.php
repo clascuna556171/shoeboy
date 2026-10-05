@@ -44,7 +44,7 @@
                      :reset-url="route('batches.index')" :filters="[]" />
 
     {{-- Batch cards --}}
-    <div x-show="view === 'cards'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    <div x-show="view === 'cards'" data-view-panel="cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         @forelse($batches as $batch)
         <div class="app-card app-card-hover p-5 flex flex-col justify-between gap-5 group">
             <div class="space-y-3">
@@ -113,8 +113,8 @@
     </div>
 
     {{-- Table view --}}
-    <div x-show="view === 'table'" x-cloak class="app-card overflow-hidden">
-        <div class="overflow-x-auto">
+    <div x-show="view === 'table'" data-view-panel="table" class="app-card">
+        <div class="overflow-x-auto lg:overflow-visible">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                     <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
@@ -289,6 +289,16 @@
                 </div>
             </form>
     </x-modal>
+
+    {{-- Show the stored view (cards/table) before Alpine boots. --}}
+    <script>
+        (function () {
+            var view = localStorage.getItem('shoeboy.batches.view') || 'cards';
+            document.querySelectorAll('[data-view-panel]').forEach(function (el) {
+                el.style.display = el.getAttribute('data-view-panel') === view ? '' : 'none';
+            });
+        })();
+    </script>
 
 </div>
 @endsection

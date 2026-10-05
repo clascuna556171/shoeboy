@@ -19,8 +19,7 @@ class DashboardController extends Controller
     public function __construct(
         protected ReportingService $reportingService,
         protected OrderService $orderService
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): View
     {
@@ -75,10 +74,10 @@ class DashboardController extends Controller
         }
 
         $items = Item::with([
-                'batch',
-                'orders' => fn ($q) => $q->whereIn('status', ['reserved', 'paid', 'fulfilled'])
-                    ->with(['items', 'customer', 'staff', 'payment', 'delivery']),
-            ])
+            'batch',
+            'orders' => fn ($q) => $q->whereIn('status', ['reserved', 'paid', 'fulfilled'])
+                ->with(['items', 'customer', 'staff', 'payment', 'delivery']),
+        ])
             ->when($activeBatch, fn ($q) => $q->where('batch_id', $activeBatch->id))
             ->get();
 

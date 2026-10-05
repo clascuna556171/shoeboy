@@ -30,13 +30,13 @@
                      ]" />
 
     {{-- Table --}}
-    <div class="app-card overflow-hidden">
+    <div class="app-card">
         <div class="flex items-center justify-between px-5 py-3.5 border-b border-neutral-200 dark:border-neutral-800">
             <h3 class="font-bold text-base text-[#1D1D1F] dark:text-white">Active Team Members &amp; Permissions</h3>
             <span class="badge badge-neutral">{{ $users->count() }} accounts</span>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto lg:overflow-visible">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                     <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">

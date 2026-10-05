@@ -36,8 +36,8 @@
                      ]" />
 
     {{-- Table --}}
-    <div class="app-card overflow-hidden">
-        <div class="overflow-x-auto">
+    <div class="app-card">
+        <div class="overflow-x-auto lg:overflow-visible">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                     <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
@@ -78,15 +78,9 @@
                                                    'category' => $item->category,
                                                ]) }}">Edit</x-action-btn>
                             @elseif($item->status === 'sold' && ($soldOrder = $item->orders->whereIn('status', ['paid', 'fulfilled'])->sortByDesc('date_awarded')->first()))
-                                <div x-data="{ open: false }" class="inline-block">
-                                    <x-action-btn icon="eye" tone="secondary" @click="open = true">View</x-action-btn>
-                                    <x-order-modal :order="$soldOrder" x-show="open" close="open = false" />
-                                </div>
+                                <x-action-btn icon="eye" tone="secondary" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $soldOrder->id]) }}">View</x-action-btn>
                             @elseif($item->status === 'reserved' && ($resOrder = $item->orders->where('status', 'reserved')->sortByDesc('date_awarded')->first()))
-                                <div x-data="{ open: false }" class="inline-block">
-                                    <x-action-btn icon="eye" tone="secondary" @click="open = true">View</x-action-btn>
-                                    <x-order-modal :order="$resOrder" x-show="open" close="open = false" />
-                                </div>
+                                <x-action-btn icon="eye" tone="secondary" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $resOrder->id]) }}">View</x-action-btn>
                             @else
                                 <span class="text-xs text-neutral-500">—</span>
                             @endif

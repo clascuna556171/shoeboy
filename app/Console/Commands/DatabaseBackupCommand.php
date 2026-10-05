@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\File;
 class DatabaseBackupCommand extends Command
 {
     protected $signature = 'shoeboy:backup';
+
     protected $description = 'Kopyahon ug i-save ang snapshot backup sa SQLite database';
 
     public function handle(): int
@@ -23,7 +24,7 @@ class DatabaseBackupCommand extends Command
         if ($connection === 'sqlite') {
             $databaseFile = config('database.connections.sqlite.database');
             if (File::exists($databaseFile)) {
-                $target = $backupDir . '/shoeboy_backup_' . date('Ymd_His') . '.sqlite';
+                $target = $backupDir.'/shoeboy_backup_'.date('Ymd_His').'.sqlite';
                 File::copy($databaseFile, $target);
                 $this->info("Database snapshot backup created: {$target}");
 
@@ -37,6 +38,7 @@ class DatabaseBackupCommand extends Command
         }
 
         $this->warn("Backup completed for connection [{$connection}].");
+
         return self::SUCCESS;
     }
 }

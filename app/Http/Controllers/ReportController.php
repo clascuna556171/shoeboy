@@ -10,9 +10,7 @@ use Illuminate\View\View;
 
 class ReportController extends Controller
 {
-    public function __construct(protected ReportingService $reportingService)
-    {
-    }
+    public function __construct(protected ReportingService $reportingService) {}
 
     public function index(Request $request): View
     {
@@ -49,9 +47,9 @@ class ReportController extends Controller
 
         $content = $this->reportingService->generateExcelExport($options);
         $suffix = ($options['start_date'] || $options['end_date'])
-            ? '_' . ($options['start_date'] ?: 'start') . '_to_' . ($options['end_date'] ?: 'today')
+            ? '_'.($options['start_date'] ?: 'start').'_to_'.($options['end_date'] ?: 'today')
             : '';
-        $filename = 'The_Shoe_Boy_Profit_Report' . $suffix . '_' . date('Ymd_His') . '.xlsx';
+        $filename = 'The_Shoe_Boy_Profit_Report'.$suffix.'_'.date('Ymd_His').'.xlsx';
 
         return $this->excelResponse($content, $filename);
     }
@@ -68,7 +66,7 @@ class ReportController extends Controller
             'include_customer' => true,
             'include_notes' => true,
         ]);
-        $filename = 'The_Shoe_Boy_Profit_Report_All_' . date('Ymd_His') . '.xlsx';
+        $filename = 'The_Shoe_Boy_Profit_Report_All_'.date('Ymd_His').'.xlsx';
 
         return $this->excelResponse($content, $filename);
     }

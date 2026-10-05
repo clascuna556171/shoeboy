@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Batch extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'supplier_id',
@@ -37,6 +38,7 @@ class Batch extends Model
         return Attribute::make(
             get: function () {
                 $pairs = max(1, (int) $this->total_pairs);
+
                 return round((float) $this->total_cost / $pairs, 2);
             }
         );

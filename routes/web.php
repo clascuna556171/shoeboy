@@ -8,6 +8,7 @@ use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PanelController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SupplierController;
@@ -27,6 +28,11 @@ Route::middleware(['auth', 'active'])->group(function () {
     // Central Role-Aware Workspace / Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Lazily-loaded detail panels (order / receipt / audit)
+    Route::get('/panel/{type}/{id}', [PanelController::class, 'show'])
+        ->where('type', 'order|receipt|audit')
+        ->name('panels.show');
+
     // Inventory & Triage Module
     Route::get('/items', [ItemController::class, 'index'])->name('items.index');
     Route::post('/items', [ItemController::class, 'store'])->name('items.store');
@@ -38,6 +44,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/batches/{batch}', [BatchController::class, 'show'])->name('batches.show');
     Route::put('/batches/{batch}', [BatchController::class, 'update'])->name('batches.update');
     Route::delete('/batches/{batch}', [BatchController::class, 'destroy'])->name('batches.destroy');
+    Route::post('/batches/{id}/restore', [BatchController::class, 'restore'])->name('batches.restore');
 
     // Orders & Walk-in POS Module
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');

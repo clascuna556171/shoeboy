@@ -296,5 +296,40 @@
         </div>
     </div>
 
+    {{-- Shared lazy detail panel (order / receipt / audit) --}}
+    <x-lazy-modal />
+
+    {{-- Restore scroll position before first paint. Runs during parse, after the
+         render-blocking stylesheet, so the page never visibly jumps from the top. --}}
+    <script>
+        (function () {
+            // Pin the sticky table-header offset before first paint so it never
+            // renders at the fallback height and then snaps into place.
+            var header = document.querySelector('header');
+            if (header) document.documentElement.style.setProperty('--app-header-h', header.offsetHeight + 'px');
+
+            if (document.querySelector('[data-scroll-to]') || document.querySelector('[data-autofocus]')) return;
+
+            var saved = null;
+            try {
+                var params = new URLSearchParams(location.search || '');
+                var sorted = Array.from(params.entries()).sort(function (a, b) { return a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0; });
+                var qs = new URLSearchParams(sorted).toString();
+                var key = 'shoeboy:scroll:' + location.pathname + (qs ? '?' + qs : '');
+                saved = sessionStorage.getItem(key);
+                if (saved !== null) sessionStorage.removeItem(key);
+            } catch (e) { return; }
+
+            if (saved === null) return;
+            var y = parseInt(saved, 10);
+            if (!isFinite(y) || y <= 0) return;
+
+            if (window.history && 'scrollRestoration' in window.history) {
+                window.history.scrollRestoration = 'manual';
+            }
+            window.scrollTo(0, y);
+        })();
+    </script>
+
 </body>
 </html>

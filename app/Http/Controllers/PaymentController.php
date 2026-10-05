@@ -10,9 +10,7 @@ use Illuminate\Http\Request;
 
 class PaymentController extends Controller
 {
-    public function __construct(protected PaymentService $paymentService)
-    {
-    }
+    public function __construct(protected PaymentService $paymentService) {}
 
     public function verify(Request $request): JsonResponse|RedirectResponse
     {
@@ -42,7 +40,7 @@ class PaymentController extends Controller
         }
 
         return back()
-            ->with('success', "Payment of ₱" . number_format($payment->amount, 2) . " verified for Order {$order->order_number}.")
+            ->with('success', 'Payment of ₱'.number_format($payment->amount, 2)." verified for Order {$order->order_number}.")
             ->with('receipt', ['label' => 'Print receipt', 'url' => route('orders.receipt', $order)]);
     }
 }

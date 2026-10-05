@@ -194,7 +194,7 @@ class ReportingService
                     'date' => $order->date_awarded?->format('Y-m-d H:i'),
                     'channel' => $order->order_type === 'walkin_pos' ? 'POS Walk-In' : 'Live Stream',
                     'sku' => $item->sku,
-                    'brand_model' => trim(($item->brand ?? '') . ' ' . ($item->model ?? '')),
+                    'brand_model' => trim(($item->brand ?? '').' '.($item->model ?? '')),
                     'size' => $item->size,
                     'condition' => $item->condition,
                     'awarded_price' => round($awarded, 2),
@@ -249,7 +249,7 @@ class ReportingService
     // Halin karong bulana
     public function getMonthSales(?string $month = null): array
     {
-        $base = $month ? Carbon::parse($month . '-01') : Carbon::now();
+        $base = $month ? Carbon::parse($month.'-01') : Carbon::now();
 
         return $this->summarizeSales($base->copy()->startOfMonth(), $base->copy()->endOfMonth());
     }
@@ -384,23 +384,23 @@ class ReportingService
 
         $filters = [];
         $filters[] = ($startDate || $endDate)
-            ? 'range ' . ($startDate ?: 'start') . ' → ' . ($endDate ?: 'today')
+            ? 'range '.($startDate ?: 'start').' → '.($endDate ?: 'today')
             : 'all time';
         if ($channel !== 'all') {
-            $filters[] = 'channel: ' . ($channel === 'walkin_pos' ? 'Walk-in POS' : 'Live Stream');
+            $filters[] = 'channel: '.($channel === 'walkin_pos' ? 'Walk-in POS' : 'Live Stream');
         }
         if ($paymentMethod !== 'all') {
-            $filters[] = 'payment: ' . strtoupper($paymentMethod);
+            $filters[] = 'payment: '.strtoupper($paymentMethod);
         }
         if ($orderStatus === 'fulfilled') {
             $filters[] = 'fulfilled only';
         }
         if ($staffId) {
-            $filters[] = 'staff #' . $staffId;
+            $filters[] = 'staff #'.$staffId;
         }
         if ($batchId) {
             $batchCode = Batch::whereKey($batchId)->value('batch_code');
-            $filters[] = 'batch ' . ($batchCode ?? ('#' . $batchId));
+            $filters[] = 'batch '.($batchCode ?? ('#'.$batchId));
         }
         $rangeLabel = ucfirst(implode(' · ', $filters));
 
@@ -419,8 +419,8 @@ class ReportingService
                     ['cells' => ['Scope', $rangeLabel]],
                     [],
                     ['style' => 'sHeader', 'cells' => ['Period', 'Gross Sales (PHP)', 'Orders', 'Cash (PHP)', 'GCash (PHP)']],
-                    ['cells' => ['Sales Today (' . $now->format('Y-m-d') . ')', $this->n($daySales['gross_sales']), $this->n($daySales['orders_count']), $this->n($daySales['cash_collected']), $this->n($daySales['gcash_collected'])]],
-                    ['cells' => ['Sales This Month (' . $now->format('Y-m') . ')', $this->n($monthSales['gross_sales']), $this->n($monthSales['orders_count']), $this->n($monthSales['cash_collected']), $this->n($monthSales['gcash_collected'])]],
+                    ['cells' => ['Sales Today ('.$now->format('Y-m-d').')', $this->n($daySales['gross_sales']), $this->n($daySales['orders_count']), $this->n($daySales['cash_collected']), $this->n($daySales['gcash_collected'])]],
+                    ['cells' => ['Sales This Month ('.$now->format('Y-m').')', $this->n($monthSales['gross_sales']), $this->n($monthSales['orders_count']), $this->n($monthSales['cash_collected']), $this->n($monthSales['gcash_collected'])]],
                     [],
                     ['style' => 'sHeader', 'cells' => ['Metric', 'Amount (PHP)']],
                     ['cells' => ['Total Sales', $this->cur($metrics['total_sales'])]],
@@ -577,7 +577,7 @@ class ReportingService
                         $line = [
                             $o->order_number, (string) $o->date_awarded,
                             $o->order_type === 'walkin_pos' ? 'POS Walk-In' : 'Live Stream',
-                            $item->sku, trim(($item->brand ?? '') . ' ' . ($item->model ?? '')), $item->size, $item->condition,
+                            $item->sku, trim(($item->brand ?? '').' '.($item->model ?? '')), $item->size, $item->condition,
                         ];
                         if ($includeRepair) {
                             $line[] = $this->cur($repair);
@@ -657,7 +657,7 @@ class ReportingService
             $sheets[] = ['name' => 'Inventory', 'widths' => [180, 90], 'rows' => $invRows];
         }
 
-        return (new XlsxWriter())->write($sheets);
+        return (new XlsxWriter)->write($sheets);
     }
 
     private function n($value): array

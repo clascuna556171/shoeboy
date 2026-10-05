@@ -41,7 +41,7 @@ class PaymentService
             // The verified amount must match the agreed order total.
             if (abs($amount - (float) $lockedOrder->awarded_price) > 0.01) {
                 throw ValidationException::withMessages([
-                    'amount' => ['Payment amount (₱' . number_format($amount, 2) . ') must match the order total (₱' . number_format((float) $lockedOrder->awarded_price, 2) . ').'],
+                    'amount' => ['Payment amount (₱'.number_format($amount, 2).') must match the order total (₱'.number_format((float) $lockedOrder->awarded_price, 2).').'],
                 ]);
             }
 
@@ -68,7 +68,7 @@ class PaymentService
                 'order_id' => $lockedOrder->id,
                 'amount' => $amount,
                 'method' => $method,
-                'reference_no' => $method === 'gcash' ? trim($referenceNo) : ($referenceNo ? trim($referenceNo) : 'CASH-' . $lockedOrder->order_number),
+                'reference_no' => $method === 'gcash' ? trim($referenceNo) : ($referenceNo ? trim($referenceNo) : 'CASH-'.$lockedOrder->order_number),
                 'verified_by' => $verifier->id,
                 'date_paid' => Carbon::now(),
             ]);

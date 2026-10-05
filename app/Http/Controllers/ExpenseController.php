@@ -61,7 +61,7 @@ class ExpenseController extends Controller
             'reference_no' => $expense->reference_no,
         ]);
 
-        return back()->with('success', "Expense of ₱" . number_format($expense->amount, 2) . " recorded.");
+        return back()->with('success', 'Expense of ₱'.number_format($expense->amount, 2).' recorded.');
     }
 
     public function destroy(Expense $expense): RedirectResponse

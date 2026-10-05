@@ -25,10 +25,15 @@ class ShoeBoySystemTest extends TestCase
     use RefreshDatabase;
 
     protected User $owner;
+
     protected User $staff;
+
     protected Supplier $supplier;
+
     protected Batch $batch;
+
     protected Item $item;
+
     protected Customer $customer;
 
     protected function setUp(): void
@@ -570,6 +575,54 @@ class ShoeBoySystemTest extends TestCase
         $response->assertSee($order->order_number);
     }
 
+    public function test_order_panel_endpoint_returns_html(): void
+    {
+        $order = app(OrderService::class)->awardItem($this->item, $this->customer, $this->staff, 4500.00);
+
+        $response = $this->actingAs($this->staff)->getJson("/panel/order/{$order->id}");
+
+        $response->assertOk();
+        $response->assertJsonStructure(['title', 'eyebrow', 'html']);
+        $this->assertSame($order->order_number, $response->json('title'));
+        $this->assertStringContainsString('Purchased Pairs', $response->json('html'));
+    }
+
+    public function test_receipt_panel_endpoint_returns_html(): void
+    {
+        $order = app(OrderService::class)->awardItem($this->item, $this->customer, $this->staff, 4500.00);
+        $this->actingAs($this->staff)->post('/payments/verify', [
+            'order_id' => $order->id,
+            'amount' => 4500.00,
+            'method' => 'cash',
+        ]);
+
+        $response = $this->actingAs($this->staff)->getJson("/panel/receipt/{$order->id}");
+
+        $response->assertOk();
+        $response->assertJsonStructure(['title', 'eyebrow', 'html']);
+        $this->assertStringContainsString('THE SHOE BOY', $response->json('html'));
+    }
+
+    public function test_audit_panel_is_owner_only(): void
+    {
+        $log = AuditLog::create([
+            'user_id' => $this->owner->id,
+            'action' => 'user_login',
+            'details' => ['role' => 'owner'],
+        ]);
+
+        $this->actingAs($this->staff)->getJson("/panel/audit/{$log->id}")->assertForbidden();
+
+        $ok = $this->actingAs($this->owner)->getJson("/panel/audit/{$log->id}");
+        $ok->assertOk();
+        $ok->assertJsonStructure(['title', 'eyebrow', 'html']);
+    }
+
+    public function test_panel_unknown_type_returns_404(): void
+    {
+        $this->actingAs($this->staff)->get('/panel/bogus/1')->assertNotFound();
+    }
+
     public function test_export_all_includes_every_section(): void
     {
         $response = $this->actingAs($this->owner)->get('/reports/export-all');
@@ -608,7 +661,7 @@ class ShoeBoySystemTest extends TestCase
         $tmp = tempnam(sys_get_temp_dir(), 'xlsx');
         file_put_contents($tmp, $response->getContent());
 
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         $zip->open($tmp);
 
         $xml = '';
@@ -662,6 +715,24 @@ class ShoeBoySystemTest extends TestCase
 
         $this->actingAs($this->owner)->post("/suppliers/{$this->supplier->id}/restore")->assertSessionHas('success');
         $this->assertDatabaseHas('suppliers', ['id' => $this->supplier->id, 'deleted_at' => null]);
+    }
+
+    public function test_batch_delete_is_soft_and_can_be_restored(): void
+    {
+        $batch = Batch::create([
+            'supplier_id' => $this->supplier->id,
+            'batch_code' => 'B99-EMPTY',
+            'date_acquired' => now()->format('Y-m-d'),
+            'total_sacks' => 1,
+            'total_pairs' => 24,
+            'total_cost' => 5000.00,
+        ]);
+
+        $this->actingAs($this->owner)->delete("/batches/{$batch->id}")->assertSessionHas('undo');
+        $this->assertSoftDeleted('batches', ['id' => $batch->id]);
+
+        $this->actingAs($this->owner)->post("/batches/{$batch->id}/restore")->assertSessionHas('success');
+        $this->assertDatabaseHas('batches', ['id' => $batch->id, 'deleted_at' => null]);
     }
 
     public function test_audit_log_has_readable_description_and_details(): void

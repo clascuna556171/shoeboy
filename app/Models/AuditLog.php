@@ -170,7 +170,7 @@ class AuditLog extends Model
 
             return match (true) {
                 $this->action === 'item_added' => $d['sku'] ?? '',
-                Str::startsWith($this->action, ['item_']) => trim(($d['sku'] ?? '') . (! empty($d['brand']) || ! empty($d['model']) ? ' — ' . trim(($d['brand'] ?? '') . ' ' . ($d['model'] ?? '')) : '')),
+                Str::startsWith($this->action, ['item_']) => trim(($d['sku'] ?? '').(! empty($d['brand']) || ! empty($d['model']) ? ' — '.trim(($d['brand'] ?? '').' '.($d['model'] ?? '')) : '')),
                 Str::startsWith($this->action, ['order_', 'payment_']) => $d['order_number'] ?? '',
                 $this->action === 'delivery_updated' => $d['order_number'] ?? '',
                 Str::startsWith($this->action, ['batch_']) => $d['batch_code'] ?? '',
@@ -207,7 +207,7 @@ class AuditLog extends Model
             $actor = $this->user?->name ?? 'System';
 
             return match ($this->action) {
-                'user_login' => sprintf('%s signed in%s.', $actor, ! empty($d['role']) ? ' as ' . $d['role'] : ''),
+                'user_login' => sprintf('%s signed in%s.', $actor, ! empty($d['role']) ? ' as '.$d['role'] : ''),
                 'user_logout' => sprintf('%s signed out.', $actor),
                 'login_failed' => sprintf('Failed sign-in attempt for %s.', $d['email'] ?? 'an unknown account'),
                 'login_blocked' => sprintf('Blocked sign-in for the deactivated account %s.', $d['email'] ?? ($this->user?->name ?? 'unknown')),
@@ -216,7 +216,7 @@ class AuditLog extends Model
                     '%s added pair %s to inventory%s from the Inventory console.',
                     $actor,
                     $d['sku'] ?? 'a pair',
-                    isset($d['price']) ? ' at a target price of ₱' . number_format((float) $d['price'], 2) : '',
+                    isset($d['price']) ? ' at a target price of ₱'.number_format((float) $d['price'], 2) : '',
                 ),
                 'item_updated' => sprintf('%s updated pair %s from the Inventory console%s.', $actor, $this->subject, $this->changeClause($d, ['sku', 'brand', 'model'])),
                 'item_triage_updated' => sprintf('%s updated the triage of pair %s from the Inventory console%s.', $actor, $d['sku'] ?? '', $this->changeClause($d)),
@@ -224,24 +224,24 @@ class AuditLog extends Model
                 'order_awarded' => sprintf(
                     '%s awarded %s%s to %s%s on a %s.',
                     $actor,
-                    ($d['items_count'] ?? 1) . (($d['items_count'] ?? 1) == 1 ? ' pair' : ' pairs'),
-                    ! empty($d['item_skus']) ? ' (' . $d['item_skus'] . ')' : '',
+                    ($d['items_count'] ?? 1).(($d['items_count'] ?? 1) == 1 ? ' pair' : ' pairs'),
+                    ! empty($d['item_skus']) ? ' ('.$d['item_skus'].')' : '',
                     $d['customer_name'] ?? 'a buyer',
-                    isset($d['total_awarded_price']) ? ' for a total of ₱' . number_format((float) $d['total_awarded_price'], 2) : '',
+                    isset($d['total_awarded_price']) ? ' for a total of ₱'.number_format((float) $d['total_awarded_price'], 2) : '',
                     ($d['order_type'] ?? 'live_stream') === 'walkin_pos' ? 'walk-in sale' : 'live stream',
                 ),
                 'order_cancelled' => sprintf(
                     '%s cancelled an order%s%s, returning the pair(s) to available stock.',
                     $actor,
-                    ! empty($d['item_skus']) ? ' for ' . $d['item_skus'] : '',
-                    ! empty($d['reason']) ? ' (reason: ' . $d['reason'] . ')' : '',
+                    ! empty($d['item_skus']) ? ' for '.$d['item_skus'] : '',
+                    ! empty($d['reason']) ? ' (reason: '.$d['reason'].')' : '',
                 ),
                 'payment_verified' => sprintf(
                     '%s verified a %s payment of ₱%s%s for order %s.',
                     $actor,
                     strtoupper($d['method'] ?? 'cash'),
                     number_format((float) ($d['amount'] ?? 0), 2),
-                    ! empty($d['reference_no']) ? ' (ref ' . $d['reference_no'] . ')' : '',
+                    ! empty($d['reference_no']) ? ' (ref '.$d['reference_no'].')' : '',
                     $d['order_number'] ?? $this->subject,
                 ),
                 'delivery_updated' => sprintf(
@@ -276,7 +276,7 @@ class AuditLog extends Model
                     $actor,
                     number_format((float) ($d['amount'] ?? 0), 2),
                     $d['category'] ?? 'General',
-                    ! empty($d['description']) ? ' — "' . $d['description'] . '"' : '',
+                    ! empty($d['description']) ? ' — "'.$d['description'].'"' : '',
                 ),
                 'expense_deleted' => sprintf('%s deleted the expense "%s" (₱%s).', $actor, $d['description'] ?? '', number_format((float) ($d['amount'] ?? 0), 2)),
                 'expense_restored' => sprintf('%s restored the expense "%s" (₱%s).', $actor, $d['description'] ?? '', number_format((float) ($d['amount'] ?? 0), 2)),
@@ -294,7 +294,7 @@ class AuditLog extends Model
         return Attribute::make(get: function () {
             return trim(implode(' · ', array_filter([
                 $this->user?->role ? ucfirst($this->user->role) : null,
-                $this->ip_address ? 'IP ' . $this->ip_address : null,
+                $this->ip_address ? 'IP '.$this->ip_address : null,
                 $this->created_at?->format('M d, Y g:i A'),
             ])));
         });
@@ -319,20 +319,13 @@ class AuditLog extends Model
             $d = $this->details ?? [];
 
             return match (true) {
-                Str::startsWith($this->action, ['order_', 'payment_']) && ! empty($d['order_number'])
-                    => ['label' => 'View order', 'url' => route('orders.index', ['focus' => $d['order_number']])],
-                $this->action === 'delivery_updated' && ! empty($d['order_number'])
-                    => ['label' => 'View delivery', 'url' => route('deliveries.index', ['search' => $d['order_number']])],
-                Str::startsWith($this->action, ['item_']) && ! empty($d['sku'])
-                    => ['label' => 'View item', 'url' => route('items.index', ['search' => $d['sku']])],
-                Str::startsWith($this->action, ['batch_']) && ! empty($d['batch_code'])
-                    => ['label' => 'View batch', 'url' => route('batches.index', ['search' => $d['batch_code']])],
-                Str::startsWith($this->action, ['expense_']) && ! empty($d['description'])
-                    => ['label' => 'View expense', 'url' => route('expenses.index', ['search' => $d['description']])],
-                Str::startsWith($this->action, ['staff_']) && ! empty($d['name'])
-                    => ['label' => 'View staff', 'url' => route('staff.index', ['search' => $d['name']])],
-                Str::startsWith($this->action, ['supplier_']) && ! empty($d['name'])
-                    => ['label' => 'View supplier', 'url' => route('suppliers.index', ['search' => $d['name']])],
+                Str::startsWith($this->action, ['order_', 'payment_']) && ! empty($d['order_number']) => ['label' => 'View order', 'url' => route('orders.index', ['focus' => $d['order_number']])],
+                $this->action === 'delivery_updated' && ! empty($d['order_number']) => ['label' => 'View delivery', 'url' => route('deliveries.index', ['search' => $d['order_number']])],
+                Str::startsWith($this->action, ['item_']) && ! empty($d['sku']) => ['label' => 'View item', 'url' => route('items.index', ['search' => $d['sku']])],
+                Str::startsWith($this->action, ['batch_']) && ! empty($d['batch_code']) => ['label' => 'View batch', 'url' => route('batches.index', ['search' => $d['batch_code']])],
+                Str::startsWith($this->action, ['expense_']) && ! empty($d['description']) => ['label' => 'View expense', 'url' => route('expenses.index', ['search' => $d['description']])],
+                Str::startsWith($this->action, ['staff_']) && ! empty($d['name']) => ['label' => 'View staff', 'url' => route('staff.index', ['search' => $d['name']])],
+                Str::startsWith($this->action, ['supplier_']) && ! empty($d['name']) => ['label' => 'View supplier', 'url' => route('suppliers.index', ['search' => $d['name']])],
                 default => null,
             };
         });
@@ -351,10 +344,10 @@ class AuditLog extends Model
             if (in_array($key, $ignore, true) || $value === null || $value === '') {
                 continue;
             }
-            $parts[] = (self::DETAIL_LABELS[$key] ?? Str::headline($key)) . ' ' . self::formatDetailValue($key, $value);
+            $parts[] = (self::DETAIL_LABELS[$key] ?? Str::headline($key)).' '.self::formatDetailValue($key, $value);
         }
 
-        return empty($parts) ? '' : ' — ' . implode(', ', $parts);
+        return empty($parts) ? '' : ' — '.implode(', ', $parts);
     }
 
     protected static function formatDetailValue(string $key, mixed $value): string
@@ -368,7 +361,7 @@ class AuditLog extends Model
         }
 
         if (in_array($key, self::CURRENCY_KEYS, true) && is_numeric($value)) {
-            return '₱' . number_format((float) $value, 2);
+            return '₱'.number_format((float) $value, 2);
         }
 
         return (string) $value;
