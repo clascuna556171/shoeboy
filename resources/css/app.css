@@ -386,14 +386,19 @@ html { scrollbar-gutter: stable; }
         animation: app-spin 0.6s linear infinite;
     }
 
-    /* ---- Sticky table headers (parked below the top nav) ------------- */
-    main thead th {
-        position: sticky;
-        top: var(--app-header-h, 3.5rem);
-        z-index: 30;
-        background-color: #FAFAFA;
+    /* ---- Sticky table headers (parked below the top nav) -------------
+       Only at lg+ where list-table wrappers are `lg:overflow-visible`.
+       Inside a horizontal scroll container a positive `top` pushes the
+       header down over the first row, so keep it in flow on small screens. */
+    @media (min-width: 1024px) {
+        main thead th {
+            position: sticky;
+            top: var(--app-header-h, 3.5rem);
+            z-index: 30;
+            background-color: #FAFAFA;
+        }
+        .dark main thead th { background-color: #202022; }
     }
-    .dark main thead th { background-color: #202022; }
     /* Match the card's rounded top corners now that it no longer clips
        (only for tables that sit flush at the top of their card) */
     main .app-card > .overflow-x-auto:first-child > table thead th:first-child { border-top-left-radius: 1.5rem; }
