@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Concerns\SortsQueries;
 use App\Models\Batch;
+use App\Models\Item;
 use App\Models\Supplier;
 use App\Services\AuditService;
 use Illuminate\Http\RedirectResponse;
@@ -68,15 +69,22 @@ class BatchController extends Controller
     {
         $batch->load(['supplier', 'expenses']);
 
+        $items = $batch->items()->with(['orders']);
+        $this->applySort($items, ['sku', 'brand', 'model', 'size', 'condition', 'status', 'triage_status', 'listed_price'], 'created_at', 'desc');
+        $items = $items->get();
+
         $stats = [
             'total_pairs' => (int) $batch->total_pairs,
             'logged' => $batch->items()->count(),
             'available' => $batch->items()->where('status', 'available')->count(),
             'reserved' => $batch->items()->where('status', 'reserved')->count(),
             'sold' => $batch->items()->where('status', 'sold')->count(),
+            'washing' => $batch->items()->where('triage_status', Item::TRIAGE_WASHING)->count(),
+            'under_repair' => $batch->items()->where('triage_status', Item::TRIAGE_UNDER_REPAIR)->count(),
+            'ready' => $batch->items()->where('triage_status', Item::TRIAGE_READY)->count(),
         ];
 
-        return view('batches.show', compact('batch', 'stats'));
+        return view('batches.show', compact('batch', 'stats', 'items'));
     }
 
     public function update(Request $request, Batch $batch): RedirectResponse

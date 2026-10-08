@@ -70,3 +70,13 @@
         <input type="text" name="category" placeholder="Basketball, Running..." class="app-input">
     </div>
 </div>
+
+<div>
+    <label class="app-label">Triage Stage <span class="app-req">*</span></label>
+    <select name="triage_status" required class="app-select">
+        <option value="washing" selected>Washing</option>
+        <option value="under_repair">Under repair</option>
+        <option value="available">Ready to sell</option>
+    </select>
+    <p class="mt-1 text-[11px] text-neutral-500">Pairs start in <strong>Washing</strong> and only become sellable once marked <strong>Ready</strong>.</p>
+</div>

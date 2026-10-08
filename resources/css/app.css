@@ -428,3 +428,86 @@ html { scrollbar-gutter: stable; }
         width: 100%;
     }
 }
+
+/* ============================================================
+   Table density (Settings → Table density)
+   Unlayered rules win over Tailwind utilities, so these safely
+   override the per-cell padding classes.
+   ============================================================ */
+main table td,
+main table th {
+    transition: padding 0.15s ease;
+}
+html[data-density="cozy"] main table td,
+html[data-density="cozy"] main table th {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+html[data-density="compact"] main table td,
+html[data-density="compact"] main table th {
+    padding-top: 0.3rem;
+    padding-bottom: 0.3rem;
+}
+
+/* ============================================================
+   Left-rail navigation (Settings → Navigation)
+   ============================================================ */
+.app-rail { display: none; }
+
+/* Keep the footer pinned to the bottom now that page content is wrapped. */
+.app-shell {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+@media (min-width: 1024px) {
+    /* Hide the horizontal menu and show the rail */
+    html[data-nav="rail"] .app-topnav { display: none !important; }
+    html[data-nav="rail"] .app-rail {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 15rem;
+        z-index: 45;
+        background-color: #FFFFFF;
+        border-right: 1px solid #E5E5EA;
+        transition: width 0.18s ease;
+    }
+    html[data-nav="rail"] .app-shell {
+        padding-left: 15rem;
+        transition: padding-left 0.18s ease;
+    }
+
+    /* Collapsed state: icons only */
+    html[data-nav="rail"][data-rail="collapsed"] .app-rail { width: 4.75rem; }
+    html[data-nav="rail"][data-rail="collapsed"] .app-shell { padding-left: 4.75rem; }
+    html[data-nav="rail"][data-rail="collapsed"] .app-rail-label { display: none; }
+    html[data-nav="rail"][data-rail="collapsed"] .app-rail-toggle svg { transform: rotate(180deg); }
+    html[data-nav="rail"][data-rail="collapsed"] .app-rail .app-rail-item { justify-content: center; }
+
+    /* Dark theme (`.dark` lives on <html>, so it must lead the selector) */
+    html.dark[data-nav="rail"] .app-rail {
+        background-color: #18181B;
+        border-right-color: #2C2C2E;
+    }
+
+    /* Active + hover states that read clearly in both themes */
+    .app-rail-item { border: 1px solid transparent; }
+    .app-rail-item--active {
+        background-color: #ffffff;
+        border-color: #dcdce1;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        color: #1D1D1F;
+        font-weight: 600;
+    }
+    html.dark .app-rail-item--active {
+        background-color: #2C2C2E;
+        border-color: #3a3a3c;
+        color: #ffffff;
+    }
+}

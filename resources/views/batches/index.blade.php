@@ -15,7 +15,7 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
-            <div class="flex items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl">
+            <div data-tour="view" class="flex items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl">
                 <button type="button" @click="setView('cards')"
                         :class="view === 'cards' ? 'bg-white dark:bg-[#2C2C2E] shadow-sm font-semibold text-neutral-900 dark:text-white' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'"
                         class="px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1.5">
@@ -32,6 +32,7 @@
 
             <button type="button"
                     @click="showIntakeModal = true"
+                    data-tour="primary"
                     class="px-5 py-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold text-sm shadow-sm flex items-center gap-2 transition-all">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 <span>Record New Batch Intake</span>
@@ -84,9 +85,9 @@
                 </div>
             </div>
 
-            <div class="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between gap-2">
-                <span class="text-sm text-neutral-500 font-mono">{{ $batch->total_sacks }} sack(s)</span>
-                <div class="flex items-center gap-1.5">
+            <div class="pt-3 border-t border-neutral-100 dark:border-neutral-800 flex flex-wrap items-center justify-between gap-2">
+                <span class="text-sm text-neutral-500 font-mono whitespace-nowrap">{{ $batch->total_sacks }} sack(s)</span>
+                <div class="flex items-center gap-1.5 shrink-0">
                     <x-action-btn icon="edit" tone="secondary"
                                   @click="editingBatch = {{ Js::from(['id' => $batch->id, 'supplier_id' => $batch->supplier_id, 'batch_code' => $batch->batch_code, 'date_acquired' => $batch->date_acquired->format('Y-m-d'), 'total_sacks' => $batch->total_sacks, 'total_pairs' => $batch->total_pairs, 'total_cost' => (float) $batch->total_cost]) }}">Edit</x-action-btn>
                     <form action="{{ route('batches.destroy', $batch->id) }}" method="POST" class="inline">

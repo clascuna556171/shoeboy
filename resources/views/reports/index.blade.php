@@ -27,11 +27,20 @@
                 </div>
         </div>
 
-        <button type="button" @click="$store.exportModal.open = true"
-                class="px-5 py-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold text-sm shadow-sm flex items-center gap-2 transition-all shrink-0">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            <span>Export Report</span>
-        </button>
+        <div class="flex items-center gap-2 shrink-0">
+            <a href="{{ route('backups.index') }}"
+               class="px-4 py-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold text-sm shadow-sm flex items-center gap-2 transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-5L9 5H6a2 2 0 00-2 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 12v4m-2-2h4"/></svg>
+                <span>Backups</span>
+            </a>
+
+            <button type="button" @click="$store.exportModal.open = true"
+                    data-tour="export"
+                    class="px-5 py-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold text-sm shadow-sm flex items-center gap-2 transition-all shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <span>Export Report</span>
+            </button>
+        </div>
     </div>
 
     {{-- Headline numbers: net balance is the takeaway, the rest support it --}}
@@ -100,7 +109,7 @@
             </div>
 
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div class="flex flex-wrap items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl text-xs">
+            <div data-tour="tabs" class="flex flex-wrap items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl text-xs">
                 @foreach(['batches' => 'By Batch Intake', 'sessions' => 'By Session / Date', 'tiers' => 'By Price Tier', 'sales' => 'Sales Ledger', 'expenses' => 'Expenses Ledger'] as $key => $label)
                     <button type="button"
                             @click="setReportTab('{{ $key }}')"
@@ -259,16 +268,21 @@
                     <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800/60">
                         @forelse($salesLedger as $s)
                         <tr class="app-row hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30">
-                            <td class="py-3.5 px-4 font-mono font-semibold text-[#0071E3] dark:text-[#0A84FF]">{{ $s['order_number'] }}</td>
-                            <td class="py-3.5 px-4 text-neutral-600 dark:text-neutral-400">{{ $s['date'] }}</td>
-                            <td class="py-3.5 px-4"><span class="badge badge-neutral">{{ $s['channel'] }}</span></td>
-                            <td class="py-3.5 px-4 font-mono">{{ $s['sku'] }}</td>
+                            <td class="py-3.5 px-4 font-mono font-semibold text-[#0071E3] dark:text-[#0A84FF] whitespace-nowrap">{{ $s['order_number'] }}</td>
+                            <td class="py-3.5 px-4 text-neutral-600 dark:text-neutral-400 whitespace-nowrap">{{ $s['date'] }}</td>
+                            <td class="py-3.5 px-4 whitespace-nowrap"><span class="badge {{ $s['channel'] === 'Live Stream' ? 'badge-live' : 'badge-pos' }}">{{ $s['channel'] }}</span></td>
+                            <td class="py-3.5 px-4 font-mono whitespace-nowrap">{{ $s['sku'] }}</td>
                             <td class="py-3.5 px-4 font-semibold text-neutral-800 dark:text-neutral-200">{{ $s['brand_model'] }}</td>
                             <td class="py-3.5 px-4 font-mono">{{ $s['size'] }}</td>
                             <td class="py-3.5 px-4 text-right font-mono font-bold"><x-money :value="$s['awarded_price']" /></td>
                             <td class="py-3.5 px-4 text-right font-mono font-bold {{ $s['unit_profit'] >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500' }}">{{ $s['unit_profit'] >= 0 ? '+' : '−' }}₱{{ number_format(abs($s['unit_profit']), 2) }}</td>
                             <td class="py-3.5 px-4 text-neutral-600 dark:text-neutral-400">{{ $s['customer'] }}</td>
-                            <td class="py-3.5 px-4"><span class="text-xs font-mono text-neutral-500">{{ $s['payment_method'] }}{{ $s['payment_ref'] ? ' · ' . $s['payment_ref'] : '' }}</span></td>
+                            <td class="py-3.5 px-4 whitespace-nowrap">
+                                <span class="badge {{ strtolower($s['payment_method']) === 'gcash' ? 'badge-gcash' : 'badge-cash' }}">{{ $s['payment_method'] }}</span>
+                                @if($s['payment_ref'])
+                                    <span class="block mt-1 text-[11px] font-mono text-neutral-400 truncate max-w-[10rem]" title="{{ $s['payment_ref'] }}">{{ $s['payment_ref'] }}</span>
+                                @endif
+                            </td>
                             <td class="py-3.5 px-4 text-neutral-600 dark:text-neutral-400">{{ $s['staff'] }}</td>
                         </tr>
                         @empty

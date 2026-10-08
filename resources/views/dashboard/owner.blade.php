@@ -316,7 +316,7 @@
     {{-- ============================================================
          OPERATIONAL SNAPSHOT
     ============================================================= --}}
-    <section aria-labelledby="operational-snapshot">
+    <section aria-labelledby="operational-snapshot" data-tour="kpis">
 
         <div class="mb-3">
 
@@ -508,7 +508,7 @@
     <section class="rounded-2xl
                     border border-neutral-200 dark:border-neutral-800
                     bg-white dark:bg-[#1C1C1E]
-                    shadow-sm overflow-hidden">
+                    shadow-sm overflow-hidden" data-tour="profit">
 
         <div class="px-6 py-5
                     flex flex-col lg:flex-row
@@ -757,7 +757,7 @@
     {{-- ============================================================
          ACTIVITY
     ============================================================= --}}
-    <section>
+    <section class="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
 
 
         {{-- RECENT SALES --}}
@@ -796,7 +796,7 @@
             </div>
 
 
-            <div class="p-5 grid grid-cols-1 xl:grid-cols-2 gap-3">
+            <div class="p-5 grid grid-cols-1 gap-3">
 
                 @forelse($recentTransactions as $tx)
 
@@ -807,30 +807,30 @@
                      tabindex="0"
                      class="group cursor-pointer rounded-xl
                             border border-neutral-200 dark:border-neutral-800
-                            p-4
+                            p-3
                             hover:border-neutral-300 dark:hover:border-neutral-700
                             hover:bg-neutral-50 dark:hover:bg-neutral-800/40
-                            hover:shadow-sm hover:-translate-y-0.5
+                            hover:shadow-sm
                             transition-all duration-150
                             focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0071E3]/40">
 
-                    <div class="flex items-start gap-3.5">
+                    <div class="flex items-start gap-3">
 
                         {{-- Payment anchor --}}
-                        <span class="w-10 h-10 shrink-0
+                        <span class="w-9 h-9 shrink-0
                                      flex items-center justify-center
-                                     rounded-xl
+                                     rounded-lg
                                      {{ $isGcash
                                          ? 'bg-blue-50 text-[#0071E3] dark:bg-blue-950/40 dark:text-[#0A84FF]'
                                          : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400' }}">
 
                             @if($isGcash)
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                             </svg>
                             @else
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                       d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
                             </svg>
@@ -850,35 +850,33 @@
                                               text-neutral-900 dark:text-white">
                                         {{ $txFirst?->brand }} {{ $txFirst?->model }}
                                         @if($tx->items->count() > 1)
-                                            <span class="ml-1 text-xs font-medium text-neutral-500">+{{ $tx->items->count() - 1 }} pair(s)</span>
+                                            <span class="ml-1 text-xs font-medium text-neutral-500">+{{ $tx->items->count() - 1 }}</span>
                                         @endif
                                     </p>
 
                                     <p class="mt-0.5 font-mono text-xs
-                                              text-[#0071E3] dark:text-[#0A84FF]">
+                                              text-[#0071E3] dark:text-[#0A84FF] truncate">
                                         {{ $tx->order_number }}
                                     </p>
 
                                 </div>
 
 
-                                <p class="shrink-0 font-mono text-lg font-bold
-                                          text-neutral-950 dark:text-white">
-                                    <x-money :value="$tx->awarded_price" />
-                                </p>
+                                <div class="shrink-0 text-right">
+                                    <p class="font-mono text-base font-bold
+                                              text-neutral-950 dark:text-white">
+                                        <x-money :value="$tx->awarded_price" />
+                                    </p>
+                                    <x-status-badge kind="payment" :value="$tx->payment?->method ?? 'cash'" class="mt-1" />
+                                </div>
 
                             </div>
 
 
-                            <div class="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1
-                                        text-xs text-neutral-500 dark:text-neutral-400">
+                            <div class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5
+                                        text-[11px] text-neutral-500 dark:text-neutral-400">
 
-                                <span>
-                                    Buyer:
-                                    <strong class="font-medium text-neutral-700 dark:text-neutral-300">
-                                        {{ $tx->customer->display_handle }}
-                                    </strong>
-                                </span>
+                                <span class="truncate">{{ $tx->customer->display_handle }}</span>
 
                                 <span class="text-neutral-300 dark:text-neutral-700">•</span>
 
@@ -888,17 +886,10 @@
 
                                 <span>{{ $tx->date_awarded->diffForHumans() }}</span>
 
-                                <x-status-badge kind="payment" :value="$tx->payment?->method ?? 'cash'" class="ml-auto" />
-
                             </div>
 
                         </div>
 
-                    </div>
-
-                    <div class="mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800/70 flex items-center justify-end gap-1 text-[11px] font-semibold text-neutral-500 dark:text-neutral-400 group-hover:text-[#0071E3] dark:group-hover:text-[#0A84FF] transition-colors">
-                        View details
-                        <svg class="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </div>
 
                 </div>
@@ -942,6 +933,131 @@
 
         </div>
 
+
+        {{-- NEEDS ATTENTION --}}
+        <div class="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#1C1C1E] shadow-sm overflow-hidden" data-tour="attention">
+
+            <div class="px-6 py-5 border-b border-neutral-200 dark:border-neutral-800 flex items-center gap-3">
+                <span class="w-9 h-9 rounded-xl flex items-center justify-center bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                </span>
+                <div>
+                    <h2 class="text-base font-semibold text-neutral-900 dark:text-white">Needs attention</h2>
+                    <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">Pending work across deliveries, reservations, and stock.</p>
+                </div>
+            </div>
+
+            <div class="p-5 space-y-3">
+
+                {{-- Pending deliveries --}}
+                <div class="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-800/20 p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+                            <h3 class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Pending deliveries</h3>
+                        </div>
+                        <a href="{{ route('deliveries.index', ['status' => 'pending']) }}" class="text-[11px] font-semibold text-[#0071E3] dark:text-[#0A84FF] hover:underline">{{ $pendingDeliveriesCount }} open →</a>
+                    </div>
+                    <div class="space-y-2">
+                        @forelse($pendingDeliveries as $d)
+                        @if($d->order)
+                        <div data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $d->order->id]) }}"
+                             role="button" tabindex="0"
+                             class="group cursor-pointer flex items-center justify-between gap-3 rounded-xl bg-white dark:bg-[#1C1C1E] border border-neutral-200/70 dark:border-neutral-800 px-3.5 py-2.5 hover:border-sky-300 dark:hover:border-sky-900/60 hover:shadow-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/40">
+                            <div class="min-w-0">
+                                <div class="font-mono text-xs font-bold text-[#1D1D1F] dark:text-white truncate">{{ $d->order->order_number }}</div>
+                                <div class="text-[11px] text-neutral-500 truncate">{{ $d->order->customer?->display_handle }}</div>
+                            </div>
+                            <span class="badge {{ $d->method === 'jnt_delivery' ? 'badge-jnt' : 'badge-pickup' }} shrink-0">{{ $d->method === 'jnt_delivery' ? 'J&T' : 'Pickup' }}</span>
+                        </div>
+                        @endif
+                        @empty
+                            <p class="text-xs text-neutral-500 px-1">Nothing pending — all caught up.</p>
+                        @endforelse
+                    </div>
+                </div>
+
+                {{-- Reservations expiring (live countdown) --}}
+                <div class="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-800/20 p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                            <h3 class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Reservations expiring</h3>
+                        </div>
+                        <a href="{{ route('orders.index', ['status' => 'reserved']) }}" class="text-[11px] font-semibold text-[#0071E3] dark:text-[#0A84FF] hover:underline">{{ $expiringReservationsCount }} active →</a>
+                    </div>
+                    <div class="space-y-2">
+                        @forelse($expiringReservations as $r)
+                        @php($rFirst = $r->items->first())
+                        <div @if($r->expires_at && $r->date_awarded)
+                                 x-data="reservationCountdown({
+                                     expiresAt: @js($r->expires_at->toIso8601String()),
+                                     startedAt: @js($r->date_awarded->toIso8601String()),
+                                     orderId: {{ $r->id }},
+                                     releaseUrl: @js(route('orders.release', $r->id)),
+                                     sku: @js($rFirst?->sku)
+                                 })"
+                                 x-show="!expired" x-transition.opacity.duration.300ms
+                             @endif
+                             class="rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 p-3 space-y-2">
+                            <div data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $r->id]) }}"
+                                 role="button" tabindex="0"
+                                 class="group cursor-pointer flex items-center justify-between gap-3 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400/40">
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="font-mono text-xs font-bold text-[#0071E3] dark:text-[#0A84FF] whitespace-nowrap">{{ $rFirst?->sku }}</span>
+                                        <span class="text-neutral-400">•</span>
+                                        <span class="font-mono text-[11px] text-neutral-600 dark:text-neutral-300 truncate">{{ $r->order_number }}</span>
+                                    </div>
+                                    <div class="text-[11px] text-neutral-500 truncate mt-0.5">{{ $r->customer?->display_handle }}</div>
+                                </div>
+                                <span class="font-mono text-sm font-bold text-neutral-900 dark:text-white shrink-0">₱{{ number_format($r->awarded_price, 2) }}</span>
+                            </div>
+                            @if($r->expires_at)
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between text-[11px]">
+                                    <span class="inline-flex items-center gap-1 font-semibold" :class="urgent ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400'">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        <span x-text="'Expires in ' + label"></span>
+                                    </span>
+                                    <span class="text-neutral-400">Auto-releases</span>
+                                </div>
+                                <div class="h-1.5 w-full overflow-hidden rounded-full bg-amber-200/60 dark:bg-amber-900/40">
+                                    <div class="h-full rounded-full transition-[width] duration-1000 ease-linear" :class="urgent ? 'bg-rose-500' : 'bg-amber-500'" :style="'width:' + percent + '%'"></div>
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+                        @empty
+                            <p class="text-xs text-neutral-500 px-1">No active reservations.</p>
+                        @endforelse
+                    </div>
+                </div>
+
+                {{-- Stock pipeline --}}
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <h3 class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Stock pipeline</h3>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <a href="{{ route('items.index', ['triage' => 'washing']) }}" class="rounded-xl border-t-2 border border-neutral-200 dark:border-neutral-800 border-t-sky-400 bg-white dark:bg-[#1C1C1E] p-3 hover:shadow-sm hover:-translate-y-0.5 transition-all">
+                            <div class="font-mono text-xl font-bold text-sky-600 dark:text-sky-400">{{ $washingCount }}</div>
+                            <div class="text-[11px] text-neutral-500 mt-0.5">Washing</div>
+                        </a>
+                        <a href="{{ route('items.index', ['triage' => 'under_repair']) }}" class="rounded-xl border-t-2 border border-neutral-200 dark:border-neutral-800 border-t-rose-400 bg-white dark:bg-[#1C1C1E] p-3 hover:shadow-sm hover:-translate-y-0.5 transition-all">
+                            <div class="font-mono text-xl font-bold text-rose-600 dark:text-rose-400">{{ $repairCount }}</div>
+                            <div class="text-[11px] text-neutral-500 mt-0.5">Under repair</div>
+                        </a>
+                        <a href="{{ route('items.index', ['triage' => 'available']) }}" class="rounded-xl border-t-2 border border-neutral-200 dark:border-neutral-800 border-t-emerald-400 bg-white dark:bg-[#1C1C1E] p-3 hover:shadow-sm hover:-translate-y-0.5 transition-all">
+                            <div class="font-mono text-xl font-bold text-emerald-600 dark:text-emerald-400">{{ $readyStock }}</div>
+                            <div class="text-[11px] text-neutral-500 mt-0.5">Ready</div>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
 
     </section>
 

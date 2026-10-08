@@ -2,42 +2,26 @@
 
 namespace App\Console\Commands;
 
-use App\Services\AuditService;
+use App\Services\BackupService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\File;
 
 class DatabaseBackupCommand extends Command
 {
     protected $signature = 'shoeboy:backup';
 
-    protected $description = 'Kopyahon ug i-save ang snapshot backup sa SQLite database';
+    protected $description = 'Create a snapshot backup of the SQLite database';
 
-    public function handle(): int
+    public function handle(BackupService $backups): int
     {
-        $backupDir = storage_path('app/backups');
-        if (! File::exists($backupDir)) {
-            File::makeDirectory($backupDir, 0755, true);
+        $path = $backups->create();
+
+        if ($path === null) {
+            $this->warn('No SQLite database file found to back up.');
+
+            return self::SUCCESS;
         }
 
-        $connection = config('database.default');
-
-        if ($connection === 'sqlite') {
-            $databaseFile = config('database.connections.sqlite.database');
-            if (File::exists($databaseFile)) {
-                $target = $backupDir.'/shoeboy_backup_'.date('Ymd_His').'.sqlite';
-                File::copy($databaseFile, $target);
-                $this->info("Database snapshot backup created: {$target}");
-
-                AuditService::log('system_backup_created', null, [
-                    'file' => basename($target),
-                    'size_bytes' => filesize($target),
-                ]);
-
-                return self::SUCCESS;
-            }
-        }
-
-        $this->warn("Backup completed for connection [{$connection}].");
+        $this->info('Database snapshot backup created: '.$path);
 
         return self::SUCCESS;
     }

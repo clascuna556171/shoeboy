@@ -43,7 +43,15 @@ class DeliveryController extends Controller
             });
         }
 
-        $this->applySort($query, ['status', 'method', 'tracking_number', 'date_completed', 'created_at'], 'created_at', 'desc');
+        // Default view prioritises outstanding work: Pending → Shipped → Completed.
+        if ($request->filled('sort')) {
+            $this->applySort($query, ['status', 'method', 'tracking_number', 'date_completed', 'created_at'], 'created_at', 'desc');
+        } else {
+            $query->reorder()
+                ->orderByRaw("CASE status WHEN 'pending' THEN 0 WHEN 'shipped' THEN 1 WHEN 'completed' THEN 2 ELSE 3 END")
+                ->orderByDesc('created_at');
+        }
+
         $deliveries = $query->paginate(20)->withQueryString();
 
         $counts = Delivery::whereHas('order', fn ($oq) => $oq->where('order_type', '!=', 'walkin_pos'))

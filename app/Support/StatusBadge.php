@@ -21,6 +21,11 @@ class StatusBadge
             'sold' => ['badge-sold', 'Sold'],
             'washing' => ['badge-washing', 'Washing'],
         ],
+        'triage' => [
+            'washing' => ['badge-washing', 'Washing'],
+            'under_repair' => ['badge-repair', 'Under repair'],
+            'available' => ['badge-available', 'Ready'],
+        ],
         'delivery' => [
             'pending' => ['badge-pending', 'Pending'],
             'shipped' => ['badge-shipped', 'Shipped'],

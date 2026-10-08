@@ -8,10 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Item extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     /**
      * Price tiers by target listed price (₱).
@@ -22,6 +24,19 @@ class Item extends Model
     public const TIER_2 = 'Tier 2';
 
     public const TIER_3 = 'Tier 3';
+
+    /** Physical processing pipeline (separate from the sale status). */
+    public const TRIAGE_WASHING = 'washing';
+
+    public const TRIAGE_UNDER_REPAIR = 'under_repair';
+
+    public const TRIAGE_READY = 'available';
+
+    public const TRIAGE_STAGES = [
+        self::TRIAGE_WASHING,
+        self::TRIAGE_UNDER_REPAIR,
+        self::TRIAGE_READY,
+    ];
 
     protected $fillable = [
         'batch_id',
@@ -73,6 +88,21 @@ class Item extends Model
         return $this->status === 'available';
     }
 
+    public function isTriageReady(): bool
+    {
+        return $this->triage_status === self::TRIAGE_READY;
+    }
+
+    public function triageLabel(): string
+    {
+        return match ($this->triage_status) {
+            self::TRIAGE_WASHING => 'Washing',
+            self::TRIAGE_UNDER_REPAIR => 'Under repair',
+            self::TRIAGE_READY => 'Ready',
+            default => ucfirst((string) $this->triage_status),
+        };
+    }
+
     public function batch(): BelongsTo
     {
         return $this->belongsTo(Batch::class);
@@ -103,5 +133,10 @@ class Item extends Model
     public function scopeSold(Builder $query): Builder
     {
         return $query->where('status', 'sold');
+    }
+
+    public function scopeTriageReady(Builder $query): Builder
+    {
+        return $query->where('triage_status', self::TRIAGE_READY);
     }
 }

@@ -16,6 +16,7 @@ use App\Services\AuditService;
 use App\Services\OrderService;
 use App\Services\PaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 use ZipArchive;
@@ -548,14 +549,23 @@ class ShoeBoySystemTest extends TestCase
         $this->assertNull($item->category);
     }
 
-    public function test_triage_endpoint_can_no_longer_flip_item_status(): void
+    public function test_triage_endpoint_controls_only_the_wash_repair_stage(): void
     {
-        // Reservations must come from an order, never a bare triage status flip.
+        // The triage endpoint only moves a pair through the wash/repair pipeline.
+        // Reset first with a valid stage so the route accepts the request.
+        $this->actingAs($this->staff)
+            ->patch("/items/{$this->item->id}/triage", ['triage_status' => 'under_repair'])
+            ->assertSessionHasNoErrors();
+
+        $this->assertEquals('under_repair', $this->item->fresh()->triage_status);
+        $this->assertEquals('available', $this->item->fresh()->status);
+
+        // A bare sale-status flip is rejected: the sale status never comes from this route.
         $response = $this->actingAs($this->staff)->patch("/items/{$this->item->id}/triage", [
             'status' => 'reserved',
         ]);
 
-        $response->assertNotFound();
+        $response->assertSessionHasErrors('triage_status');
         $this->assertEquals('available', $this->item->fresh()->status);
     }
 
@@ -1259,5 +1269,66 @@ class ShoeBoySystemTest extends TestCase
             'method' => 'pickup',
             'status' => 'completed',
         ]);
+    }
+
+    public function test_owner_can_open_the_staff_console(): void
+    {
+        $this->actingAs($this->owner)->get('/console')->assertStatus(200);
+        $this->actingAs($this->staff)->get('/console')->assertStatus(200);
+    }
+
+    public function test_backups_page_is_owner_only(): void
+    {
+        $this->actingAs($this->staff)->get('/backups')->assertForbidden();
+        $this->actingAs($this->owner)->get('/backups')->assertOk();
+    }
+
+    public function test_backup_import_rejects_a_non_sqlite_file(): void
+    {
+        $file = UploadedFile::fake()->createWithContent('notes.txt', 'this is not a database');
+
+        $this->actingAs($this->owner)
+            ->post('/backups/import', ['backup' => $file])
+            ->assertSessionHas('error');
+    }
+
+    public function test_new_pairs_default_to_the_washing_triage_stage(): void
+    {
+        $this->actingAs($this->staff)->post('/items', [
+            'batch_id' => $this->batch->id,
+            'brand' => 'Test',
+            'model' => 'Default Triage',
+            'size' => 'US 9.0',
+            'condition' => 'Good',
+            'listed_price' => 1000,
+        ])->assertSessionHas('success');
+
+        $item = Item::where('model', 'Default Triage')->firstOrFail();
+        $this->assertEquals(Item::TRIAGE_WASHING, $item->triage_status);
+    }
+
+    public function test_a_pair_still_in_triage_cannot_be_awarded(): void
+    {
+        $this->item->update(['triage_status' => Item::TRIAGE_WASHING]);
+
+        $this->expectException(ValidationException::class);
+
+        app(OrderService::class)->awardItem(
+            item: $this->item->fresh(),
+            customer: $this->customer,
+            staff: $this->staff,
+            awardedPrice: 4500.00,
+        );
+    }
+
+    public function test_an_available_pair_can_be_deleted_and_restored(): void
+    {
+        $id = $this->item->id;
+
+        $this->actingAs($this->staff)->delete("/items/{$id}")->assertSessionHas('undo');
+        $this->assertSoftDeleted('items', ['id' => $id]);
+
+        $this->actingAs($this->staff)->post("/items/{$id}/restore")->assertSessionHas('success');
+        $this->assertNotSoftDeleted('items', ['id' => $id]);
     }
 }

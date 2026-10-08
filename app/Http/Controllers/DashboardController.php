@@ -35,6 +35,14 @@ class DashboardController extends Controller
         return $this->staffDashboard($request);
     }
 
+    /** Staff operations console — open to both staff and owners. */
+    public function console(Request $request): View
+    {
+        $this->orderService->releaseExpiredReservations();
+
+        return $this->staffDashboard($request);
+    }
+
     protected function ownerDashboard(): View
     {
         $metrics = $this->reportingService->getOverallFinancialMetrics();
@@ -48,7 +56,29 @@ class DashboardController extends Controller
 
         $activeBatch = Batch::with('supplier')->latest()->first();
         $suppliersCount = Supplier::count();
-        $pendingDeliveriesCount = Delivery::where('status', 'pending')->count();
+        $pendingDeliveriesCount = Delivery::where('status', 'pending')
+            ->whereHas('order', fn ($q) => $q->where('order_type', '!=', 'walkin_pos'))
+            ->count();
+
+        // "Needs attention" panel data (live orders only — walk-in POS is paid + fulfilled on the spot).
+        $pendingDeliveries = Delivery::with(['order.customer'])
+            ->where('status', 'pending')
+            ->whereHas('order', fn ($q) => $q->where('order_type', '!=', 'walkin_pos'))
+            ->latest()
+            ->take(4)
+            ->get();
+
+        $expiringReservations = Order::with(['customer', 'items'])
+            ->where('status', 'reserved')
+            ->whereNotNull('expires_at')
+            ->orderBy('expires_at')
+            ->take(4)
+            ->get();
+        $expiringReservationsCount = Order::where('status', 'reserved')->whereNotNull('expires_at')->count();
+
+        $washingCount = Item::where('triage_status', Item::TRIAGE_WASHING)->count();
+        $repairCount = Item::where('triage_status', Item::TRIAGE_UNDER_REPAIR)->count();
+        $readyStock = Item::where('status', 'available')->where('triage_status', Item::TRIAGE_READY)->count();
 
         return view('dashboard.owner', compact(
             'metrics',
@@ -57,7 +87,13 @@ class DashboardController extends Controller
             'recentTransactions',
             'activeBatch',
             'suppliersCount',
-            'pendingDeliveriesCount'
+            'pendingDeliveriesCount',
+            'pendingDeliveries',
+            'expiringReservations',
+            'expiringReservationsCount',
+            'washingCount',
+            'repairCount',
+            'readyStock'
         ));
     }
 

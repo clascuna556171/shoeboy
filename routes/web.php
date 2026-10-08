@@ -2,10 +2,12 @@
 
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BatchController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\HelpController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PanelController;
@@ -28,6 +30,12 @@ Route::middleware(['auth', 'active'])->group(function () {
     // Central Role-Aware Workspace / Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Staff operations console (owner + staff) — live selling / POS / triage
+    Route::get('/console', [DashboardController::class, 'console'])->name('staff.workspace');
+
+    // In-app help / onboarding guide
+    Route::get('/help', [HelpController::class, 'index'])->name('help.index');
+
     // Lazily-loaded detail panels (order / receipt / audit)
     Route::get('/panel/{type}/{id}', [PanelController::class, 'show'])
         ->where('type', 'order|receipt|audit')
@@ -37,6 +45,9 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/items', [ItemController::class, 'index'])->name('items.index');
     Route::post('/items', [ItemController::class, 'store'])->name('items.store');
     Route::put('/items/{item}', [ItemController::class, 'update'])->name('items.update');
+    Route::patch('/items/{item}/triage', [ItemController::class, 'triage'])->name('items.triage');
+    Route::delete('/items/{item}', [ItemController::class, 'destroy'])->name('items.destroy');
+    Route::post('/items/{id}/restore', [ItemController::class, 'restore'])->name('items.restore');
 
     // Batches Module
     Route::get('/batches', [BatchController::class, 'index'])->name('batches.index');
@@ -76,6 +87,16 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/export', [ReportController::class, 'exportExcel'])->name('reports.export');
         Route::get('/reports/export-all', [ReportController::class, 'exportAllExcel'])->name('reports.export-all');
+
+        // Data Backup & Recovery
+        Route::get('/backups', [BackupController::class, 'index'])->name('backups.index');
+        Route::post('/backups', [BackupController::class, 'store'])->name('backups.store');
+        Route::get('/backups/download', [BackupController::class, 'downloadCurrent'])->name('backups.download');
+        Route::post('/backups/import', [BackupController::class, 'import'])->name('backups.import');
+        Route::get('/backups/{file}/download', [BackupController::class, 'download'])->name('backups.file')->where('file', '[A-Za-z0-9_\-\.]+');
+        Route::post('/backups/{file}/restore', [BackupController::class, 'restore'])->name('backups.restore')->where('file', '[A-Za-z0-9_\-\.]+');
+        Route::delete('/backups/{file}', [BackupController::class, 'destroy'])->name('backups.destroy')->where('file', '[A-Za-z0-9_\-\.]+');
+        Route::post('/backups/{file}/undo', [BackupController::class, 'undo'])->name('backups.undo')->where('file', '[A-Za-z0-9_\-\.]+');
 
         // Staff Account Management Module
         Route::get('/staff', [UserController::class, 'index'])->name('staff.index');

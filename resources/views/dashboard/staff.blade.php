@@ -101,9 +101,10 @@
                  return;
              }
              const q = query.trim().toUpperCase();
-             this.selectedClaimShoe = this.shoes.find(s => s.sku.toUpperCase() === q) ||
-                                     this.shoes.find(s => s.sku.toUpperCase().includes(q)) ||
-                                     this.shoes.find(s => `${s.brand} ${s.model}`.toUpperCase().includes(q)) || null;
+             const sellable = this.shoes.filter(s => s.triage_status === 'available');
+             this.selectedClaimShoe = sellable.find(s => s.sku.toUpperCase() === q) ||
+                                      sellable.find(s => s.sku.toUpperCase().includes(q)) ||
+                                      sellable.find(s => `${s.brand} ${s.model}`.toUpperCase().includes(q)) || null;
          },
 
          addToClaim(shoe) {
@@ -147,7 +148,7 @@
          get triageItems() {
              let list = this.shoes;
              if (this.triageStatus !== 'all') {
-                 list = list.filter(s => s.status === this.triageStatus);
+                 list = list.filter(s => s.triage_status === this.triageStatus);
              }
              const q = (this.triageSearch || '').trim().toLowerCase();
              if (q) {
@@ -174,6 +175,30 @@
          },
          countByStatus(status) {
              return this.shoes.filter(s => s.status === status).length;
+         },
+         countByTriage(stage) {
+             return this.shoes.filter(s => s.triage_status === stage).length;
+         },
+         triageBusy: null,
+         async setTriage(item, stage) {
+             this.triageBusy = item.id;
+             try {
+                 const res = await fetch('{{ url('/items') }}/' + item.id + '/triage', {
+                     method: 'POST',
+                     headers: {
+                         'Accept': 'application/json',
+                         'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                         'X-Requested-With': 'XMLHttpRequest',
+                         'Content-Type': 'application/x-www-form-urlencoded',
+                     },
+                     body: new URLSearchParams({ _method: 'PATCH', triage_status: stage }),
+                 });
+                 if (res.ok) {
+                     const data = await res.json();
+                     item.triage_status = data.triage_status;
+                 }
+             } catch (e) { /* ignore */ }
+             this.triageBusy = null;
          }
      }">
 
@@ -200,7 +225,7 @@
             <h1 class="text-xl md:text-2xl font-bold tracking-tight text-[#1D1D1F] dark:text-white mt-1">Multi-Channel Order & Claim Console</h1>
         </div>
 
-        <div class="flex items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl border border-neutral-200/70 dark:border-neutral-700">
+        <div data-tour="tabs" class="flex items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl border border-neutral-200/70 dark:border-neutral-700">
             <button type="button"
                     @click="setTab('claims')"
                     :class="activeTab === 'claims' ? 'bg-white dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-white font-semibold shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'"
@@ -279,7 +304,7 @@
             <div class="lg:col-span-7 space-y-4">
                 
                 {{-- Pangita pinaagi sa short-code --}}
-                <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-6 shadow-sm space-y-4">
+                <div data-tour="lookup" class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-6 shadow-sm space-y-4">
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold uppercase tracking-wider text-neutral-500 flex items-center gap-1.5">
                             <svg class="w-3.5 h-3.5 text-[#0071E3]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
@@ -293,15 +318,16 @@
                                x-model="claimInput"
                                @input="handleSearch(claimInput)"
                                placeholder="Type short code (e.g. B04-001, Panda, Kobe, Wade)..."
+                               data-tour="search"
                                class="app-input">
                     </div>
 
                     <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
                         <span class="text-xs text-neutral-500 shrink-0">Available pairs:</span>
-                        <template x-for="shoe in shoes.filter(s => s.status === 'available').slice(0, 6)" :key="shoe.id">
+                        <template x-for="shoe in shoes.filter(s => s.status === 'available' && s.triage_status === 'available').slice(0, 6)" :key="shoe.id">
                             <button @click="claimInput = shoe.sku; handleSearch(shoe.sku)"
                                     type="button"
-                                    class="px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-900 dark:hover:bg-white hover:text-white dark:hover:text-neutral-900 transition-all font-mono text-xs">
+                                    class="px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-900 dark:hover:bg-white hover:text-white dark:hover:text-neutral-900 transition-all font-mono text-xs whitespace-nowrap">
                                 <span x-text="shoe.sku"></span>
                             </button>
                         </template>
@@ -393,7 +419,7 @@
             <div class="lg:col-span-5 space-y-4">
 
                 {{-- Live Claim Ticket (bulk) --}}
-                <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 shadow-sm space-y-4">
+                <div data-tour="ticket" class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 shadow-sm space-y-4">
                     <div class="flex items-center justify-between pb-2 border-b border-neutral-200/80 dark:border-neutral-800">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-[#0071E3]"></span>
@@ -476,7 +502,7 @@
                 </div>
 
                 {{-- Mga naka-reserve nga claims --}}
-                <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 shadow-sm space-y-4">
+                <div data-tour="claims" class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 shadow-sm space-y-4">
                     <div class="flex items-center justify-between pb-2 border-b border-neutral-200/80 dark:border-neutral-800">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-amber-500"></span>
@@ -505,8 +531,8 @@
                             <div class="flex items-start justify-between gap-2 text-sm">
                                 <div class="min-w-0">
                                     <div class="flex items-center gap-1.5">
-                                        <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $claimFirst?->sku }}</span>
-                                        <span class="text-neutral-500">•</span>
+                                        <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF] whitespace-nowrap shrink-0">{{ $claimFirst?->sku }}</span>
+                                        <span class="text-neutral-500 shrink-0">•</span>
                                         <span class="font-semibold text-neutral-800 dark:text-neutral-200 truncate">{{ $claimFirst?->brand }} {{ $claimFirst?->model }}</span>
                                         @if($claim->items->count() > 1)
                                             <span class="badge badge-neutral">+{{ $claim->items->count() - 1 }}</span>
@@ -588,7 +614,7 @@
             
             <div class="lg:col-span-7 space-y-4">
                 
-                <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 shadow-sm space-y-3">
+                <div data-tour="pos-catalog" class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 shadow-sm space-y-3">
                     <input type="text"
                            x-model="posSearch"
                            placeholder="Filter catalog by brand, model or SKU..."
@@ -606,7 +632,7 @@
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 max-h-[600px] overflow-y-auto pr-1">
-                    <template x-for="shoe in shoes.filter(s => s.status === 'available' && (posBrandFilter === 'All' || s.brand === posBrandFilter) && (!posSearch.trim() || `${s.sku} ${s.brand} ${s.model}`.toLowerCase().includes(posSearch.toLowerCase())))" :key="shoe.id">
+                    <template x-for="shoe in shoes.filter(s => s.status === 'available' && s.triage_status === 'available' && (posBrandFilter === 'All' || s.brand === posBrandFilter) && (!posSearch.trim() || `${s.sku} ${s.brand} ${s.model}`.toLowerCase().includes(posSearch.toLowerCase())))" :key="shoe.id">
                         <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 hover:border-[#0071E3]/50 rounded-2xl p-4 shadow-sm transition-all flex flex-col justify-between gap-3"
                              :class="posCart.some(i => i.id === shoe.id) ? 'opacity-50 grayscale pointer-events-none' : ''">
                             <div>
@@ -640,7 +666,7 @@
             </div>
 
             <div class="lg:col-span-5 space-y-4">
-                <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-6 shadow-sm space-y-5">
+                <div data-tour="pos-ticket" class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-6 shadow-sm space-y-5">
                     
                     <div class="flex items-center justify-between pb-3 border-b border-neutral-200/80 dark:border-neutral-800">
                         <div>
@@ -711,7 +737,7 @@
 
                         <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Payment</div>
 
-                        <div class="flex items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl border border-neutral-200/70 dark:border-neutral-700">
+        <div data-tour="pos-payment" class="flex items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl border border-neutral-200/70 dark:border-neutral-700">
                             <button @click="posPaymentMethod = 'cash'"
                                     type="button"
                                     :class="posPaymentMethod === 'cash' ? 'bg-white dark:bg-[#2C2C2E] shadow-sm text-neutral-900 dark:text-white font-semibold' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'"
@@ -733,7 +759,7 @@
                             <div class="p-3 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/60 text-sm space-y-2">
                                 <div class="flex items-center justify-between">
                                     <label class="text-neutral-500">Cash Received (₱) <span class="app-req">*</span>:</label>
-                                    <input type="number" step="0.01" min="0" x-model="posCashTendered" @input="posError = ''" name="cash_tendered" :required="posPaymentMethod === 'cash'" class="app-input app-input-sm font-mono text-right w-28">
+                                    <input type="number" step="0.01" min="0" x-model="posCashTendered" @input="posError = ''" name="cash_tendered" :required="posPaymentMethod === 'cash'" placeholder="0.00" class="app-input app-input-sm font-mono text-right w-32 !bg-white dark:!bg-neutral-900 !border-neutral-300 dark:!border-neutral-600">
                                 </div>
                                 <template x-if="posError">
                                     <p class="text-[11px] font-medium text-rose-600 dark:text-rose-400" x-text="posError"></p>
@@ -748,7 +774,7 @@
                         <template x-if="posPaymentMethod === 'gcash'">
                             <div class="p-3 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/60 text-sm space-y-1">
                                 <label class="text-neutral-500 block">GCash Reference No <span class="app-req">*</span>:</label>
-                                <input type="text" x-model="posGcashRef" name="gcash_ref" :required="posPaymentMethod === 'gcash'" placeholder="e.g. 1092837482" class="app-input app-input-sm font-mono">
+                                <input type="text" x-model="posGcashRef" name="gcash_ref" :required="posPaymentMethod === 'gcash'" placeholder="e.g. 1092837482" class="app-input app-input-sm font-mono !bg-white dark:!bg-neutral-900 !border-neutral-300 dark:!border-neutral-600">
                             </div>
                         </template>
 
@@ -768,11 +794,11 @@
 
     {{-- Tab 3: Triage Table --}}
     <div x-show="activeTab === 'triage'" data-tab-panel="triage" class="space-y-6">
-        <div class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 shadow-sm space-y-4">
+        <div data-tour="triage-table" class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 shadow-sm space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-neutral-200/80 dark:border-neutral-800">
                 <div>
-                    <h3 class="font-bold text-base text-[#1D1D1F] dark:text-white">{{ $activeBatch?->batch_code ?? 'All Batches' }} Serialized Pair Triage</h3>
-                    <p class="text-xs text-neutral-500">Reference view of every serialized pair. Reservations are managed from Claims &mdash; pairs can only be set to reserved by awarding them to a buyer.</p>
+                    <h3 class="font-bold text-base text-[#1D1D1F] dark:text-white">{{ $activeBatch?->batch_code ?? 'All Batches' }} Triage Worklist</h3>
+                    <p class="text-xs text-neutral-500">Move each pair through <strong>Washing &rarr; Under repair &rarr; Ready</strong>. Only <strong>Ready</strong> pairs can be sold.</p>
                 </div>
                 <div class="flex flex-wrap items-center justify-end gap-2">
                     <div class="relative">
@@ -791,29 +817,29 @@
                                   :class="triageStatus === 'all' ? 'bg-white/20 text-white' : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'"
                                   x-text="shoes.length"></span>
                         </button>
+                        <button type="button" @click="triageStatus = 'washing'"
+                                class="app-btn app-btn-sm"
+                                :class="triageStatus === 'washing' ? 'app-btn-primary' : 'app-btn-secondary'">
+                            Washing
+                            <span class="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-mono leading-none"
+                                  :class="triageStatus === 'washing' ? 'bg-white/20 text-white' : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'"
+                                  x-text="countByTriage('washing')"></span>
+                        </button>
+                        <button type="button" @click="triageStatus = 'under_repair'"
+                                class="app-btn app-btn-sm"
+                                :class="triageStatus === 'under_repair' ? 'app-btn-primary' : 'app-btn-secondary'">
+                            Under repair
+                            <span class="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-mono leading-none"
+                                  :class="triageStatus === 'under_repair' ? 'bg-white/20 text-white' : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'"
+                                  x-text="countByTriage('under_repair')"></span>
+                        </button>
                         <button type="button" @click="triageStatus = 'available'"
                                 class="app-btn app-btn-sm"
                                 :class="triageStatus === 'available' ? 'app-btn-primary' : 'app-btn-secondary'">
-                            Available
+                            Ready
                             <span class="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-mono leading-none"
                                   :class="triageStatus === 'available' ? 'bg-white/20 text-white' : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'"
-                                  x-text="countByStatus('available')"></span>
-                        </button>
-                        <button type="button" @click="triageStatus = 'reserved'"
-                                class="app-btn app-btn-sm"
-                                :class="triageStatus === 'reserved' ? 'app-btn-primary' : 'app-btn-secondary'">
-                            Reserved
-                            <span class="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-mono leading-none"
-                                  :class="triageStatus === 'reserved' ? 'bg-white/20 text-white' : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'"
-                                  x-text="countByStatus('reserved')"></span>
-                        </button>
-                        <button type="button" @click="triageStatus = 'sold'"
-                                class="app-btn app-btn-sm"
-                                :class="triageStatus === 'sold' ? 'app-btn-primary' : 'app-btn-secondary'">
-                            Sold
-                            <span class="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-mono leading-none"
-                                  :class="triageStatus === 'sold' ? 'bg-white/20 text-white' : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'"
-                                  x-text="countByStatus('sold')"></span>
+                                  x-text="countByTriage('available')"></span>
                         </button>
                     </div>
                 </div>
@@ -825,11 +851,9 @@
                         <tr>
                             <x-sort-th column="sku" label="SKU" method="sortTriage" active="triageSort" dir="triageDir" />
                             <x-sort-th column="brand" label="Brand & Model" method="sortTriage" active="triageSort" dir="triageDir" />
-                            <x-sort-th column="size" label="Size" method="sortTriage" active="triageSort" dir="triageDir" />
                             <x-sort-th column="condition" label="Condition" method="sortTriage" active="triageSort" dir="triageDir" />
                             <x-sort-th column="repair_cost" label="Repair Cost" align="right" method="sortTriage" active="triageSort" dir="triageDir" />
-                            <x-sort-th column="listed_price" label="Listed Price" align="right" method="sortTriage" active="triageSort" dir="triageDir" />
-                            <x-sort-th column="status" label="Status" align="center" method="sortTriage" active="triageSort" dir="triageDir" />
+                            <th class="py-2.5 px-3 font-semibold text-center">Stage</th>
                             <th class="py-2.5 px-3 text-right font-semibold">Action</th>
                         </tr>
                     </thead>
@@ -843,28 +867,36 @@
                                     <span class="font-semibold text-neutral-800 dark:text-neutral-200" x-text="`${item.brand} ${item.model}`"></span>
                                 </div>
                             </td>
-                            <td class="py-3 px-3 font-mono" x-text="item.size"></td>
                             <td class="py-3 px-3" x-text="item.condition"></td>
                             <td class="py-3 px-3 text-right font-mono text-neutral-500" x-text="'₱' + Number(item.repair_cost).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></td>
-                            <td class="py-3 px-3 text-right font-mono font-bold text-neutral-900 dark:text-white" x-text="'₱' + Number(item.listed_price).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></td>
                             <td class="py-3 px-3 text-center">
-                                <span class="badge" :class="'badge-' + item.status" x-text="item.status.toUpperCase()"></span>
+                                <span class="badge"
+                                      :class="item.triage_status === 'washing' ? 'badge-washing' : (item.triage_status === 'under_repair' ? 'badge-repair' : 'badge-available')"
+                                      x-text="item.triage_status === 'washing' ? 'Washing' : (item.triage_status === 'under_repair' ? 'Under repair' : 'Ready')"></span>
                             </td>
                             <td class="py-3 px-3 text-right">
-                                <template x-if="item.status === 'sold'">
-                                    <x-action-btn icon="eye" tone="secondary" x-bind:data-panel-url="orderPanelUrl(item, 'sold')">View</x-action-btn>
-                                </template>
-                                <template x-if="item.status === 'reserved'">
-                                    <x-action-btn icon="eye" tone="secondary" x-bind:data-panel-url="orderPanelUrl(item, 'reserved')">View</x-action-btn>
-                                </template>
-                                <template x-if="item.status === 'available'">
-                                    <span class="text-xs text-neutral-400 dark:text-neutral-600">—</span>
-                                </template>
+                                <div class="inline-flex items-center gap-1.5">
+                                    <template x-if="item.triage_status === 'washing'">
+                                        <button type="button" class="app-btn app-btn-secondary app-btn-sm" :disabled="triageBusy === item.id"
+                                                @click="setTriage(item, 'under_repair')">To repair</button>
+                                    </template>
+                                    <template x-if="item.triage_status === 'under_repair'">
+                                        <button type="button" class="app-btn app-btn-secondary app-btn-sm" :disabled="triageBusy === item.id"
+                                                @click="setTriage(item, 'washing')">Back to wash</button>
+                                    </template>
+                                    <template x-if="item.triage_status !== 'available'">
+                                        <button type="button" class="app-btn app-btn-emerald app-btn-sm" :disabled="triageBusy === item.id"
+                                                @click="setTriage(item, 'available')">Mark ready</button>
+                                    </template>
+                                    <template x-if="item.triage_status === 'available'">
+                                        <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Ready</span>
+                                    </template>
+                                </div>
                             </td>
                         </tr>
                         </template>
                         <tr x-show="triageItems.length === 0" x-cloak>
-                            <td colspan="8">
+                            <td colspan="6">
                                 <div class="app-empty">
                                     <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                                     <span class="text-xs font-medium">No pairs match your search or filter.</span>

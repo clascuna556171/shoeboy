@@ -19,7 +19,7 @@
                 ['label' => 'Reserved', 'value' => $reservedCount, 'tone' => 'amber'],
                 ['label' => 'Sold', 'value' => $soldCount, 'tone' => 'neutral'],
             ]" />
-            <button type="button" @click="showAddItem = true"
+            <button type="button" @click="showAddItem = true" data-tour="primary"
                     class="px-5 py-2.5 rounded-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold text-sm shadow-sm flex items-center gap-2 transition-all">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 <span>Add Pair</span>
@@ -33,6 +33,7 @@
                      :filters="[
                          ['name' => 'batch_id', 'selected' => $selectedBatchId, 'options' => ['' => 'All Batches'] + $batches->pluck('batch_code', 'id')->all()],
                          ['name' => 'status', 'selected' => request('status'), 'options' => ['' => 'All Statuses', 'available' => 'Available', 'reserved' => 'Reserved', 'sold' => 'Sold']],
+                         ['name' => 'triage', 'selected' => request('triage'), 'options' => ['' => 'All Stages', 'washing' => 'Washing', 'under_repair' => 'Under repair', 'available' => 'Ready']],
                      ]" />
 
     {{-- Table --}}
@@ -48,13 +49,14 @@
                         <th class="py-3 px-4 font-semibold">Price Tier</th>
                         <x-sort-th-server column="listed_price" label="Target Price" align="right" />
                         <x-sort-th-server column="status" label="Status" align="center" />
+                        <th class="py-3 px-4 font-semibold text-center">Triage</th>
                         <th class="py-3 px-4 font-semibold text-right">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800/60">
                     @forelse($items as $item)
                     <tr class="app-row hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30">
-                        <td class="py-3.5 px-4 font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $item->sku }}</td>
+                        <td class="py-3.5 px-4 font-mono font-bold text-[#0071E3] dark:text-[#0A84FF] whitespace-nowrap">{{ $item->sku }}</td>
                         <td class="py-3.5 px-4 font-semibold text-neutral-800 dark:text-neutral-200">{{ $item->brand }} {{ $item->model }}</td>
                         <td class="py-3.5 px-4 font-mono text-neutral-600 dark:text-neutral-300">{{ $item->size }}</td>
                         <td class="py-3.5 px-4 text-neutral-600 dark:text-neutral-300">{{ $item->condition }}</td>
@@ -63,32 +65,57 @@
                         <td class="py-3.5 px-4 text-center">
                             <x-status-badge kind="item" :value="$item->status" />
                         </td>
-                        <td class="py-3.5 px-4 text-right">
+                        <td class="py-3.5 px-4 text-center">
                             @if($item->status === 'available')
-                                <x-action-btn icon="edit" tone="secondary"
-                                              @click="editItem = {{ Js::from([
-                                                  'id' => $item->id,
-                                                  'sku' => $item->sku,
-                                                  'brand' => $item->brand,
-                                                  'model' => $item->model,
-                                                  'size' => $item->size,
-                                                  'condition' => $item->condition,
-                                                   'listed_price' => $item->listed_price,
-                                                   'repair_cost' => $item->repair_cost,
-                                                   'category' => $item->category,
-                                               ]) }}">Edit</x-action-btn>
-                            @elseif($item->status === 'sold' && ($soldOrder = $item->orders->whereIn('status', ['paid', 'fulfilled'])->sortByDesc('date_awarded')->first()))
-                                <x-action-btn icon="eye" tone="secondary" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $soldOrder->id]) }}">View</x-action-btn>
-                            @elseif($item->status === 'reserved' && ($resOrder = $item->orders->where('status', 'reserved')->sortByDesc('date_awarded')->first()))
-                                <x-action-btn icon="eye" tone="secondary" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $resOrder->id]) }}">View</x-action-btn>
+                                <x-status-badge kind="triage" :value="$item->triage_status" />
                             @else
-                                <span class="text-xs text-neutral-500">—</span>
+                                <span class="text-neutral-300 dark:text-neutral-700">—</span>
                             @endif
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <div class="flex items-center justify-end gap-1.5">
+                                @if($item->status === 'available')
+                                    <x-action-btn icon="edit" tone="secondary"
+                                                  @click="editItem = {{ Js::from([
+                                                      'id' => $item->id,
+                                                      'sku' => $item->sku,
+                                                      'brand' => $item->brand,
+                                                      'model' => $item->model,
+                                                      'size' => $item->size,
+                                                      'condition' => $item->condition,
+                                                      'listed_price' => $item->listed_price,
+                                                      'repair_cost' => $item->repair_cost,
+                                                      'category' => $item->category,
+                                                      'triage_status' => $item->triage_status,
+                                                  ]) }}">Edit</x-action-btn>
+
+                                    <form action="{{ route('items.destroy', $item) }}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button"
+                                                title="Delete pair"
+                                                data-confirm="Delete pair {{ $item->sku }}?"
+                                                data-confirm-message="The pair is removed from inventory. An Undo option appears right after."
+                                                data-confirm-variant="danger"
+                                                data-confirm-icon="trash"
+                                                data-confirm-label="Delete"
+                                                class="p-2 rounded-xl text-neutral-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        </button>
+                                    </form>
+                                @elseif($item->status === 'sold' && ($soldOrder = $item->orders->whereIn('status', ['paid', 'fulfilled'])->sortByDesc('date_awarded')->first()))
+                                    <x-action-btn icon="eye" tone="secondary" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $soldOrder->id]) }}">View</x-action-btn>
+                                @elseif($item->status === 'reserved' && ($resOrder = $item->orders->where('status', 'reserved')->sortByDesc('date_awarded')->first()))
+                                    <x-action-btn icon="eye" tone="secondary" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $resOrder->id]) }}">View</x-action-btn>
+                                @else
+                                    <span class="text-xs text-neutral-500">—</span>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8">
+                        <td colspan="9">
                             <div class="app-empty">
                                 <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h6m6-7l4 4m0 0l-4 4m4-4H10"/></svg>
                                 <span class="text-xs font-medium">No inventory items match the current filters.</span>
@@ -166,6 +193,16 @@
                     <label class="app-label">Category <span class="app-optional">(optional)</span></label>
                     <input type="text" name="category" :value="editItem?.category" class="app-input">
                     <p class="mt-1 text-[11px] text-neutral-500">Status is set automatically when a pair is awarded or sold.</p>
+                </div>
+
+                <div>
+                    <label class="app-label">Triage Stage <span class="app-req">*</span></label>
+                    <select name="triage_status" :value="editItem?.triage_status" required class="app-select">
+                        <option value="washing">Washing</option>
+                        <option value="under_repair">Under repair</option>
+                        <option value="available">Ready to sell</option>
+                    </select>
+                    <p class="mt-1 text-[11px] text-neutral-500">Only <strong>Ready</strong> pairs can be reserved or sold.</p>
                 </div>
 
                 <div class="flex gap-2 pt-4">

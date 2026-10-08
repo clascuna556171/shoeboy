@@ -2,17 +2,54 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}"
       :class="{ 'dark': darkMode }"
       x-data="{
-          darkMode: localStorage.getItem('shoeboy_theme') === 'dark' || (!('shoeboy_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches),
-          toggleTheme() {
-              this.darkMode = !this.darkMode;
-              if (this.darkMode) {
-                  document.documentElement.classList.add('dark');
-                  localStorage.setItem('shoeboy_theme', 'dark');
-              } else {
-                  document.documentElement.classList.remove('dark');
-                  localStorage.setItem('shoeboy_theme', 'light');
-              }
-          }
+          theme: (localStorage.getItem('shoeboy.theme') || (localStorage.getItem('shoeboy_theme') === 'dark' ? 'dark' : (localStorage.getItem('shoeboy_theme') === 'light' ? 'light' : null)) || 'system'),
+          darkMode: false,
+          density: localStorage.getItem('shoeboy.density') || 'compact',
+          navMode: localStorage.getItem('shoeboy.nav') || 'top',
+          railCollapsed: localStorage.getItem('shoeboy.nav.collapsed') === '1',
+          settingsOpen: false,
+          showTourPrompt: false,
+          init() {
+              this.applyTheme();
+              this.applyDensity();
+              this.applyNav();
+              try { this.showTourPrompt = !localStorage.getItem('shoeboy.tour.seen'); } catch (e) {}
+              try {
+                  var pending = localStorage.getItem('shoeboy.tour.pending');
+                  if (pending) {
+                      localStorage.removeItem('shoeboy.tour.pending');
+                      this.showTourPrompt = false;
+                      setTimeout(function () { window.appTour && window.appTour.start(pending); }, 450);
+                  }
+              } catch (e) {}
+              window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (this.theme === 'system') this.applyTheme(); });
+          },
+          dismissTourPrompt() {
+              this.showTourPrompt = false;
+              try { localStorage.setItem('shoeboy.tour.seen', '1'); } catch (e) {}
+          },
+          resolvedDark() {
+              return this.theme === 'dark' || (this.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          },
+          applyTheme() {
+              this.darkMode = this.resolvedDark();
+              document.documentElement.classList.toggle('dark', this.darkMode);
+          },
+          setTheme(t) {
+              this.theme = t;
+              localStorage.setItem('shoeboy.theme', t);
+              localStorage.setItem('shoeboy_theme', this.resolvedDark() ? 'dark' : 'light');
+              this.applyTheme();
+          },
+          toggleTheme() { this.setTheme(this.darkMode ? 'light' : 'dark'); },
+          setDensity(d) { this.density = d; localStorage.setItem('shoeboy.density', d); this.applyDensity(); },
+          applyDensity() { document.documentElement.setAttribute('data-density', this.density); },
+          setNav(m) { this.navMode = m; localStorage.setItem('shoeboy.nav', m); this.applyNav(); },
+          applyNav() {
+              document.documentElement.setAttribute('data-nav', this.navMode);
+              document.documentElement.setAttribute('data-rail', this.railCollapsed ? 'collapsed' : 'expanded');
+          },
+          toggleRail() { this.railCollapsed = !this.railCollapsed; localStorage.setItem('shoeboy.nav.collapsed', this.railCollapsed ? '1' : '0'); this.applyNav(); }
       }">
 <head>
     <meta charset="utf-8">
@@ -22,11 +59,14 @@
     <title>{{ config('app.name', 'The Shoe Boy') }} - @yield('title', 'Order & Inventory System')</title>
 
     <script>
-        if (localStorage.getItem('shoeboy_theme') === 'dark' || (!('shoeboy_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
+        (function () {
+            var t = localStorage.getItem('shoeboy.theme') || localStorage.getItem('shoeboy_theme');
+            var dark = t === 'dark' || ((t === 'system' || t === null) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.classList.toggle('dark', dark);
+            document.documentElement.setAttribute('data-density', localStorage.getItem('shoeboy.density') || 'compact');
+            document.documentElement.setAttribute('data-nav', localStorage.getItem('shoeboy.nav') || 'top');
+            document.documentElement.setAttribute('data-rail', localStorage.getItem('shoeboy.nav.collapsed') === '1' ? 'collapsed' : 'expanded');
+        })();
     </script>
 
     <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
@@ -34,7 +74,29 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     {{ Vite::fonts() }}
 </head>
-<body class="bg-[#F5F5F7] dark:bg-[#121214] text-[#1D1D1F] dark:text-[#F5F5F7] font-sans antialiased min-h-screen flex flex-col transition-colors duration-200 selection:bg-[#0071E3] selection:text-white">
+@php
+    // Current page's tour key (used by the body data-page + Help "Take the tour").
+    $routeName = request()->route()?->getName() ?? '';
+    $isOwnerPage = auth()->check() && auth()->user()->isOwner();
+    if ($routeName === 'dashboard') {
+        $pageKey = $isOwnerPage ? 'dashboard' : 'console';
+    } else {
+        $pageKey = match (true) {
+            str_starts_with($routeName, 'batches.') => 'batches',
+            str_starts_with($routeName, 'items.') => 'inventory',
+            $routeName === 'staff.workspace' => 'console',
+            str_starts_with($routeName, 'orders.') => 'orders',
+            str_starts_with($routeName, 'deliveries.') => 'deliveries',
+            str_starts_with($routeName, 'expenses.') => 'expenses',
+            str_starts_with($routeName, 'reports.') => 'reports',
+            $routeName === 'staff.index' => 'staff',
+            str_starts_with($routeName, 'suppliers.') => 'suppliers',
+            str_starts_with($routeName, 'backups.') => 'backups',
+            default => 'dashboard',
+        };
+    }
+@endphp
+<body data-page="{{ $pageKey }}" class="bg-[#F5F5F7] dark:bg-[#121214] text-[#1D1D1F] dark:text-[#F5F5F7] font-sans antialiased min-h-screen flex flex-col transition-colors duration-200 selection:bg-[#0071E3] selection:text-white">
 
     <div id="app-progress" class="app-progress" aria-hidden="true">
         <div class="app-progress__bar"></div>
@@ -43,21 +105,90 @@
     @php
         $isOwner = auth()->check() && auth()->user()->isOwner();
 
+        // Ordered by daily workflow: workspace → intake → sell → fulfil → money → admin.
         $navItems = [
             ['route' => 'dashboard',        'pattern' => 'dashboard',   'label' => 'Workspace',  'tint' => 'text-blue-400',    'icon' => 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z'],
-            ['route' => 'items.index',      'pattern' => 'items.*',     'label' => 'Inventory',  'tint' => 'text-emerald-400', 'icon' => 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10'],
             ['route' => 'batches.index',    'pattern' => 'batches.*',   'label' => 'Batches',    'tint' => 'text-amber-400',    'icon' => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4'],
-            ['route' => 'orders.index',     'pattern' => 'orders.*',    'label' => 'Orders',     'tint' => 'text-rose-400',     'icon' => 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z'],
-            ['route' => 'deliveries.index', 'pattern' => 'deliveries.*','label' => 'Deliveries', 'tint' => 'text-sky-400',      'icon' => 'M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0'],
-            ['route' => 'expenses.index',   'pattern' => 'expenses.*',  'label' => 'Expenses',   'tint' => 'text-rose-400',     'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
+            ['route' => 'items.index',      'pattern' => 'items.*',     'label' => 'Inventory',  'tint' => 'text-emerald-400', 'icon' => 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10'],
         ];
+
+        if (! $isOwner) {
+            // Staff reach their console at both / and /console.
+            $navItems[0]['pattern'] = ['dashboard', 'staff.workspace'];
+        }
+
+        if ($isOwner) {
+            $navItems[] = ['route' => 'staff.workspace', 'pattern' => 'staff.workspace', 'label' => 'Console', 'tint' => 'text-sky-400', 'icon' => 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z'];
+        }
+
+        $navItems[] = ['route' => 'orders.index',     'pattern' => 'orders.*',    'label' => 'Orders',     'tint' => 'text-rose-400',     'icon' => 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z'];
+        $navItems[] = ['route' => 'deliveries.index', 'pattern' => 'deliveries.*','label' => 'Deliveries', 'tint' => 'text-sky-400',      'icon' => 'M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0'];
+        $navItems[] = ['route' => 'expenses.index',   'pattern' => 'expenses.*',  'label' => 'Expenses',   'tint' => 'text-rose-400',     'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'];
 
         if ($isOwner) {
             $navItems[] = ['route' => 'reports.index',  'pattern' => 'reports.*',  'label' => 'Reports',  'tint' => 'text-indigo-400', 'icon' => 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z'];
-            $navItems[] = ['route' => 'staff.index',    'pattern' => 'staff.*',    'label' => 'Staff',    'tint' => 'text-violet-400', 'icon' => 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'];
+            $navItems[] = ['route' => 'staff.index',    'pattern' => 'staff.index',    'label' => 'Staff',    'tint' => 'text-violet-400', 'icon' => 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'];
             $navItems[] = ['route' => 'suppliers.index','pattern' => 'suppliers.*','label' => 'Suppliers','tint' => 'text-teal-400',   'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'];
         }
+
+        // Page guides (profile dropdown) — role-aware, links navigate + start a tour.
+        $consoleTabs = [
+            ['key' => 'console:claims', 'label' => 'Live Claims', 'url' => route('staff.workspace', ['tab' => 'claims'])],
+            ['key' => 'console:pos', 'label' => 'Walk-in POS', 'url' => route('staff.workspace', ['tab' => 'pos'])],
+            ['key' => 'console:triage', 'label' => 'Triage Table', 'url' => route('staff.workspace', ['tab' => 'triage'])],
+        ];
+        if ($isOwner) {
+            $guidePages = [
+                ['key' => 'dashboard', 'label' => 'Workspace', 'url' => route('dashboard')],
+                ['key' => 'batches', 'label' => 'Batches', 'url' => route('batches.index')],
+                ['key' => 'inventory', 'label' => 'Inventory', 'url' => route('items.index')],
+                ['key' => 'console', 'label' => 'Console', 'url' => route('staff.workspace'), 'children' => $consoleTabs],
+                ['key' => 'orders', 'label' => 'Orders', 'url' => route('orders.index')],
+                ['key' => 'deliveries', 'label' => 'Deliveries', 'url' => route('deliveries.index')],
+                ['key' => 'expenses', 'label' => 'Expenses', 'url' => route('expenses.index')],
+                ['key' => 'reports', 'label' => 'Reports', 'url' => route('reports.index')],
+                ['key' => 'staff', 'label' => 'Staff', 'url' => route('staff.index')],
+                ['key' => 'suppliers', 'label' => 'Suppliers', 'url' => route('suppliers.index')],
+                ['key' => 'backups', 'label' => 'Data & Backups', 'url' => route('backups.index')],
+            ];
+        } else {
+            $guidePages = [
+                ['key' => 'console', 'label' => 'Workspace', 'url' => route('dashboard'), 'children' => $consoleTabs],
+                ['key' => 'batches', 'label' => 'Batches', 'url' => route('batches.index')],
+                ['key' => 'inventory', 'label' => 'Inventory', 'url' => route('items.index')],
+                ['key' => 'orders', 'label' => 'Orders', 'url' => route('orders.index')],
+                ['key' => 'deliveries', 'label' => 'Deliveries', 'url' => route('deliveries.index')],
+                ['key' => 'expenses', 'label' => 'Expenses', 'url' => route('expenses.index')],
+            ];
+        }
     @endphp
+
+    <div class="app-shell">
+
+    @auth
+    {{-- Optional left-rail navigation (Settings → Navigation) --}}
+    <aside class="app-rail" aria-label="Primary">
+        <div class="flex h-full flex-col">
+            <nav data-tour="nav" class="flex-1 overflow-y-auto px-2 py-3 space-y-1">
+                @foreach($navItems as $item)
+                <a href="{{ route($item['route']) }}" title="{{ $item['label'] }}"
+                   class="app-rail-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors {{ request()->routeIs($item['pattern']) ? 'app-rail-item--active' : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200/60 dark:hover:bg-neutral-800' }}">
+                    <svg class="shrink-0 {{ $item['tint'] }}" style="width:1.125rem;height:1.125rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/></svg>
+                    <span class="app-rail-label truncate">{{ $item['label'] }}</span>
+                </a>
+                @endforeach
+            </nav>
+            <div class="p-2 space-y-1 border-t border-neutral-200 dark:border-neutral-800">
+                    <x-user-menu variant="rail" :pages="$guidePages" />
+                <button type="button" @click="toggleRail()" title="Collapse / expand menu"
+                        class="app-rail-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-neutral-500 hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors">
+                    <svg class="app-rail-toggle shrink-0" style="width:1.125rem;height:1.125rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+                    <span class="app-rail-label truncate">Collapse</span>
+                </button>
+            </div>
+        </div>
+    </aside>
+    @endauth
 
     <header x-data="{ mobileNav: false }"
             class="sticky top-0 z-40 w-full apple-glass border-b border-[#E5E5EA] dark:border-[#2C2C2E] px-4 lg:px-6 py-2.5 transition-colors duration-200">
@@ -74,51 +205,21 @@
             </div>
 
             @auth
-            <nav class="hidden lg:flex items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl border border-neutral-200 dark:border-neutral-800 text-xs">
+            <nav data-tour="nav" class="app-topnav hidden lg:flex items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl border border-neutral-200 dark:border-neutral-800 text-xs">
                 @foreach($navItems as $item)
                 <a href="{{ route($item['route']) }}"
-                   class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all {{ request()->routeIs($item['pattern']) ? 'bg-white dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-white font-semibold shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-[#1D1D1F] dark:hover:text-white' }}">
+                   class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all {{ request()->routeIs($item['pattern']) ? 'bg-white dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-white font-semibold shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200/60 dark:hover:bg-neutral-700/30 hover:text-[#1D1D1F] dark:hover:text-white' }}">
                     <svg class="w-3.5 h-3.5 {{ $item['tint'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/></svg>
-                    <span>{{ $item['label'] }}</span>
+                    <span class="whitespace-nowrap">{{ $item['label'] }}</span>
                 </a>
                 @endforeach
             </nav>
             @endauth
 
-            <div class="flex items-center gap-2.5">
-                <button @click="toggleTheme()"
-                        title="Toggle Light / Dark Mode"
-                        class="p-2 rounded-xl text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors border border-transparent hover:border-neutral-300/70 dark:hover:border-neutral-700">
-                    <template x-if="!darkMode">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
-                    </template>
-                    <template x-if="darkMode">
-                        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                    </template>
-                </button>
-
+            <div class="flex items-center gap-2.5 shrink-0">
                 @auth
-                <div class="flex items-center gap-2 pl-2 border-l border-neutral-200 dark:border-neutral-800">
-                    <div class="text-right hidden sm:block">
-                        <div class="text-xs font-bold text-[#1D1D1F] dark:text-white leading-none">{{ auth()->user()->name }}</div>
-                        <div class="text-[10px] uppercase font-semibold tracking-wider mt-0.5 {{ $isOwner ? 'text-amber-600 dark:text-amber-400' : 'text-neutral-500 dark:text-neutral-400' }}">
-                            {{ auth()->user()->role }}
-                        </div>
-                    </div>
-
-                    <form action="{{ route('logout') }}" method="POST" class="inline">
-                        @csrf
-                        <button type="button"
-                                title="Sign out"
-                                data-confirm="Sign out?"
-                                data-confirm-variant="danger"
-                                data-confirm-icon="logout"
-                                data-confirm-message="You will be returned to the login screen."
-                                data-confirm-label="Sign out"
-                                class="p-2 rounded-xl text-neutral-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                        </button>
-                    </form>
+                <div x-show="navMode !== 'rail'" class="pl-2 border-l border-neutral-200 dark:border-neutral-800">
+                    <x-user-menu variant="header" :show-identity="false" :pages="$guidePages" />
                 </div>
 
                 <button type="button"
@@ -237,6 +338,85 @@
             </div>
         </div>
     </footer>
+
+    </div>{{-- /.app-shell --}}
+
+    @auth
+    {{-- First-run tour prompt --}}
+    <div x-show="showTourPrompt" x-cloak
+         x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+         class="fixed bottom-4 left-1/2 -translate-x-1/2 z-[105] w-[min(92vw,26rem)] pointer-events-none">
+        <div class="pointer-events-auto flex items-center gap-3 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#1C1C1E] shadow-xl p-3.5">
+            <span class="w-9 h-9 rounded-xl flex items-center justify-center bg-[#0071E3]/10 text-[#0071E3] dark:text-[#0A84FF] shrink-0">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </span>
+            <div class="min-w-0 flex-1">
+                <div class="text-sm font-semibold text-[#1D1D1F] dark:text-white">New here?</div>
+                <div class="text-xs text-neutral-500">Take a quick tour of the system.</div>
+            </div>
+            <button type="button" @click="showTourPrompt = false; window.appTour && window.appTour.start()" class="app-btn app-btn-primary app-btn-sm shrink-0">Start</button>
+            <button type="button" @click="dismissTourPrompt()" title="Dismiss"
+                    class="p-1.5 rounded-lg text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+    </div>
+    @endauth
+
+    {{-- Settings modal (theme / density / navigation) --}}
+    <div x-show="settingsOpen" x-cloak
+         x-effect="settingsOpen ? window.appScrollLock?.lock() : window.appScrollLock?.unlock()"
+         @keydown.escape.window="settingsOpen = false"
+         class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/30 dark:bg-black/50 backdrop-blur-[2px] app-modal-backdrop">
+        <div class="app-modal-panel w-full max-w-md bg-white dark:bg-[#1C1C1E] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6"
+             @click.outside="settingsOpen = false">
+            <div class="flex items-center justify-between">
+                <h3 class="font-bold text-base text-[#1D1D1F] dark:text-white">Settings</h3>
+                <button type="button" @click="settingsOpen = false" class="p-1.5 rounded-lg text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            {{-- Theme --}}
+            <div class="mt-6">
+                <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Theme</div>
+                <div class="mt-2 grid grid-cols-3 gap-2">
+                    <button type="button" @click="setTheme('light')"
+                            class="app-btn app-btn-sm" :class="theme === 'light' ? 'app-btn-primary' : 'app-btn-secondary'">Light</button>
+                    <button type="button" @click="setTheme('dark')"
+                            class="app-btn app-btn-sm" :class="theme === 'dark' ? 'app-btn-primary' : 'app-btn-secondary'">Dark</button>
+                    <button type="button" @click="setTheme('system')"
+                            class="app-btn app-btn-sm" :class="theme === 'system' ? 'app-btn-primary' : 'app-btn-secondary'">System</button>
+                </div>
+            </div>
+
+            {{-- Density --}}
+            <div class="mt-6">
+                <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Table density</div>
+                <div class="mt-2 grid grid-cols-3 gap-2">
+                    <button type="button" @click="setDensity('comfortable')"
+                            class="app-btn app-btn-sm" :class="density === 'comfortable' ? 'app-btn-primary' : 'app-btn-secondary'">Comfortable</button>
+                    <button type="button" @click="setDensity('cozy')"
+                            class="app-btn app-btn-sm" :class="density === 'cozy' ? 'app-btn-primary' : 'app-btn-secondary'">Cozy</button>
+                    <button type="button" @click="setDensity('compact')"
+                            class="app-btn app-btn-sm" :class="density === 'compact' ? 'app-btn-primary' : 'app-btn-secondary'">Compact</button>
+                </div>
+                <p class="mt-1.5 text-[11px] text-neutral-500">Controls row padding across all tables.</p>
+            </div>
+
+            {{-- Navigation --}}
+            <div class="mt-6">
+                <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Navigation</div>
+                <div class="mt-2 grid grid-cols-2 gap-2">
+                    <button type="button" @click="setNav('top')"
+                            class="app-btn app-btn-sm" :class="navMode === 'top' ? 'app-btn-primary' : 'app-btn-secondary'">Top bar</button>
+                    <button type="button" @click="setNav('rail')"
+                            class="app-btn app-btn-sm" :class="navMode === 'rail' ? 'app-btn-primary' : 'app-btn-secondary'">Left rail</button>
+                </div>
+                <p class="mt-1.5 text-[11px] text-neutral-500">The left rail can be collapsed from the menu header.</p>
+            </div>
+        </div>
+    </div>
 
     {{-- Unified confirm dialog --}}
     <div x-data

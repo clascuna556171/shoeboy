@@ -29,6 +29,8 @@ class AuditLog extends Model
         'item_added' => 'Added a pair to inventory',
         'item_updated' => 'Updated a pair',
         'item_triage_updated' => 'Updated pair triage',
+        'item_deleted' => 'Deleted a pair',
+        'item_restored' => 'Restored a pair',
         'order_awarded' => 'Awarded an order',
         'order_cancelled' => 'Cancelled an order',
         'payment_verified' => 'Verified a payment',
@@ -47,6 +49,7 @@ class AuditLog extends Model
         'expense_deleted' => 'Deleted an expense',
         'expense_restored' => 'Restored an expense',
         'system_backup_created' => 'Created a system backup',
+        'system_backup_restored' => 'Restored a system backup',
         'system_bootstrapped' => 'System initialized',
     ];
 
@@ -80,6 +83,7 @@ class AuditLog extends Model
         'condition' => 'Condition',
         'size' => 'Size',
         'category' => 'Category',
+        'triage_status' => 'Triage stage',
         'price' => 'Price',
         'listed_price' => 'Target price',
         'repair_cost' => 'Repair cost',
@@ -176,7 +180,7 @@ class AuditLog extends Model
                 Str::startsWith($this->action, ['batch_']) => $d['batch_code'] ?? '',
                 Str::startsWith($this->action, ['supplier_', 'staff_']) => $d['name'] ?? ($d['email'] ?? ''),
                 Str::startsWith($this->action, ['expense_']) => $d['description'] ?? '',
-                $this->action === 'system_backup_created' => $d['file'] ?? '',
+                Str::startsWith($this->action, ['system_backup_']) => $d['file'] ?? '',
                 default => '',
             };
         });
@@ -220,6 +224,8 @@ class AuditLog extends Model
                 ),
                 'item_updated' => sprintf('%s updated pair %s from the Inventory console%s.', $actor, $this->subject, $this->changeClause($d, ['sku', 'brand', 'model'])),
                 'item_triage_updated' => sprintf('%s updated the triage of pair %s from the Inventory console%s.', $actor, $d['sku'] ?? '', $this->changeClause($d)),
+                'item_deleted' => sprintf('%s deleted pair %s from the Inventory console.', $actor, $d['sku'] ?? $this->subject),
+                'item_restored' => sprintf('%s restored pair %s to inventory.', $actor, $d['sku'] ?? $this->subject),
 
                 'order_awarded' => sprintf(
                     '%s awarded %s%s to %s%s on a %s.',
@@ -282,6 +288,7 @@ class AuditLog extends Model
                 'expense_restored' => sprintf('%s restored the expense "%s" (₱%s).', $actor, $d['description'] ?? '', number_format((float) ($d['amount'] ?? 0), 2)),
 
                 'system_backup_created' => sprintf('The system created a database backup (%s).', $d['file'] ?? 'backup file'),
+                'system_backup_restored' => sprintf('The system restored the database from a backup (%s).', $d['file'] ?? 'backup file'),
 
                 default => sprintf('%s performed "%s" from %s.', $actor, $this->description, $this->where),
             };

@@ -142,7 +142,7 @@ class OrderController extends Controller
             ]);
         }
 
-        return redirect()->route('dashboard', ['tab' => 'claims'])
+        return redirect()->route('staff.workspace', ['tab' => 'claims'])
             ->with('success', "Reserved {$order->items->count()} pair(s) for {$customer->name}. Reservation active.");
     }
 
@@ -235,7 +235,7 @@ class OrderController extends Controller
             ]);
         }
 
-        return redirect()->route('dashboard', ['tab' => 'pos'])
+        return redirect()->route('staff.workspace', ['tab' => 'pos'])
             ->with('success', "POS sale completed ({$order->items->count()} pair(s)) and inventory updated.")
             ->with('receipt', ['label' => 'Print receipt', 'url' => route('orders.receipt', $order)]);
     }

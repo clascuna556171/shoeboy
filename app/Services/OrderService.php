@@ -32,18 +32,24 @@ class OrderService
             $total = 0.0;
 
             foreach (array_values($items) as $index => $item) {
-                // Atomic claim: only succeed if the pair is still available. The condition
-                // and the write are a single statement, so it is race-safe even on SQLite
-                // (which ignores row locks).
+                // Atomic claim: only succeed if the pair is still available AND has
+                // finished triage (wash/repair). The condition and the write are a
+                // single statement, so it is race-safe even on SQLite.
                 $claimed = Item::whereKey($item->id)
                     ->where('status', 'available')
+                    ->where('triage_status', Item::TRIAGE_READY)
                     ->update(['status' => 'reserved']);
 
                 if ($claimed === 0) {
-                    $sku = Item::whereKey($item->id)->value('sku') ?? $item->sku;
+                    $blocked = Item::whereKey($item->id)->first();
+                    $sku = $blocked?->sku ?? $item->sku;
+
+                    $reason = $blocked && $blocked->status === 'available'
+                        ? "Item {$sku} is still in triage (not ready to sell) and cannot be awarded."
+                        : "Item {$sku} is no longer available and cannot be awarded.";
 
                     throw ValidationException::withMessages([
-                        'item_ids' => ["Item {$sku} is no longer available and cannot be awarded."],
+                        'item_ids' => [$reason],
                     ]);
                 }
 
