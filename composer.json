@@ -1,9 +1,9 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "theshoeboy/order-inventory-system",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "The Shoe Boy — order & inventory management system for a footwear reselling business (live-stream sales and walk-in POS).",
+    "keywords": ["laravel", "inventory", "pos", "orders", "retail"],
     "license": "MIT",
     "require": {
         "php": "^8.3",

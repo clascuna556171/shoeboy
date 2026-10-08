@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -88,11 +87,6 @@ class Item extends Model
         return $this->status === 'available';
     }
 
-    public function isTriageReady(): bool
-    {
-        return $this->triage_status === self::TRIAGE_READY;
-    }
-
     public function triageLabel(): string
     {
         return match ($this->triage_status) {
@@ -118,25 +112,5 @@ class Item extends Model
     public function orderItems(): HasMany
     {
         return $this->hasMany(OrderItem::class);
-    }
-
-    public function scopeAvailable(Builder $query): Builder
-    {
-        return $query->where('status', 'available');
-    }
-
-    public function scopeReserved(Builder $query): Builder
-    {
-        return $query->where('status', 'reserved');
-    }
-
-    public function scopeSold(Builder $query): Builder
-    {
-        return $query->where('status', 'sold');
-    }
-
-    public function scopeTriageReady(Builder $query): Builder
-    {
-        return $query->where('triage_status', self::TRIAGE_READY);
     }
 }

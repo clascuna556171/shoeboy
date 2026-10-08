@@ -70,9 +70,4 @@ class User extends Authenticatable
     {
         return $this->hasMany(Payment::class, 'verified_by');
     }
-
-    public function auditLogs(): HasMany
-    {
-        return $this->hasMany(AuditLog::class);
-    }
 }

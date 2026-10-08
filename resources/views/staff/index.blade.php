@@ -159,7 +159,7 @@
     {{-- Edit staff modal --}}
     <x-modal title="Edit Staff Account" accent="violet" close="editingUser = null"
              x-show="editingUser" x-cloak @keydown.escape.window="editingUser = null">
-            <form :action="editingUser ? '/staff/' + editingUser.id : '#'" method="POST" class="space-y-3.5 text-sm">
+            <form :action="editingUser ? '{{ route('staff.update', ['user' => '__ID__']) }}'.replace('__ID__', editingUser.id) : '#'" method="POST" class="space-y-3.5 text-sm">
                 @csrf
                 @method('PUT')
 

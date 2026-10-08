@@ -151,7 +151,7 @@
     <x-modal eyebrow="Edit Pair" size="lg" accent="emerald" close="editItem = null"
              x-show="editItem" x-cloak @keydown.escape.window="editItem = null">
         <x-slot:heading><span x-text="editItem ? editItem.sku : ''"></span></x-slot:heading>
-            <form :action="editItem ? '/items/' + editItem.id : '#'" method="POST" class="space-y-3.5">
+            <form :action="editItem ? '{{ route('items.update', ['item' => '__ID__']) }}'.replace('__ID__', editItem.id) : '#'" method="POST" class="space-y-3.5">
                 @csrf
                 @method('PUT')
 

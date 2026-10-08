@@ -183,7 +183,7 @@
          async setTriage(item, stage) {
              this.triageBusy = item.id;
              try {
-                 const res = await fetch('{{ url('/items') }}/' + item.id + '/triage', {
+                 const res = await fetch('{{ route('items.triage', ['item' => '__ID__']) }}'.replace('__ID__', item.id), {
                      method: 'POST',
                      headers: {
                          'Accept': 'application/json',

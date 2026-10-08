@@ -244,7 +244,7 @@
     <x-modal accent="amber" close="editingBatch = null"
              x-show="editingBatch" x-cloak @keydown.escape.window="editingBatch = null">
         <x-slot:heading>Edit Batch <span x-text="editingBatch ? editingBatch.batch_code : ''"></span></x-slot:heading>
-            <form :action="editingBatch ? '/batches/' + editingBatch.id : '#'" method="POST" class="space-y-3.5 text-sm">
+            <form :action="editingBatch ? '{{ route('batches.update', ['batch' => '__ID__']) }}'.replace('__ID__', editingBatch.id) : '#'" method="POST" class="space-y-3.5 text-sm">
                 @csrf
                 @method('PUT')
 

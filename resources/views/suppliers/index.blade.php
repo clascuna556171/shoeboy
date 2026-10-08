@@ -179,7 +179,7 @@
     {{-- Edit supplier modal --}}
     <x-modal title="Edit Supplier" accent="teal" close="editingSupplier = null"
              x-show="editingSupplier" x-cloak @keydown.escape.window="editingSupplier = null">
-            <form :action="editingSupplier ? '/suppliers/' + editingSupplier.id : '#'" method="POST" class="space-y-3.5 text-sm">
+            <form :action="editingSupplier ? '{{ route('suppliers.update', ['supplier' => '__ID__']) }}'.replace('__ID__', editingSupplier.id) : '#'" method="POST" class="space-y-3.5 text-sm">
                 @csrf
                 @method('PUT')
 

@@ -57,7 +57,7 @@
 | **Asset Pipeline** | Vite 8 | HMR in development, bundled/minified production assets |
 | **Domain Services** | `OrderService`, `PaymentService`, `ReportingService`, `AuditService` | Fat service layer; thin, testable controllers |
 | **Reporting** | Native `XlsxWriter` (OOXML) | Multi-sheet, filterable `.xlsx` financial exports with no external library |
-| **Testing** | PHPUnit 12 + `RefreshDatabase` | ~60 feature tests covering business rules, access control, and reporting |
+| **Testing** | PHPUnit 12 + `RefreshDatabase` | 78 feature tests covering business rules, access control, and reporting |
 | **Security** | RBAC middleware, throttling, audit logging | Role gating, brute-force protection, accountability trail |
 
 ---
@@ -132,10 +132,10 @@ The system treats money and inventory as first-class correctness problems, not j
 | **GCash anti-replay** | A GCash `reference_no` may exist on only one payment in the entire system. |
 | **Amount matching** | Verified payment amounts must equal the order total to the centavo. |
 | **Reservation expiry** | `shoeboy:release-expired` runs every minute (scheduled) plus a lazy sweep on dashboard load; the client countdown also nudges the server. |
-| **One sale per pair** | A DB-unique `order_items.item_id` guarantees a pair belongs to exactly one order. |
+| **One sale per pair** | A pair is claimed through a single atomic conditional `UPDATE ... WHERE status = 'available'` (in `OrderService`) plus the `Item.status` guard, so it can belong to exactly one live order at a time. Re-sale after cancel/release is allowed, so there is deliberately **no** DB-unique index on `order_items.item_id`. |
 | **Brute-force protection** | Login is throttled at `5 attempts / minute`. |
 | **RBAC + active gate** | `role:owner` and `active` middleware; deactivated users are logged out mid-session. |
-| **Soft deletes** | Expenses and suppliers are restorable, with an undo toast. |
+| **Soft deletes** | Expenses, suppliers, and batches are restorable with an undo toast; individual pairs are soft-deletable too. |
 | **Audit logging** | All sensitive events captured with actor, role, IP, and JSON details. |
 
 ---
@@ -158,9 +158,9 @@ The system uses a normalized relational structure with strict cascading foreign 
 | **`items`** | Individual Pair Inventory | `sku` (unique), brand, model, `price_tier`, `listed_price`, condition, size, `status` (`available`/`reserved`/`sold`), `repair_cost` | The atomic claim target; price tier is auto-derived on save; indexed by batch and status. |
 | **`customers`** | Buyer Registry | `name`, `messenger_contact` (indexed), phone, shipping address | Groups a buyer's claims/sales across live sessions. |
 | **`orders`** | Claim & Sale Ledger | `order_number` (unique), `awarded_price`, `status` (`reserved`/`paid`/`fulfilled`/`cancelled`), `order_type` (`live_stream`/`walkin_pos`), `expires_at` | Drives the reservation timer and the order state machine. |
-| **`order_items`** | Order ↔ Pair Pivot | `order_id`, `item_id` (**unique**), `awarded_price` | Enforces the "one sale per pair" rule while allowing many pairs per order. |
+| **`order_items`** | Order ↔ Pair Pivot | `order_id`, `item_id`, `awarded_price` | Allows many pairs per order; the "one active sale per pair" rule is enforced in `OrderService` (atomic `Item.status` claim), not by a DB-unique index. |
 | **`payments`** | Verified Receipts | `order_id` (unique), `amount`, `method` (`gcash`/`cash`), `reference_no`, `verified_by`, `date_paid` | Amount must match the order; GCash references are globally unique (anti-replay). |
-| **`deliveries`** | Fulfillment Tracking | `order_id` (unique), `method` (`pickup`/`jnt_delivery`), `tracking_number`, `status` (`pending`/`shipped`/`completed`), `date_completed` | Completing a delivery fulfills its parent order; J&T requires a valid waybill. |
+| **`deliveries`** | Fulfillment Tracking | `order_id` (unique), `method` (`pickup`/`jnt_delivery`), `tracking_number`, `status` (`pending`/`shipped`/`completed`), `date_completed` | Completing a delivery fulfills its parent order; a J&T waybill is required once the delivery leaves `pending`. |
 | **`expenses`** | Operating Expenses | `batch_id` (nullable), category, `description`, `reference_no`, `amount`, `date`, `deleted_at` | Feeds the net operating balance; soft-deletable and restorable. |
 | **`audit_logs`** | Accountability Trail | `user_id`, `action`, `auditable_type`/`auditable_id`, `details` (JSON), `ip_address` | Immutable record of sensitive events, including failed and blocked sign-ins. |
 

@@ -6,6 +6,7 @@ use App\Models\Batch;
 use App\Models\Item;
 use App\Models\Order;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 
 /**
@@ -139,19 +140,83 @@ class BackupService
 
     /**
      * Replace the active database with a backup, snapshotting the current one first.
+     *
+     * Validates the source SQLite file, disconnects the live connection so the
+     * file can be replaced atomically, and rolls back to the pre-restore snapshot
+     * if anything goes wrong.
      */
     public function restore(string $sourcePath, string $auditName): bool
     {
+        if (! $this->isValidSqlite($sourcePath)) {
+            return false;
+        }
+
         $database = $this->databasePath();
+        $connection = config('database.default');
+
+        // Release the live connection so the file handle is free to swap.
+        DB::purge($connection);
 
         // Safety net: capture the state we are about to overwrite.
-        $this->create('pre-restore');
+        $snapshot = $this->create('pre-restore');
 
-        File::copy($sourcePath, $database);
+        $temp = $database.'.restore-'.uniqid('', true);
+
+        try {
+            File::copy($sourcePath, $temp);
+
+            // Atomic replace (same directory); fall back to a direct copy.
+            if (! @rename($temp, $database)) {
+                File::copy($temp, $database);
+                File::delete($temp);
+            }
+        } catch (\Throwable $e) {
+            File::delete($temp);
+
+            if ($snapshot && File::exists($snapshot)) {
+                File::copy($snapshot, $database);
+            }
+
+            DB::reconnect($connection);
+
+            return false;
+        }
+
+        DB::reconnect($connection);
 
         AuditService::log('system_backup_restored', null, ['file' => $auditName]);
 
         return true;
+    }
+
+    /** Whether a file is a structurally valid SQLite database. */
+    public function isValidSqlite(string $path): bool
+    {
+        if (! File::exists($path) || filesize($path) < 512) {
+            return false;
+        }
+
+        $handle = @fopen($path, 'rb');
+        if (! $handle) {
+            return false;
+        }
+        $header = (string) fread($handle, 16);
+        fclose($handle);
+
+        if (strncmp($header, 'SQLite format 3', 15) !== 0) {
+            return false;
+        }
+
+        try {
+            $pdo = new \PDO('sqlite:'.$path);
+            $pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+            $result = $pdo->query('PRAGMA integrity_check')->fetchColumn();
+            $pdo = null;
+
+            return $result === 'ok';
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     /** Validate and restore an uploaded .sqlite file. */

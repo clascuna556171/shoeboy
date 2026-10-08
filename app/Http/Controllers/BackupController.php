@@ -54,7 +54,9 @@ class BackupController extends Controller
         $path = $this->backups->find($file);
         abort_unless($path, 404);
 
-        $this->backups->restore($path, basename($path));
+        if (! $this->backups->restore($path, basename($path))) {
+            return back()->with('error', 'That backup could not be restored — it is not a valid SQLite database.');
+        }
 
         return back()->with('success', 'Database restored from '.basename($path).'.');
     }
@@ -70,17 +72,14 @@ class BackupController extends Controller
         ]);
 
         $file = $request->file('backup');
-        $handle = fopen($file->getRealPath(), 'rb');
-        $header = $handle ? (string) fread($handle, 16) : '';
-        if ($handle) {
-            fclose($handle);
-        }
 
-        if (strncmp($header, 'SQLite format 3', 15) !== 0) {
+        if (! $this->backups->isValidSqlite($file->getRealPath())) {
             return back()->with('error', 'That file is not a valid SQLite database backup.');
         }
 
-        $this->backups->import($file);
+        if (! $this->backups->import($file)) {
+            return back()->with('error', 'The import failed and the database was left unchanged.');
+        }
 
         return back()->with('success', 'Backup imported — the database has been restored.');
     }
