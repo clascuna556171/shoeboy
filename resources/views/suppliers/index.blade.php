@@ -45,7 +45,7 @@
                      :reset-url="route('suppliers.index')" :filters="[]" />
 
     {{-- Cards --}}
-    <div x-show="view === 'cards'" data-view-panel="cards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    <div x-show="view === 'cards'" data-view-panel="cards" data-tour="list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         @forelse($suppliers as $sup)
         <div class="app-card app-card-hover p-5 flex flex-col justify-between gap-4">
             <div class="space-y-3">
@@ -94,7 +94,7 @@
     </div>
 
     {{-- Table view --}}
-    <div x-show="view === 'table'" data-view-panel="table" class="app-card">
+    <div x-show="view === 'table'" data-view-panel="table" data-tour="list" class="app-card">
         <div class="overflow-x-auto lg:overflow-visible">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">

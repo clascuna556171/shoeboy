@@ -131,37 +131,60 @@
             $navItems[] = ['route' => 'suppliers.index','pattern' => 'suppliers.*','label' => 'Suppliers','tint' => 'text-teal-400',   'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'];
         }
 
-        // Page guides (profile dropdown) — role-aware, links navigate + start a tour.
+        // Anchor key per nav route, used by the general tour to name each module.
+        $navTour = [
+            'dashboard' => 'nav-workspace',
+            'batches.index' => 'nav-batches',
+            'items.index' => 'nav-inventory',
+            'staff.workspace' => 'nav-console',
+            'orders.index' => 'nav-orders',
+            'deliveries.index' => 'nav-deliveries',
+            'expenses.index' => 'nav-expenses',
+            'reports.index' => 'nav-reports',
+            'staff.index' => 'nav-staff',
+            'suppliers.index' => 'nav-suppliers',
+        ];
+
+        // Page guides (profile dropdown) — derived from the shared guide config.
+        $guideRole = $isOwner ? 'owner' : 'staff';
+        $guide = config('guides');
+        $allowed = fn ($page) => empty($page['roles']) || in_array($guideRole, $page['roles'], true);
         $consoleTabs = [
             ['key' => 'console:claims', 'label' => 'Live Claims', 'url' => route('staff.workspace', ['tab' => 'claims'])],
             ['key' => 'console:pos', 'label' => 'Walk-in POS', 'url' => route('staff.workspace', ['tab' => 'pos'])],
             ['key' => 'console:triage', 'label' => 'Triage Table', 'url' => route('staff.workspace', ['tab' => 'triage'])],
         ];
-        if ($isOwner) {
-            $guidePages = [
-                ['key' => 'dashboard', 'label' => 'Workspace', 'url' => route('dashboard')],
-                ['key' => 'batches', 'label' => 'Batches', 'url' => route('batches.index')],
-                ['key' => 'inventory', 'label' => 'Inventory', 'url' => route('items.index')],
-                ['key' => 'console', 'label' => 'Console', 'url' => route('staff.workspace'), 'children' => $consoleTabs],
-                ['key' => 'orders', 'label' => 'Orders', 'url' => route('orders.index')],
-                ['key' => 'deliveries', 'label' => 'Deliveries', 'url' => route('deliveries.index')],
-                ['key' => 'expenses', 'label' => 'Expenses', 'url' => route('expenses.index')],
-                ['key' => 'reports', 'label' => 'Reports', 'url' => route('reports.index')],
-                ['key' => 'staff', 'label' => 'Staff', 'url' => route('staff.index')],
-                ['key' => 'suppliers', 'label' => 'Suppliers', 'url' => route('suppliers.index')],
-                ['key' => 'backups', 'label' => 'Data & Backups', 'url' => route('backups.index')],
+        $guidePages = [];
+        $tourPages = [];
+        foreach ($guide['pages'] as $key => $page) {
+            if (! $allowed($page)) {
+                continue;
+            }
+            $tourPages[$key] = ['label' => $page['label'] ?? $key, 'steps' => $page['steps'] ?? []];
+
+            if (empty($page['route'])) {
+                continue; // tab-only entries (console:claims, …) have no menu link
+            }
+            $entry = [
+                'key' => $key,
+                'label' => (! $isOwner && $key === 'console') ? 'Workspace' : ($page['label'] ?? $key),
+                'url' => route($page['route']),
             ];
-        } else {
-            $guidePages = [
-                ['key' => 'console', 'label' => 'Workspace', 'url' => route('dashboard'), 'children' => $consoleTabs],
-                ['key' => 'batches', 'label' => 'Batches', 'url' => route('batches.index')],
-                ['key' => 'inventory', 'label' => 'Inventory', 'url' => route('items.index')],
-                ['key' => 'orders', 'label' => 'Orders', 'url' => route('orders.index')],
-                ['key' => 'deliveries', 'label' => 'Deliveries', 'url' => route('deliveries.index')],
-                ['key' => 'expenses', 'label' => 'Expenses', 'url' => route('expenses.index')],
-            ];
+            if ($key === 'console') {
+                $entry['children'] = $consoleTabs;
+            }
+            $guidePages[] = $entry;
         }
+
+        $guideJs = [
+            'role' => $guideRole,
+            'helpUrl' => route('help.index'),
+            'general' => ['label' => $guide['general']['label'] ?? 'Overview', 'steps' => $guide['general']['steps'] ?? []],
+            'pages' => $tourPages,
+        ];
     @endphp
+
+    <script>window.__GUIDES__ = @json($guideJs);</script>
 
     <div class="app-shell">
 
@@ -172,6 +195,7 @@
             <nav data-tour="nav" class="flex-1 overflow-y-auto px-2 py-3 space-y-1">
                 @foreach($navItems as $item)
                 <a href="{{ route($item['route']) }}" title="{{ $item['label'] }}"
+                   data-tour="{{ $navTour[$item['route']] ?? '' }}"
                    class="app-rail-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors {{ request()->routeIs($item['pattern']) ? 'app-rail-item--active' : 'text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200/60 dark:hover:bg-neutral-800' }}">
                     <svg class="shrink-0 {{ $item['tint'] }}" style="width:1.125rem;height:1.125rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/></svg>
                     <span class="app-rail-label truncate">{{ $item['label'] }}</span>
@@ -208,6 +232,7 @@
             <nav data-tour="nav" class="app-topnav hidden lg:flex items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl border border-neutral-200 dark:border-neutral-800 text-xs">
                 @foreach($navItems as $item)
                 <a href="{{ route($item['route']) }}"
+                   data-tour="{{ $navTour[$item['route']] ?? '' }}"
                    class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all {{ request()->routeIs($item['pattern']) ? 'bg-white dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-white font-semibold shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:bg-neutral-200/60 dark:hover:bg-neutral-700/30 hover:text-[#1D1D1F] dark:hover:text-white' }}">
                     <svg class="w-3.5 h-3.5 {{ $item['tint'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/></svg>
                     <span class="whitespace-nowrap">{{ $item['label'] }}</span>
@@ -250,6 +275,7 @@
              class="lg:hidden mt-3 max-w-[1720px] mx-auto grid grid-cols-2 sm:grid-cols-3 gap-2 pb-1">
             @foreach($navItems as $item)
             <a href="{{ route($item['route']) }}"
+               data-tour="{{ $navTour[$item['route']] ?? '' }}"
                class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs border transition-colors {{ request()->routeIs($item['pattern']) ? 'bg-neutral-900 text-white border-transparent font-semibold dark:bg-white dark:text-neutral-900' : 'bg-white dark:bg-[#1C1C1E] border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-200' }}">
                 <svg class="w-4 h-4 {{ $item['tint'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/></svg>
                 <span>{{ $item['label'] }}</span>
@@ -352,9 +378,10 @@
             </span>
             <div class="min-w-0 flex-1">
                 <div class="text-sm font-semibold text-[#1D1D1F] dark:text-white">New here?</div>
-                <div class="text-xs text-neutral-500">Take a quick tour of the system.</div>
+                <div class="text-xs text-neutral-500">Take a quick or full tour of the system.</div>
             </div>
-            <button type="button" @click="showTourPrompt = false; window.appTour && window.appTour.start()" class="app-btn app-btn-primary app-btn-sm shrink-0">Start</button>
+            <button type="button" @click="showTourPrompt = false; window.appTour && window.appTour.start('', 'essentials')" class="app-btn app-btn-secondary app-btn-sm shrink-0">Quick</button>
+            <button type="button" @click="showTourPrompt = false; window.appTour && window.appTour.start('', 'full')" class="app-btn app-btn-primary app-btn-sm shrink-0">Full tour</button>
             <button type="button" @click="dismissTourPrompt()" title="Dismiss"
                     class="p-1.5 rounded-lg text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 shrink-0">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>

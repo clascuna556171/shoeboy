@@ -101,7 +101,7 @@
     </div>
 
     {{-- Breakdown tabs --}}
-    <div class="app-card">
+    <div class="app-card" data-tour="list">
         <div class="p-4 border-b border-neutral-200 dark:border-neutral-800">
             <div class="mb-3">
                 <div class="text-sm font-semibold text-neutral-900 dark:text-white">Breakdown</div>

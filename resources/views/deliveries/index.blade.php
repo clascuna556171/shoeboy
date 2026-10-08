@@ -30,7 +30,7 @@
                      ]" />
 
     {{-- Table --}}
-    <div class="app-card">
+    <div class="app-card" data-tour="list">
         <div class="overflow-x-auto lg:overflow-visible">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
@@ -116,15 +116,19 @@
                                   class="relative flex items-center justify-end gap-1.5 whitespace-nowrap">
                                 @csrf
                                 @method('PUT')
-                                <select name="method" x-model="method" @change="if (method === 'pickup') tracking = null" class="app-select app-input-sm !w-auto shrink-0">
+                                <select name="method" x-model="method" @change="if (method === 'pickup') tracking = null" data-tour="method" class="app-select app-input-sm !w-auto shrink-0">
                                     <option value="pickup">Pickup</option>
                                     <option value="jnt_delivery">J&amp;T</option>
                                 </select>
                                 <input type="text" name="tracking_number" x-model="tracking" x-show="method === 'jnt_delivery'"
                                        @if($del->method !== 'jnt_delivery') style="display:none" @endif
-                                       :required="method === 'jnt_delivery'" minlength="6" maxlength="40"
-                                       placeholder="Tracking / waybill #" class="app-input app-input-sm !w-36 shrink-0 font-mono">
-                                <select name="status" x-model="status" class="app-select app-input-sm !w-auto shrink-0">
+                                       :required="method === 'jnt_delivery' && status !== 'pending'"
+                                       :minlength="(method === 'jnt_delivery' && status !== 'pending') ? 6 : false"
+                                       :placeholder="(method === 'jnt_delivery' && status === 'pending') ? 'Optional while pending' : 'Tracking / waybill #'"
+                                       maxlength="40"
+                                       title="Optional while pending — required once shipped or completed."
+                                       class="app-input app-input-sm !w-36 shrink-0 font-mono">
+                                <select name="status" x-model="status" data-tour="status" class="app-select app-input-sm !w-auto shrink-0">
                                     <option value="pending">Pending</option>
                                     <option value="shipped">Shipped</option>
                                     <option value="completed">Completed</option>

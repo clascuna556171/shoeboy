@@ -41,6 +41,11 @@
     from { transform: scaleX(1); }
     to   { transform: scaleX(0); }
 }
+@keyframes app-help-flash {
+    0%   { box-shadow: 0 0 0 0 rgba(0, 113, 227, 0); border-color: var(--color-apple-border); }
+    15%  { box-shadow: 0 0 0 5px rgba(0, 113, 227, 0.28); border-color: rgba(0, 113, 227, 0.6); }
+    100% { box-shadow: 0 0 0 0 rgba(0, 113, 227, 0); border-color: var(--color-apple-border); }
+}
 
 /* Apple Pro Scrollbars */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -90,6 +95,21 @@ html { scrollbar-gutter: stable; }
         box-shadow: 0 16px 40px -20px rgba(0, 0, 0, 0.22);
         border-color: rgba(0, 113, 227, 0.35);
         transform: translateY(-2px);
+    }
+
+    /* Flash a Help section that was jumped to (hash / "On this page"). */
+    .app-help-target { animation: app-help-flash 1.5s ease-out; }
+
+    /* Help "On this page" links + scrollspy active state. */
+    .app-help-toc { transition: background-color 0.15s ease, color 0.15s ease; }
+    .app-help-toc.is-active {
+        background-color: rgba(0, 113, 227, 0.10);
+        color: #0071E3;
+        font-weight: 600;
+    }
+    .dark .app-help-toc.is-active {
+        background-color: rgba(10, 132, 255, 0.16);
+        color: #0A84FF;
     }
 
     .app-row { transition: background-color 0.15s ease; }

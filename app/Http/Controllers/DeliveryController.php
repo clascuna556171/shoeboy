@@ -72,12 +72,20 @@ class DeliveryController extends Controller
             return back()->with('error', "Delivery for Order {$delivery->order->order_number} is already completed and locked. Status can no longer be changed.");
         }
 
-        $validated = $request->validate([
+        $rules = [
             'method' => ['required', 'in:pickup,jnt_delivery'],
-            'tracking_number' => ['nullable', 'string', 'max:100', 'required_if:method,jnt_delivery', 'regex:/^[A-Za-z0-9\-]{6,40}$/'],
+            'tracking_number' => ['nullable', 'string', 'max:100', 'regex:/^[A-Za-z0-9\-]{6,40}$/'],
             'status' => ['required', 'in:pending,shipped,completed'],
-        ], [
-            'tracking_number.required_if' => 'A tracking / waybill number is required for J&T delivery.',
+        ];
+
+        // A J&T delivery may be saved without a waybill while it is still
+        // pending, but a tracking number is required once it ships or completes.
+        if ($request->input('method') === 'jnt_delivery' && $request->input('status') !== 'pending') {
+            $rules['tracking_number'][] = 'required';
+        }
+
+        $validated = $request->validate($rules, [
+            'tracking_number.required' => 'A tracking / waybill number is required for J&T once the delivery is shipped or completed.',
             'tracking_number.regex' => 'Tracking number must be 6–40 letters, numbers or dashes.',
         ]);
 

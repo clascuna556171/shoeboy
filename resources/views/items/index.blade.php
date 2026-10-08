@@ -37,7 +37,7 @@
                      ]" />
 
     {{-- Table --}}
-    <div class="app-card">
+    <div class="app-card" data-tour="list">
         <div class="overflow-x-auto lg:overflow-visible">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
@@ -49,7 +49,7 @@
                         <th class="py-3 px-4 font-semibold">Price Tier</th>
                         <x-sort-th-server column="listed_price" label="Target Price" align="right" />
                         <x-sort-th-server column="status" label="Status" align="center" />
-                        <th class="py-3 px-4 font-semibold text-center">Triage</th>
+                        <th data-tour="triage" class="py-3 px-4 font-semibold text-center">Triage</th>
                         <th class="py-3 px-4 font-semibold text-right">Action</th>
                     </tr>
                 </thead>

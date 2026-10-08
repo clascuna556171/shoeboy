@@ -31,7 +31,7 @@
                      ]" />
 
     {{-- Table --}}
-    <div class="app-card">
+    <div class="app-card" data-tour="list">
         <div class="flex items-center justify-between px-5 py-3.5 border-b border-neutral-200 dark:border-neutral-800">
             <h3 class="font-bold text-base text-[#1D1D1F] dark:text-white">Active Team Members &amp; Permissions</h3>
             <span class="badge badge-neutral">{{ $users->count() }} accounts</span>

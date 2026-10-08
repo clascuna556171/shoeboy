@@ -37,7 +37,7 @@
                      ]" />
 
     {{-- Table --}}
-    <div class="app-card">
+    <div class="app-card" data-tour="list">
         <div class="overflow-x-auto lg:overflow-visible">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
@@ -46,7 +46,7 @@
                         <x-sort-th-server column="category" label="Category" />
                         <x-sort-th-server column="description" label="Description" />
                         <x-sort-th-server column="reference_no" label="Reference No." />
-                        <th class="py-3 px-4 font-semibold">Batch Link</th>
+                        <th class="py-3 px-4 font-semibold" data-tour="batch-link">Batch Link</th>
                         <x-sort-th-server column="amount" label="Amount" align="right" />
                         <th class="py-3 px-4 font-semibold text-right">Action</th>
                     </tr>

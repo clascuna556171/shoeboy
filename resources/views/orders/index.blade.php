@@ -30,7 +30,7 @@
                      ]" />
 
     {{-- Table --}}
-    <div class="app-card">
+    <div class="app-card" data-tour="list">
         <div class="overflow-x-auto lg:overflow-visible">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
@@ -76,7 +76,7 @@
                         <td class="py-3.5 px-4 text-center">
                             <x-status-badge kind="order" :value="$ord->status" />
                         </td>
-                        <td class="py-3.5 px-4 text-center">
+                        <td class="py-3.5 px-4 text-center" data-tour="row-actions">
                             @if($ord->payment)
                                 <div class="inline-flex flex-col items-center gap-1">
                                     <x-status-badge kind="payment" :value="$ord->payment->method" />

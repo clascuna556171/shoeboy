@@ -131,7 +131,7 @@
     {{-- ============================================================
          FINANCIAL OVERVIEW
     ============================================================= --}}
-    <section aria-labelledby="financial-overview">
+    <section aria-labelledby="financial-overview" data-tour="financial">
 
         <div class="mb-3">
             <h2 id="financial-overview"
@@ -761,7 +761,7 @@
 
 
         {{-- RECENT SALES --}}
-        <div class="rounded-2xl
+        <div data-tour="sales" class="rounded-2xl
                     border border-neutral-200 dark:border-neutral-800
                     bg-white dark:bg-[#1C1C1E]
                     shadow-sm overflow-hidden">
@@ -1069,6 +1069,7 @@
                     border border-neutral-200 dark:border-neutral-800
                     bg-white dark:bg-[#1C1C1E]
                     shadow-sm overflow-hidden"
+             data-tour="audit"
              x-data="{ open: false, selectedId: null }">
 
         <div class="w-full px-6 py-4 flex items-center justify-between gap-4 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/40">
