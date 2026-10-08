@@ -114,7 +114,7 @@ class DatabaseSeeder extends Seeder
                     'condition' => $r['cond'],
                     'size' => $r['size'],
                     'status' => $r['status'] ?? 'available',
-                    'triage_status' => ($r['repair'] ?? 0) > 0 ? 'under_repair' : 'available',
+                    'triage_status' => $r['triage'] ?? (($r['repair'] ?? 0) > 0 ? 'under_repair' : 'available'),
                     'repair_cost' => $r['repair'] ?? 0,
                     'category' => $r['cat'] ?? null,
                 ]);
@@ -127,11 +127,11 @@ class DatabaseSeeder extends Seeder
         $itemsB04 = $makeItems($batch1, [
             ['sku' => 'B04-001', 'brand' => 'Li-Ning', 'model' => 'Way of Wade 10 "South Beach"', 'price' => 4500, 'cond' => 'Pristine', 'size' => 'US 10.5', 'cat' => 'Basketball'],
             ['sku' => 'B04-002', 'brand' => 'Anta', 'model' => 'KT 8 "Splash Party"', 'price' => 3200, 'cond' => 'Good', 'size' => 'US 9.0', 'status' => 'reserved', 'cat' => 'Basketball'],
-            ['sku' => 'B04-003', 'brand' => 'Peak', 'model' => 'Taichi Flash 4 "Underground"', 'price' => 2800, 'cond' => 'Good', 'size' => 'US 10.0', 'cat' => 'Basketball'],
+            ['sku' => 'B04-003', 'brand' => 'Peak', 'model' => 'Taichi Flash 4 "Underground"', 'price' => 2800, 'cond' => 'Good', 'size' => 'US 10.0', 'triage' => 'washing', 'cat' => 'Basketball'],
             ['sku' => 'B04-004', 'brand' => 'Nike', 'model' => 'Dunk Low Retro "Panda"', 'price' => 4200, 'cond' => 'Pristine', 'size' => 'US 8.5', 'cat' => 'Lifestyle'],
             ['sku' => 'B04-005', 'brand' => 'Jordan', 'model' => 'Air Jordan 1 High "Lost & Found"', 'price' => 5800, 'cond' => 'Pristine', 'size' => 'US 11.0', 'status' => 'reserved', 'cat' => 'Basketball'],
             ['sku' => 'B04-006', 'brand' => 'Li-Ning', 'model' => 'Yushuai 16 V2 Low', 'price' => 2400, 'cond' => 'Fair', 'size' => 'US 9.5', 'repair' => 150, 'cat' => 'Basketball'],
-            ['sku' => 'B04-007', 'brand' => 'Anta', 'model' => 'Shock The Game 6.0', 'price' => 2200, 'cond' => 'Fair', 'size' => 'US 10.5', 'cat' => 'Basketball'],
+            ['sku' => 'B04-007', 'brand' => 'Anta', 'model' => 'Shock The Game 6.0', 'price' => 2200, 'cond' => 'Fair', 'size' => 'US 10.5', 'triage' => 'washing', 'cat' => 'Basketball'],
             ['sku' => 'B04-008', 'brand' => 'Nike', 'model' => 'Kobe 6 Protro "Grinch"', 'price' => 6500, 'cond' => 'Pristine', 'size' => 'US 10.0', 'status' => 'sold', 'cat' => 'Basketball'],
             ['sku' => 'B04-009', 'brand' => 'Asics', 'model' => 'Gel-Kayano 14 "Silver Cream"', 'price' => 3900, 'cond' => 'Pristine', 'size' => 'US 8.0', 'cat' => 'Running'],
             ['sku' => 'B04-010', 'brand' => 'Peak', 'model' => 'Attitude Basketball Mid', 'price' => 2600, 'cond' => 'Good', 'size' => 'US 11.5', 'cat' => 'Basketball'],
@@ -151,7 +151,7 @@ class DatabaseSeeder extends Seeder
             ['sku' => 'B05-001', 'brand' => 'New Balance', 'model' => '990v6 "Grey"', 'price' => 7200, 'cond' => 'Pristine', 'size' => 'US 9.5', 'cat' => 'Lifestyle'],
             ['sku' => 'B05-002', 'brand' => 'Asics', 'model' => 'Gel-Kayano 14 "Outdoor"', 'price' => 4300, 'cond' => 'Pristine', 'size' => 'US 10.0', 'cat' => 'Running'],
             ['sku' => 'B05-003', 'brand' => 'Nike', 'model' => 'Air Max 1 "Patta"', 'price' => 6100, 'cond' => 'Good', 'size' => 'US 10.5', 'status' => 'sold', 'cat' => 'Lifestyle'],
-            ['sku' => 'B05-004', 'brand' => 'Adidas', 'model' => 'Gazelle Indoor', 'price' => 3300, 'cond' => 'Good', 'size' => 'US 8.5', 'cat' => 'Lifestyle'],
+            ['sku' => 'B05-004', 'brand' => 'Adidas', 'model' => 'Gazelle Indoor', 'price' => 3300, 'cond' => 'Good', 'size' => 'US 8.5', 'triage' => 'washing', 'cat' => 'Lifestyle'],
             ['sku' => 'B05-005', 'brand' => 'Asics', 'model' => 'Gel-1130 "Cream"', 'price' => 2900, 'cond' => 'Fair', 'size' => 'US 9.0', 'repair' => 90, 'cat' => 'Running'],
             ['sku' => 'B05-006', 'brand' => 'Saucony', 'model' => 'Shadow 6000', 'price' => 3600, 'cond' => 'Pristine', 'size' => 'US 11.0', 'status' => 'sold', 'cat' => 'Running'],
             ['sku' => 'B05-007', 'brand' => 'Mizuno', 'model' => 'Wave Rider 10', 'price' => 3200, 'cond' => 'Good', 'size' => 'US 9.5', 'cat' => 'Running'],
@@ -282,11 +282,29 @@ class DatabaseSeeder extends Seeder
             'tracking_number' => 'JNT-PH-1122334455', 'status' => 'shipped',
         ]);
 
+        // G. Expired reservation that auto-released back to stock (cancelled)
+        // Shows the cancelled state: the pair is available again, no payment.
+        $orderCancelled = Order::create([
+            'order_number' => 'ORD-'.date('Ymd').'-CC009',
+            'customer_id' => $customer3->id,
+            'staff_id' => $staff->id,
+            'awarded_price' => 3900.00,
+            'status' => 'cancelled',
+            'order_type' => 'live_stream',
+            'date_awarded' => Carbon::now()->subHours(26),
+            'expires_at' => null,
+            'notes' => 'Reservation expired and auto-released back to stock.',
+        ]);
+        $orderCancelled->items()->attach($itemsB04['B04-009']->id, ['awarded_price' => 3900.00]);
+
         // 7. Store Operating Expenses --------------------------------------
-        Expense::create(['batch_id' => $batch1->id, 'category' => 'Sack Purchase', 'description' => 'Bale B04 (24 pairs basketball mix intake)', 'reference_no' => 'OR-2026-000101', 'amount' => 18000.00, 'date' => Carbon::now()->subDays(6)->format('Y-m-d')]);
-        Expense::create(['batch_id' => $batch1->id, 'category' => 'Shipping & Freight', 'description' => 'Sea freight cargo delivery fee from Cebu to Davao', 'reference_no' => 'BILL-88231', 'amount' => 1850.00, 'date' => Carbon::now()->subDays(5)->format('Y-m-d')]);
-        Expense::create(['batch_id' => $batch1->id, 'category' => 'Shoe Restoration', 'description' => 'Deep cleaner foam, brushes & sole contact cement', 'amount' => 920.00, 'date' => Carbon::now()->subDays(4)->format('Y-m-d')]);
-        Expense::create(['batch_id' => $batch2->id, 'category' => 'Sack Purchase', 'description' => 'Bale B05 (18 pairs runner mix intake)', 'reference_no' => 'OR-2026-000118', 'amount' => 16200.00, 'date' => Carbon::now()->subDays(3)->format('Y-m-d')]);
+        // NOTE: the bale purchase price lives on `batches.total_cost` (the COGS
+        // basis). It must NOT also be recorded as a batch-linked expense, or it
+        // would be subtracted twice in batch profit. Only *additional* costs
+        // (freight, restoration, packaging, utilities) belong here.
+        Expense::create(['batch_id' => $batch1->id, 'category' => 'Shipping & Freight', 'description' => 'Sea freight cargo delivery fee from Cebu to Davao (B04)', 'reference_no' => 'BILL-88231', 'amount' => 1850.00, 'date' => Carbon::now()->subDays(5)->format('Y-m-d')]);
+        Expense::create(['batch_id' => $batch1->id, 'category' => 'Shoe Restoration', 'description' => 'Deep cleaner foam, brushes & sole contact cement for B04 pairs', 'amount' => 920.00, 'date' => Carbon::now()->subDays(4)->format('Y-m-d')]);
+        Expense::create(['batch_id' => $batch2->id, 'category' => 'Shipping & Freight', 'description' => 'Sea freight cargo delivery fee from Cebu to Davao (B05)', 'reference_no' => 'BILL-88255', 'amount' => 1450.00, 'date' => Carbon::now()->subDays(2)->format('Y-m-d')]);
         Expense::create(['batch_id' => null, 'category' => 'Packaging & Labels', 'description' => 'J&T parcel pouches & thermal label rolls', 'reference_no' => 'OR-2026-000124', 'amount' => 650.00, 'date' => Carbon::now()->subDays(3)->format('Y-m-d')]);
         Expense::create(['batch_id' => null, 'category' => 'Store Utilities', 'description' => 'Physical shop power & lighting allowance', 'amount' => 1200.00, 'date' => Carbon::now()->subDays(2)->format('Y-m-d')]);
 
@@ -305,7 +323,7 @@ class DatabaseSeeder extends Seeder
             AuditService::log('item_added', $item, ['sku' => $item->sku, 'brand' => $item->brand, 'model' => $item->model, 'price' => (float) $item->listed_price], $staff);
         }
 
-        foreach ([$orderKobe, $orderJa, $orderMax, $orderSaucony, $orderKt, $orderAj] as $order) {
+        foreach ([$orderKobe, $orderJa, $orderMax, $orderSaucony, $orderKt, $orderAj, $orderCancelled] as $order) {
             AuditService::log('order_awarded', $order, [
                 'order_number' => $order->order_number,
                 'items_count' => $order->items->count(),
@@ -315,6 +333,12 @@ class DatabaseSeeder extends Seeder
                 'order_type' => $order->order_type,
             ], $staff);
         }
+
+        AuditService::log('order_cancelled', $orderCancelled, [
+            'order_number' => $orderCancelled->order_number,
+            'reason' => 'Reservation expired (auto-released back to stock)',
+            'item_skus' => $orderCancelled->items->pluck('sku')->implode(', '),
+        ], $staff);
 
         foreach ([$orderKobe, $orderJa, $orderMax, $orderSaucony] as $order) {
             $payment = $order->payment;

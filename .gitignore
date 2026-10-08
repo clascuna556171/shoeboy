@@ -29,6 +29,7 @@ Thumbs.db
 # Personal Notes & Planning Specs (Head Programmer)
 *.md
 !README.md
+!docs/*.md
 
 
 # Local SQLite databases
