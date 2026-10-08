@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\FiltersSearches;
 use App\Http\Controllers\Concerns\SortsQueries;
+use App\Http\Requests\BatchRequest;
 use App\Models\Batch;
 use App\Models\Item;
 use App\Models\Supplier;
 use App\Services\AuditService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class BatchController extends Controller
 {
+    use FiltersSearches;
     use SortsQueries;
 
     public function index(Request $request): View
@@ -28,10 +30,7 @@ class BatchController extends Controller
             ]);
 
         if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('batch_code', 'like', "%{$search}%")
-                    ->orWhereHas('supplier', fn ($sq) => $sq->where('name', 'like', "%{$search}%"));
-            });
+            $this->applySearch($query, $search, ['batch_code'], ['supplier' => ['name']]);
         }
 
         $this->applySort($query, ['batch_code', 'total_sacks', 'total_pairs', 'total_cost', 'date_acquired', 'created_at'], 'created_at', 'desc');
@@ -42,18 +41,9 @@ class BatchController extends Controller
         return view('batches.index', compact('batches', 'suppliers', 'search'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(BatchRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'supplier_id' => ['required', 'exists:suppliers,id'],
-            'batch_code' => ['required', 'string', 'max:30', 'unique:batches,batch_code'],
-            'date_acquired' => ['required', 'date'],
-            'total_sacks' => ['required', 'integer', 'min:1'],
-            'total_pairs' => ['required', 'integer', 'min:1'],
-            'total_cost' => ['required', 'numeric', 'min:0'],
-        ]);
-
-        $batch = Batch::create($validated);
+        $batch = Batch::create($request->validated());
 
         AuditService::log('batch_intake_created', $batch, [
             'batch_code' => $batch->batch_code,
@@ -87,18 +77,9 @@ class BatchController extends Controller
         return view('batches.show', compact('batch', 'stats', 'items'));
     }
 
-    public function update(Request $request, Batch $batch): RedirectResponse
+    public function update(BatchRequest $request, Batch $batch): RedirectResponse
     {
-        $validated = $request->validate([
-            'supplier_id' => ['required', 'exists:suppliers,id'],
-            'batch_code' => ['required', 'string', 'max:30', Rule::unique('batches', 'batch_code')->ignore($batch->id)],
-            'date_acquired' => ['required', 'date'],
-            'total_sacks' => ['required', 'integer', 'min:1'],
-            'total_pairs' => ['required', 'integer', 'min:1'],
-            'total_cost' => ['required', 'numeric', 'min:0'],
-        ]);
-
-        $batch->update($validated);
+        $batch->update($request->validated());
 
         AuditService::log('batch_updated', $batch, [
             'batch_code' => $batch->batch_code,

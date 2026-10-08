@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\FiltersSearches;
 use App\Http\Controllers\Concerns\SortsQueries;
+use App\Http\Requests\ItemRequest;
 use App\Models\Batch;
 use App\Models\Item;
 use App\Services\AuditService;
@@ -14,6 +16,7 @@ use Illuminate\View\View;
 
 class ItemController extends Controller
 {
+    use FiltersSearches;
     use SortsQueries;
 
     public function index(Request $request): View
@@ -36,11 +39,7 @@ class ItemController extends Controller
         }
 
         if ($search = $request->query('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('sku', 'like', "%{$search}%")
-                    ->orWhere('brand', 'like', "%{$search}%")
-                    ->orWhere('model', 'like', "%{$search}%");
-            });
+            $this->applySearch($query, $search, ['sku', 'brand', 'model']);
         }
 
         // Default view prioritises available stock, then triage order:
@@ -77,20 +76,9 @@ class ItemController extends Controller
         ));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(ItemRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'batch_id' => ['required', 'exists:batches,id'],
-            'sku' => ['nullable', 'string', 'max:50', 'unique:items,sku'],
-            'brand' => ['required', 'string', 'max:100'],
-            'model' => ['required', 'string', 'max:150'],
-            'listed_price' => ['required', 'numeric', 'min:0'],
-            'condition' => ['required', 'string'],
-            'size' => ['required', 'string'],
-            'repair_cost' => ['nullable', 'numeric', 'min:0'],
-            'category' => ['nullable', 'string', 'max:50'],
-            'triage_status' => ['nullable', Rule::in(Item::TRIAGE_STAGES)],
-        ]);
+        $validated = $request->validated();
 
         $validated['status'] = 'available';
         $validated['triage_status'] = $validated['triage_status'] ?? Item::TRIAGE_WASHING;
@@ -118,22 +106,13 @@ class ItemController extends Controller
         return back()->with('success', "Item {$item->sku} added to batch {$batch->batch_code}.");
     }
 
-    public function update(Request $request, Item $item): RedirectResponse
+    public function update(ItemRequest $request, Item $item): RedirectResponse
     {
         if (! $item->isEditable()) {
             return back()->with('error', "Item {$item->sku} has already been {$item->status} and can no longer be edited.");
         }
 
-        $validated = $request->validate([
-            'brand' => ['required', 'string', 'max:100'],
-            'model' => ['required', 'string', 'max:150'],
-            'listed_price' => ['required', 'numeric', 'min:0'],
-            'condition' => ['required', 'string'],
-            'size' => ['required', 'string'],
-            'repair_cost' => ['nullable', 'numeric', 'min:0'],
-            'category' => ['nullable', 'string', 'max:50'],
-            'triage_status' => ['nullable', Rule::in(Item::TRIAGE_STAGES)],
-        ]);
+        $validated = $request->validated();
 
         if (array_key_exists('triage_status', $validated) && $validated['triage_status'] === null) {
             unset($validated['triage_status']);

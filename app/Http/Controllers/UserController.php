@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\FiltersSearches;
 use App\Http\Controllers\Concerns\SortsQueries;
+use App\Http\Requests\StaffRequest;
 use App\Models\User;
 use App\Services\AuditService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class UserController extends Controller
 {
+    use FiltersSearches;
     use SortsQueries;
 
     public function index(Request $request): View
@@ -23,10 +25,7 @@ class UserController extends Controller
         $query = User::withCount(['orders', 'verifiedPayments']);
 
         if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
-            });
+            $this->applySearch($query, $search, ['name', 'email']);
         }
 
         if ($role) {
@@ -39,15 +38,9 @@ class UserController extends Controller
         return view('staff.index', compact('users', 'search', 'role'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(StaffRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'in:owner,staff'],
-            'contact_number' => ['nullable', 'numeric'],
-        ]);
+        $validated = $request->validated();
 
         $user = User::create([
             'name' => $validated['name'],
@@ -67,16 +60,9 @@ class UserController extends Controller
         return back()->with('success', "Staff account for '{$user->name}' created successfully.");
     }
 
-    public function update(Request $request, User $user): RedirectResponse
+    public function update(StaffRequest $request, User $user): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
-            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'in:owner,staff'],
-            'contact_number' => ['nullable', 'numeric'],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
+        $validated = $request->validated();
 
         $updateData = [
             'name' => $validated['name'],

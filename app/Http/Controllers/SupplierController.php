@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\FiltersSearches;
 use App\Http\Controllers\Concerns\SortsQueries;
+use App\Http\Requests\SupplierRequest;
 use App\Models\Supplier;
 use App\Services\AuditService;
 use Illuminate\Http\RedirectResponse;
@@ -11,6 +13,7 @@ use Illuminate\View\View;
 
 class SupplierController extends Controller
 {
+    use FiltersSearches;
     use SortsQueries;
 
     public function index(Request $request): View
@@ -20,10 +23,7 @@ class SupplierController extends Controller
         $query = Supplier::withCount('batches');
 
         if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('contact_number', 'like', "%{$search}%");
-            });
+            $this->applySearch($query, $search, ['name', 'contact_number']);
         }
 
         $this->applySort($query, ['name', 'contact_number', 'batches_count', 'created_at'], 'created_at', 'desc');
@@ -32,15 +32,9 @@ class SupplierController extends Controller
         return view('suppliers.index', compact('suppliers', 'search'));
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(SupplierRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'contact_number' => ['nullable', 'numeric'],
-            'notes' => ['nullable', 'string'],
-        ]);
-
-        $supplier = Supplier::create($validated);
+        $supplier = Supplier::create($request->validated());
 
         AuditService::log('supplier_created', $supplier, [
             'name' => $supplier->name,
@@ -49,15 +43,9 @@ class SupplierController extends Controller
         return back()->with('success', "Supplier '{$supplier->name}' added successfully.");
     }
 
-    public function update(Request $request, Supplier $supplier): RedirectResponse
+    public function update(SupplierRequest $request, Supplier $supplier): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'contact_number' => ['nullable', 'numeric'],
-            'notes' => ['nullable', 'string'],
-        ]);
-
-        $supplier->update($validated);
+        $supplier->update($request->validated());
 
         AuditService::log('supplier_updated', $supplier, [
             'name' => $supplier->name,
