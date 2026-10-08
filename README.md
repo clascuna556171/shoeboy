@@ -57,7 +57,7 @@
 | **Asset Pipeline** | Vite 8 | HMR in development, bundled/minified production assets |
 | **Domain Services** | `OrderService`, `PaymentService`, `ReportingService`, `AuditService` | Fat service layer; thin, testable controllers |
 | **Reporting** | Native `XlsxWriter` (OOXML) | Multi-sheet, filterable `.xlsx` financial exports with no external library |
-| **Testing** | PHPUnit 12 + `RefreshDatabase` | 78 feature tests covering business rules, access control, and reporting |
+| **Testing** | PHPUnit 12 + `RefreshDatabase` | 89 feature tests covering business rules, access control, and reporting |
 | **Security** | RBAC middleware, throttling, audit logging | Role gating, brute-force protection, accountability trail |
 
 ---
