@@ -15,7 +15,7 @@ RUN npm run build
 # ========================================================
 # Stage 2: Production PHP 8.3 & Nginx Web Server
 # ========================================================
-FROM serversideup/docker-php:8.3-fpm-nginx
+FROM serversideup/php:8.3-fpm-nginx
 
 # Configure Nginx & PHP
 ENV WEB_DOCUMENT_ROOT=/var/www/html/public
