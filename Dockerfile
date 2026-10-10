@@ -23,17 +23,34 @@ ENV PHP_OPCACHE_ENABLE=1
 
 WORKDIR /var/www/html
 
-# Copy project files with proper web user permissions
-COPY --chown=9999:9999 . .
+# Ensure working directory ownership for www-data
+USER root
+RUN mkdir -p /var/www/html && chown -R www-data:www-data /var/www/html
+
+# Switch to unprivileged user to run Composer
+USER www-data
+
+# Copy composer files first for optimal Docker layer caching
+COPY --chown=www-data:www-data composer.json composer.lock ./
+
+# Install production dependencies (without scripts and autoloader)
+RUN composer install --no-dev --no-interaction --no-scripts --no-autoloader
+
+# Copy application files
+COPY --chown=www-data:www-data . .
 
 # Copy compiled frontend assets from Stage 1
-COPY --from=frontend --chown=9999:9999 /app/public/build ./public/build
+COPY --from=frontend --chown=www-data:www-data /app/public/build ./public/build
 
-# Install production Composer dependencies (without dev packages)
-RUN composer install --no-dev --no-interaction --no-scripts --optimize-autoloader
+# Generate final optimized production classmap autoloader
+RUN composer dump-autoload --optimize --no-dev --no-interaction
 
-# Set up storage and cache write permissions
-RUN chmod -R 775 storage bootstrap/cache
+# Configure storage/cache permissions and entrypoint script
+USER root
+RUN chmod -R 775 storage bootstrap/cache && \
+    chown -R www-data:www-data storage bootstrap/cache
 
-# Register entrypoint initialization script
 COPY --chmod=755 docker/entrypoint.sh /etc/entrypoint.d/99-init.sh
+
+# Revert to unprivileged user for runtime security
+USER www-data
