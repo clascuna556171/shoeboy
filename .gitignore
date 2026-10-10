@@ -37,3 +37,9 @@ Thumbs.db
 /database/*.sqlite-journal
 /database/*.sqlite-wal
 /database/*.sqlite-shm
+
+# Local AI & tool configs
+.mcp.json
+boost.json
+opencode.json
+

@@ -1,0 +1,16 @@
+.git
+.github
+node_modules
+vendor
+tests
+.env
+.env.*
+public/build
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/logs/*
+*.log
+.mcp.json
+boost.json
+opencode.json

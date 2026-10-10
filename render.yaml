@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: the-shoe-boy
+    runtime: docker
+    plan: free
+    region: singapore
+    envVars:
+      - key: APP_NAME
+        value: "The Shoe Boy"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        generateValue: true
+      - key: DB_CONNECTION
+        value: pgsql
+      - fromDatabase:
+          name: shoeboy-db
+          property: connectionString
+        key: DATABASE_URL
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: sync
+
+databases:
+  - name: shoeboy-db
+    plan: free
+    region: singapore
+    databaseName: shoeboy
+    user: shoeboy_user
