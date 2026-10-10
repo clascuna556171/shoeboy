@@ -947,10 +947,10 @@
                 </div>
             </div>
 
-            <div class="p-5 space-y-3">
+            <div class="p-5 divide-y divide-neutral-100 dark:divide-neutral-800">
 
                 {{-- Pending deliveries --}}
-                <div class="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-800/20 p-4">
+                <div class="py-4 first:pt-0">
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-sky-500"></span>
@@ -978,7 +978,7 @@
                 </div>
 
                 {{-- Reservations expiring (live countdown) --}}
-                <div class="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-800/20 p-4">
+                <div class="py-4">
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-amber-500"></span>
@@ -1024,21 +1024,24 @@
                 </div>
 
                 {{-- Stock pipeline --}}
-                <div>
+                <div class="pt-4">
                     <div class="flex items-center gap-2 mb-3">
                         <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                         <h3 class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Stock pipeline</h3>
                     </div>
                     <div class="grid grid-cols-3 gap-2 text-center">
-                        <a href="{{ route('items.index', ['triage' => 'washing']) }}" class="rounded-xl border-t-2 border border-neutral-200 dark:border-neutral-800 border-t-sky-400 bg-white dark:bg-[#1C1C1E] p-3 hover:shadow-sm hover:-translate-y-0.5 transition-all">
+                        <a href="{{ route('items.index', ['triage' => 'washing']) }}" class="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#1C1C1E] p-3 hover:shadow-sm hover:-translate-y-0.5 transition-all">
+                            <span class="mx-auto mb-1 block w-1.5 h-1.5 rounded-full bg-sky-400"></span>
                             <div class="font-mono text-xl font-bold text-sky-600 dark:text-sky-400">{{ $washingCount }}</div>
                             <div class="text-[11px] text-neutral-500 mt-0.5">Washing</div>
                         </a>
-                        <a href="{{ route('items.index', ['triage' => 'under_repair']) }}" class="rounded-xl border-t-2 border border-neutral-200 dark:border-neutral-800 border-t-rose-400 bg-white dark:bg-[#1C1C1E] p-3 hover:shadow-sm hover:-translate-y-0.5 transition-all">
+                        <a href="{{ route('items.index', ['triage' => 'under_repair']) }}" class="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#1C1C1E] p-3 hover:shadow-sm hover:-translate-y-0.5 transition-all">
+                            <span class="mx-auto mb-1 block w-1.5 h-1.5 rounded-full bg-rose-400"></span>
                             <div class="font-mono text-xl font-bold text-rose-600 dark:text-rose-400">{{ $repairCount }}</div>
                             <div class="text-[11px] text-neutral-500 mt-0.5">Under repair</div>
                         </a>
-                        <a href="{{ route('items.index', ['triage' => 'available']) }}" class="rounded-xl border-t-2 border border-neutral-200 dark:border-neutral-800 border-t-emerald-400 bg-white dark:bg-[#1C1C1E] p-3 hover:shadow-sm hover:-translate-y-0.5 transition-all">
+                        <a href="{{ route('items.index', ['triage' => 'available']) }}" class="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#1C1C1E] p-3 hover:shadow-sm hover:-translate-y-0.5 transition-all">
+                            <span class="mx-auto mb-1 block w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                             <div class="font-mono text-xl font-bold text-emerald-600 dark:text-emerald-400">{{ $readyStock }}</div>
                             <div class="text-[11px] text-neutral-500 mt-0.5">Ready</div>
                         </a>

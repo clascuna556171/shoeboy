@@ -225,7 +225,7 @@
             <h1 class="text-xl md:text-2xl font-bold tracking-tight text-[#1D1D1F] dark:text-white mt-1">Multi-Channel Order & Claim Console</h1>
         </div>
 
-        <div data-tour="tabs" class="flex items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl border border-neutral-200/70 dark:border-neutral-700">
+        <div data-tour="tabs" class="flex flex-nowrap items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl border border-neutral-200/70 dark:border-neutral-700 overflow-x-auto max-w-full">
             <button type="button"
                     @click="setTab('claims')"
                     :class="activeTab === 'claims' ? 'bg-white dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-white font-semibold shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'"
