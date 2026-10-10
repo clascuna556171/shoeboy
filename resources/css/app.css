@@ -612,8 +612,6 @@ html[data-density="compact"] main table th {
 /* ============================================================
    Mobile foundations
    ============================================================ */
-
-/* Backdrop blur is expensive on phone GPUs — keep the dark scrim only. */
 @media (max-width: 1023px), (pointer: coarse) {
     .app-modal-backdrop {
         backdrop-filter: none !important;
@@ -626,5 +624,27 @@ html[data-density="compact"] main table th {
     .app-btn { min-height: 44px; }
     .app-btn-sm { min-height: 40px; }
     .app-select, .app-input { min-height: 44px; }
+}
+
+/* ============================================================
+   Guided tour
+   ============================================================ */
+/* Reveal the navigation while a tour runs so nav steps can be highlighted
+   even on tablet/phone where the bar/drawer would otherwise be hidden. */
+html.touring .app-topnav {
+    display: flex !important;
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+/* On phones the tour card docks to the bottom of the screen. */
+.app-tour-dock {
+    left: 12px !important;
+    right: 12px !important;
+    bottom: 12px !important;
+    top: auto !important;
+    width: auto !important;
+    max-height: 45vh;
+    overflow-y: auto;
 }
 

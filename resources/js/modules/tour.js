@@ -131,6 +131,26 @@ export default function registerTour() {
         if (!step) return;
         const target = step.sel ? findVisible(step.sel) : null;
 
+        // On phones, dock the card to the bottom of the screen so it stays
+        // put and never jitters around the (often tall) target.
+        const docked = window.innerWidth < 640;
+        tip.classList.toggle('app-tour-dock', docked);
+
+        if (docked) {
+            if (target) {
+                const r = target.getBoundingClientRect();
+                spot.style.display = '';
+                spot.style.left = (r.left - 8) + 'px';
+                spot.style.top = (r.top - 8) + 'px';
+                spot.style.width = (r.width + 16) + 'px';
+                spot.style.height = (r.height + 16) + 'px';
+            } else {
+                spot.style.display = 'none';
+            }
+            arrow.style.display = 'none';
+            return;
+        }
+
         if (!target) {
             spot.style.display = 'none';
             arrow.style.display = 'none';
@@ -227,6 +247,9 @@ export default function registerTour() {
         if (!list.length) return;
         steps = list;
         index = 0;
+        // Reveal the navigation for the duration of the tour so nav steps can
+        // be highlighted even on tablet/phone (where it is normally hidden).
+        document.documentElement.classList.add('touring');
         root.style.display = 'block';
         tip.style.visibility = 'hidden';
         showStep();
@@ -234,6 +257,7 @@ export default function registerTour() {
 
     function end() {
         if (root) root.style.display = 'none';
+        document.documentElement.classList.remove('touring');
         steps = [];
         index = 0;
         try { localStorage.setItem('shoeboy.tour.seen', '1'); } catch (e) { /* ignore */ }
