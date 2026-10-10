@@ -7,6 +7,7 @@
           density: localStorage.getItem('shoeboy.density') || 'compact',
           navMode: localStorage.getItem('shoeboy.nav') || 'top',
           listView: localStorage.getItem('shoeboy.view') || 'cards',
+          cardDensity: localStorage.getItem('shoeboy.cardDensity') || 'comfortable',
           railCollapsed: localStorage.getItem('shoeboy.nav.collapsed') === '1',
           settingsOpen: false,
           mobileNav: false,
@@ -45,7 +46,8 @@
           },
           toggleTheme() { this.setTheme(this.darkMode ? 'light' : 'dark'); },
           setDensity(d) { this.density = d; localStorage.setItem('shoeboy.density', d); this.applyDensity(); },
-          setListView(v) { this.listView = v; localStorage.setItem('shoeboy.view', v); },
+          setListView(v) { this.listView = v; localStorage.setItem('shoeboy.view', v); document.documentElement.setAttribute('data-list', v); },
+          setCardDensity(d) { this.cardDensity = d; localStorage.setItem('shoeboy.cardDensity', d); document.documentElement.setAttribute('data-card-density', d); },
           applyDensity() { document.documentElement.setAttribute('data-density', this.density); },
           setNav(m) { this.navMode = m; localStorage.setItem('shoeboy.nav', m); this.applyNav(); },
           applyNav() {
@@ -69,6 +71,8 @@
             document.documentElement.setAttribute('data-density', localStorage.getItem('shoeboy.density') || 'compact');
             document.documentElement.setAttribute('data-nav', localStorage.getItem('shoeboy.nav') || 'top');
             document.documentElement.setAttribute('data-rail', localStorage.getItem('shoeboy.nav.collapsed') === '1' ? 'collapsed' : 'expanded');
+            document.documentElement.setAttribute('data-list', localStorage.getItem('shoeboy.view') || 'cards');
+            document.documentElement.setAttribute('data-card-density', localStorage.getItem('shoeboy.cardDensity') || 'comfortable');
         })();
     </script>
 
@@ -250,7 +254,16 @@
             class="sticky top-0 z-40 w-full apple-glass border-b border-[#E5E5EA] dark:border-[#2C2C2E] px-4 lg:px-6 py-2.5 transition-colors duration-200">
         <div class="max-w-[1720px] mx-auto flex items-center justify-between gap-4">
 
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 sm:gap-3">
+                @auth
+                <button type="button"
+                        @click="mobileNav = !mobileNav"
+                        title="Menu"
+                        class="xl:hidden p-2 -ml-1 rounded-xl text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors">
+                    <svg x-show="!mobileNav" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    <svg x-show="mobileNav" x-cloak class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+                @endauth
                 <a href="{{ route('dashboard') }}" class="flex items-center gap-3 group">
                     <img src="{{ asset('logo.png') }}" alt="The Shoe Boy" class="w-9 h-9 rounded-xl object-cover shadow-sm border border-neutral-200 dark:border-neutral-700 shrink-0 group-hover:scale-105 transition-transform">
                     <div class="flex items-center gap-2">
@@ -278,14 +291,6 @@
                 <div data-header-usermenu class="pl-2 border-l border-neutral-200 dark:border-neutral-800">
                     <x-user-menu variant="header" :show-identity="false" :pages="$guidePages" />
                 </div>
-
-                <button type="button"
-                        @click="mobileNav = !mobileNav"
-                        title="Menu"
-                        class="xl:hidden p-2 rounded-xl text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors">
-                    <svg x-show="!mobileNav" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                    <svg x-show="mobileNav" x-cloak class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
                 @else
                 <a href="{{ route('login') }}" class="px-3.5 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 text-xs font-semibold shadow-sm transition-all">
                     Sign In
@@ -514,7 +519,7 @@
             </div>
 
             {{-- Density --}}
-            <div class="mt-6">
+            <div class="mt-6 hidden md:block">
                 <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Table density</div>
                 <div class="mt-2 grid grid-cols-3 gap-2">
                     <button type="button" @click="setDensity('comfortable')"
@@ -528,7 +533,7 @@
             </div>
 
             {{-- Navigation --}}
-            <div class="mt-6">
+            <div class="mt-6 hidden md:block">
                 <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Navigation</div>
                 <div class="mt-2 grid grid-cols-2 gap-2">
                     <button type="button" @click="setNav('top')"
@@ -539,8 +544,8 @@
                 <p class="mt-1.5 text-[11px] text-neutral-500">The left rail can be collapsed from the menu header.</p>
             </div>
 
-            {{-- Default list layout --}}
-            <div class="mt-6">
+            {{-- Default list layout (desktop) --}}
+            <div class="mt-6 hidden md:block">
                 <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">List layout</div>
                 <div class="mt-2 grid grid-cols-2 gap-2">
                     <button type="button" @click="setListView('cards')"
@@ -548,7 +553,19 @@
                     <button type="button" @click="setListView('table')"
                             class="app-btn app-btn-sm" :class="listView === 'table' ? 'app-btn-primary' : 'app-btn-secondary'">Table</button>
                 </div>
-                <p class="mt-1.5 text-[11px] text-neutral-500">Default for list pages. Phones always use list rows.</p>
+                <p class="mt-1.5 text-[11px] text-neutral-500">Applies to list pages on tablet and desktop. Phones always use cards.</p>
+            </div>
+
+            {{-- Card density (all devices) --}}
+            <div class="mt-6">
+                <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Card density</div>
+                <div class="mt-2 grid grid-cols-2 gap-2">
+                    <button type="button" @click="setCardDensity('comfortable')"
+                            class="app-btn app-btn-sm" :class="cardDensity === 'comfortable' ? 'app-btn-primary' : 'app-btn-secondary'">Comfortable</button>
+                    <button type="button" @click="setCardDensity('compact')"
+                            class="app-btn app-btn-sm" :class="cardDensity === 'compact' ? 'app-btn-primary' : 'app-btn-secondary'">Compact</button>
+                </div>
+                <p class="mt-1.5 text-[11px] text-neutral-500">Controls list-card padding and how much detail each card shows.</p>
             </div>
         </div>
     </div>

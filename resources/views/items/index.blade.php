@@ -30,75 +30,81 @@
     <x-table-toolbar :action="route('items.index')" :search="request('search')"
                      search-placeholder="Search SKU, brand, or model..."
                      :reset-url="route('items.index')"
+                     :sorts="[
+                         ['column' => 'sku', 'direction' => 'asc', 'label' => 'SKU'],
+                         ['column' => 'brand', 'direction' => 'asc', 'label' => 'Brand'],
+                         ['column' => 'listed_price', 'direction' => 'desc', 'label' => 'Price: high to low'],
+                         ['column' => 'status', 'direction' => 'asc', 'label' => 'Status'],
+                     ]"
                      :filters="[
                          ['name' => 'batch_id', 'selected' => $selectedBatchId, 'options' => ['' => 'All Batches'] + $batches->pluck('batch_code', 'id')->all()],
                          ['name' => 'status', 'selected' => request('status'), 'options' => ['' => 'All Statuses', 'available' => 'Available', 'reserved' => 'Reserved', 'sold' => 'Sold']],
                          ['name' => 'triage', 'selected' => request('triage'), 'options' => ['' => 'All Stages', 'washing' => 'Washing', 'under_repair' => 'Under repair', 'available' => 'Ready']],
                      ]" />
 
-    {{-- Mobile list rows --}}
-    <div class="md:hidden space-y-2.5" data-tour="list">
+    {{-- Cards (phones + desktop when List layout = cards) --}}
+    <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3" data-tour="list">
         @forelse($items as $item)
-        <div x-data="{ open: false }" class="app-card p-4">
-            <button type="button" @click="open = !open" class="w-full text-left">
-                <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                        <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $item->sku }}</span>
-                        <div class="mt-0.5 font-semibold text-neutral-800 dark:text-neutral-200 truncate">{{ $item->brand }} {{ $item->model }}</div>
-                        <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
-                            <x-status-badge kind="item" :value="$item->status" />
-                            @if($item->status === 'available')
-                                <x-status-badge kind="triage" :value="$item->triage_status" />
-                            @endif
-                            <span class="font-mono text-[11px] text-neutral-500">{{ $item->size }}</span>
-                        </div>
-                    </div>
-                    <div class="text-right shrink-0">
-                        <div class="font-mono font-bold text-neutral-900 dark:text-white"><x-money :value="$item->listed_price" /></div>
-                        <svg :class="open && 'rotate-180'" class="w-4 h-4 ml-auto mt-1.5 text-neutral-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </div>
+        <div class="app-card app-list-card flex flex-col gap-3">
+            <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                    <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $item->sku }}</span>
+                    <div class="mt-0.5 font-semibold text-neutral-800 dark:text-neutral-200 truncate">{{ $item->brand }} {{ $item->model }}</div>
                 </div>
-            </button>
-            <div x-show="open" x-cloak class="mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800 space-y-2 text-sm">
+                <div class="text-right shrink-0">
+                    <div class="font-mono font-bold text-neutral-900 dark:text-white"><x-money :value="$item->listed_price" /></div>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-1.5">
+                <x-status-badge kind="item" :value="$item->status" />
+                @if($item->status === 'available')
+                    <x-status-badge kind="triage" :value="$item->triage_status" />
+                @endif
+                <span class="font-mono text-[11px] text-neutral-500">{{ $item->size }}</span>
+                <span class="badge badge-neutral">{{ $item->price_tier }}</span>
+            </div>
+
+            <div class="app-list-card-extra space-y-1.5 text-sm">
                 <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">Condition</span><span class="text-neutral-700 dark:text-neutral-300">{{ $item->condition }}</span></div>
-                <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">Price tier</span><span class="text-neutral-500">{{ $item->price_tier }}</span></div>
                 @if($item->repair_cost)
                 <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">Repair cost</span><span class="font-mono text-neutral-700 dark:text-neutral-300"><x-money :value="$item->repair_cost" /></span></div>
                 @endif
-                <div class="flex flex-wrap items-center gap-2 pt-1">
-                    @if($item->status === 'available')
-                        <button type="button" class="app-btn app-btn-secondary app-btn-sm flex-1"
-                                @click="editItem = {{ Js::from([
-                                    'id' => $item->id, 'sku' => $item->sku, 'brand' => $item->brand, 'model' => $item->model,
-                                    'size' => $item->size, 'condition' => $item->condition, 'listed_price' => $item->listed_price,
-                                    'repair_cost' => $item->repair_cost, 'category' => $item->category, 'triage_status' => $item->triage_status,
-                                ]) }}">Edit</button>
-                        <form action="{{ route('items.destroy', $item) }}" method="POST">
-                            @csrf
-                            @method('DELETE')
-                            <button type="button" class="app-btn app-btn-sm app-btn-ghost"
-                                    data-confirm="Delete pair {{ $item->sku }}?"
-                                    data-confirm-message="The pair is removed from inventory. An Undo option appears right after."
-                                    data-confirm-variant="danger" data-confirm-icon="trash" data-confirm-label="Delete">Delete</button>
-                        </form>
-                    @elseif($item->status === 'sold' && ($soldOrder = $item->orders->whereIn('status', ['paid', 'fulfilled'])->sortByDesc('date_awarded')->first()))
-                        <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $soldOrder->id]) }}" class="app-btn app-btn-secondary app-btn-sm flex-1">View order</button>
-                    @elseif($item->status === 'reserved' && ($resOrder = $item->orders->where('status', 'reserved')->sortByDesc('date_awarded')->first()))
-                        <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $resOrder->id]) }}" class="app-btn app-btn-secondary app-btn-sm flex-1">View order</button>
-                    @endif
-                </div>
+            </div>
+
+            <div class="mt-auto flex flex-wrap items-center gap-2 pt-1">
+                @if($item->status === 'available')
+                    <button type="button" class="app-btn app-btn-secondary app-btn-sm flex-1"
+                            @click="editItem = {{ Js::from([
+                                'id' => $item->id, 'sku' => $item->sku, 'brand' => $item->brand, 'model' => $item->model,
+                                'size' => $item->size, 'condition' => $item->condition, 'listed_price' => $item->listed_price,
+                                'repair_cost' => $item->repair_cost, 'category' => $item->category, 'triage_status' => $item->triage_status,
+                            ]) }}">Edit</button>
+                    <form action="{{ route('items.destroy', $item) }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <button type="button" class="app-btn app-btn-sm app-btn-ghost"
+                                data-confirm="Delete pair {{ $item->sku }}?"
+                                data-confirm-message="The pair is removed from inventory. An Undo option appears right after."
+                                data-confirm-variant="danger" data-confirm-icon="trash" data-confirm-label="Delete">Delete</button>
+                    </form>
+                @elseif($item->status === 'sold' && ($soldOrder = $item->orders->whereIn('status', ['paid', 'fulfilled'])->sortByDesc('date_awarded')->first()))
+                    <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $soldOrder->id]) }}" class="app-btn app-btn-secondary app-btn-sm flex-1">View details</button>
+                @elseif($item->status === 'reserved' && ($resOrder = $item->orders->where('status', 'reserved')->sortByDesc('date_awarded')->first()))
+                    <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $resOrder->id]) }}" class="app-btn app-btn-secondary app-btn-sm flex-1">View details</button>
+                @endif
             </div>
         </div>
         @empty
-        <div class="app-card"><div class="app-empty"><span class="text-xs font-medium">No inventory items match the current filters.</span></div></div>
+        <div class="col-span-full app-card"><div class="app-empty"><span class="text-xs font-medium">No inventory items match the current filters.</span></div></div>
         @endforelse
-        @if($items->hasPages())
-        <div class="pt-1">{{ $items->links() }}</div>
-        @endif
     </div>
+    @if($items->hasPages())
+    <div>{{ $items->links() }}</div>
+    @endif
 
-    {{-- Table --}}
-    <div class="app-card hidden md:block" data-tour="list">
+    {{-- Table (desktop, List layout = table) --}}
+    <div class="app-card app-list-table" data-tour="list">
         <div class="app-scroll-x">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">

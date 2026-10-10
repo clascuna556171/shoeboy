@@ -10,9 +10,9 @@
     ];
 @endphp
 
-<div class="flex flex-wrap items-center gap-2 text-xs">
+<div class="flex flex-nowrap items-center gap-2 text-xs overflow-x-auto max-w-full pb-0.5">
     @foreach($counts as $count)
-        <div class="px-3 py-2 rounded-xl border {{ $tones[$count['tone'] ?? 'neutral'] ?? $tones['neutral'] }}">
+        <div class="px-3 py-2 rounded-xl border shrink-0 {{ $tones[$count['tone'] ?? 'neutral'] ?? $tones['neutral'] }}">
             <span class="font-mono font-bold">{{ $count['value'] }}</span> {{ $count['label'] }}
         </div>
     @endforeach

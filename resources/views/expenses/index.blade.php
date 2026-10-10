@@ -32,52 +32,58 @@
     <x-table-toolbar :action="route('expenses.index')" :search="$search"
                      search-placeholder="Search description or reference no..."
                      :reset-url="route('expenses.index')"
+                     :sorts="[
+                         ['column' => 'date', 'direction' => 'desc', 'label' => 'Newest'],
+                         ['column' => 'amount', 'direction' => 'desc', 'label' => 'Amount: high to low'],
+                         ['column' => 'category', 'direction' => 'asc', 'label' => 'Category'],
+                     ]"
                      :filters="[
                          ['name' => 'category', 'selected' => $category, 'options' => ['' => 'All Categories'] + $categories->mapWithKeys(fn ($c) => [$c => $c])->all()],
                      ]" />
 
-    {{-- Mobile list rows --}}
-    <div class="md:hidden space-y-2.5" data-tour="list">
+    {{-- Cards (phones + desktop when List layout = cards) --}}
+    <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3" data-tour="list">
         @forelse($expenses as $exp)
-        <div x-data="{ open: false }" class="app-card p-4">
-            <button type="button" @click="open = !open" class="w-full text-left">
-                <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                        <x-cell :value="$exp->description" class="font-semibold text-neutral-800 dark:text-neutral-200" />
-                        <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
-                            <span class="badge badge-neutral">{{ $exp->category }}</span>
-                            <span class="font-mono text-[11px] text-neutral-500">{{ $exp->date->format('M d, Y') }}</span>
-                        </div>
-                    </div>
-                    <div class="text-right shrink-0">
-                        <div class="font-mono font-bold text-rose-600 dark:text-rose-400">−₱{{ number_format($exp->amount, 2) }}</div>
-                        <svg :class="open && 'rotate-180'" class="w-4 h-4 ml-auto mt-1.5 text-neutral-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </div>
+        <div class="app-card app-list-card flex flex-col gap-3">
+            <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                    <x-cell :value="$exp->description" class="font-semibold text-neutral-800 dark:text-neutral-200" />
+                    <div class="mt-1 text-[11px] text-neutral-500 font-mono">{{ $exp->date->format('M d, Y') }}</div>
                 </div>
-            </button>
-            <div x-show="open" x-cloak class="mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800 space-y-2 text-sm">
-                <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">Reference</span><span class="font-mono text-neutral-700 dark:text-neutral-300">{{ $exp->reference_no ?? '—' }}</span></div>
-                <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">Batch</span><span class="font-mono text-neutral-700 dark:text-neutral-300">{{ $exp->batch?->batch_code ?? 'General Overhead' }}</span></div>
-                <form action="{{ route('expenses.destroy', $exp->id) }}" method="POST" class="pt-1">
-                    @csrf
-                    @method('DELETE')
-                    <button type="button" class="app-btn app-btn-sm app-btn-ghost w-full"
-                            data-confirm="Delete this expense?" data-confirm-variant="danger"
-                            data-confirm-message="You can undo this right after from the notification toast."
-                            data-confirm-label="Delete">Delete expense</button>
-                </form>
+                <div class="text-right shrink-0 font-mono font-bold text-rose-600 dark:text-rose-400">−₱{{ number_format($exp->amount, 2) }}</div>
             </div>
+
+            <div class="flex flex-wrap items-center gap-1.5">
+                <span class="badge badge-neutral">{{ $exp->category }}</span>
+                @if($exp->batch)
+                    <span class="badge badge-neutral font-mono">{{ $exp->batch->batch_code }}</span>
+                @endif
+            </div>
+
+            <div class="app-list-card-extra space-y-1.5 text-sm">
+                <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">Reference</span><span class="font-mono text-neutral-700 dark:text-neutral-300 truncate">{{ $exp->reference_no ?? '—' }}</span></div>
+                <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">Batch</span><span class="font-mono text-neutral-700 dark:text-neutral-300">{{ $exp->batch?->batch_code ?? 'General Overhead' }}</span></div>
+            </div>
+
+            <form action="{{ route('expenses.destroy', $exp->id) }}" method="POST" class="mt-auto pt-1">
+                @csrf
+                @method('DELETE')
+                <button type="button" class="app-btn app-btn-sm app-btn-ghost w-full"
+                        data-confirm="Delete this expense?" data-confirm-variant="danger"
+                        data-confirm-message="You can undo this right after from the notification toast."
+                        data-confirm-label="Delete">Delete expense</button>
+            </form>
         </div>
         @empty
-        <div class="app-card"><div class="app-empty"><span class="text-xs font-medium">No expenses recorded yet.</span></div></div>
+        <div class="col-span-full app-card"><div class="app-empty"><span class="text-xs font-medium">No expenses recorded yet.</span></div></div>
         @endforelse
-        @if($expenses->hasPages())
-        <div class="pt-1">{{ $expenses->links() }}</div>
-        @endif
     </div>
+    @if($expenses->hasPages())
+    <div>{{ $expenses->links() }}</div>
+    @endif
 
-    {{-- Table --}}
-    <div class="app-card hidden md:block" data-tour="list">
+    {{-- Table (desktop, List layout = table) --}}
+    <div class="app-card app-list-table" data-tour="list">
         <div class="app-scroll-x">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">

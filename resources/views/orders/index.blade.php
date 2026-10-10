@@ -24,68 +24,65 @@
     <x-table-toolbar :action="route('orders.index')" :search="request('search')"
                      search-placeholder="Order #, SKU, customer..."
                      :reset-url="route('orders.index')"
+                     :sorts="[
+                         ['column' => 'date_awarded', 'direction' => 'desc', 'label' => 'Newest'],
+                         ['column' => 'awarded_price', 'direction' => 'desc', 'label' => 'Total: high to low'],
+                         ['column' => 'order_number', 'direction' => 'asc', 'label' => 'Order #'],
+                         ['column' => 'status', 'direction' => 'asc', 'label' => 'Status'],
+                     ]"
                      :filters="[
                          ['name' => 'status', 'selected' => request('status'), 'options' => ['' => 'All Statuses', 'reserved' => 'Reserved', 'paid' => 'Paid', 'fulfilled' => 'Fulfilled', 'cancelled' => 'Cancelled']],
                          ['name' => 'type', 'selected' => request('type'), 'options' => ['' => 'All Channels', 'live_stream' => 'Live Stream', 'walkin_pos' => 'POS Walk-In']],
                      ]" />
 
-    {{-- Mobile list rows --}}
-    <div class="md:hidden space-y-2.5" data-tour="list">
+    {{-- Cards (phones + desktop when List layout = cards) --}}
+    <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3" data-tour="list">
         @forelse($orders as $ord)
-        <div x-data="{ open: false }" class="app-card p-4">
-            <button type="button" @click="open = !open" class="w-full text-left">
-                <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                        <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $ord->order_number }}</span>
-                        <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
-                            <x-status-badge kind="order" :value="$ord->status" />
-                            <x-status-badge kind="channel" :value="$ord->order_type" />
-                        </div>
-                        <div class="mt-1 text-[11px] text-neutral-500 font-mono">{{ $ord->date_awarded->format('M d, Y H:i') }}</div>
-                    </div>
-                    <div class="text-right shrink-0">
-                        <div class="font-mono font-bold text-neutral-900 dark:text-white"><x-money :value="$ord->awarded_price" /></div>
-                        <svg :class="open && 'rotate-180'" class="w-4 h-4 ml-auto mt-1.5 text-neutral-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                    </div>
+        <div class="app-card app-list-card flex flex-col gap-3">
+            <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                    <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $ord->order_number }}</span>
+                    <div class="mt-0.5 text-[11px] text-neutral-500 font-mono">{{ $ord->date_awarded->format('M d, Y H:i') }}</div>
                 </div>
-            </button>
-            <div x-show="open" x-cloak class="mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800 space-y-2 text-sm">
-                <div class="flex items-center justify-between gap-3">
-                    <span class="text-neutral-500">Customer</span>
-                    <span class="font-medium text-neutral-800 dark:text-neutral-200 truncate">{{ $ord->customer->display_handle }}</span>
+                <div class="text-right shrink-0">
+                    <div class="font-mono font-bold text-neutral-900 dark:text-white"><x-money :value="$ord->awarded_price" /></div>
                 </div>
-                <div class="flex items-center justify-between gap-3">
-                    <span class="text-neutral-500">Sold by</span>
-                    <span class="text-neutral-700 dark:text-neutral-300">{{ $ord->staff->name }}</span>
-                </div>
-                <div class="flex items-center justify-between gap-3">
-                    <span class="text-neutral-500">Items</span>
-                    <span class="badge badge-neutral">{{ $ord->items->count() }} {{ $ord->items->count() === 1 ? 'pair' : 'pairs' }}</span>
-                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-1.5">
+                <x-status-badge kind="order" :value="$ord->status" />
+                <x-status-badge kind="channel" :value="$ord->order_type" />
+                <span class="badge badge-neutral">{{ $ord->items->count() }} {{ $ord->items->count() === 1 ? 'pair' : 'pairs' }}</span>
+            </div>
+
+            <div class="app-list-card-extra space-y-1.5 text-sm">
+                <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">Customer</span><span class="font-medium text-neutral-800 dark:text-neutral-200 truncate">{{ $ord->customer->display_handle }}</span></div>
+                <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">Sold by</span><span class="text-neutral-700 dark:text-neutral-300">{{ $ord->staff->name }}</span></div>
                 @if($ord->payment)
                 <div class="flex items-center justify-between gap-3">
                     <span class="text-neutral-500">Settlement</span>
                     <span class="flex items-center gap-1.5"><x-status-badge kind="payment" :value="$ord->payment->method" />@if($ord->payment->method === 'gcash')<span class="font-mono text-xs text-neutral-500 truncate max-w-[8rem]">{{ $ord->payment->reference_no }}</span>@endif</span>
                 </div>
                 @endif
-                <div class="flex flex-wrap gap-2 pt-1">
-                    <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $ord->id]) }}" class="app-btn app-btn-secondary app-btn-sm flex-1">Full details</button>
-                    @if($ord->payment)
-                        <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'receipt', 'id' => $ord->id]) }}" class="app-btn app-btn-secondary app-btn-sm">Receipt</button>
-                    @endif
-                </div>
+            </div>
+
+            <div class="mt-auto flex flex-wrap gap-2 pt-1">
+                <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $ord->id]) }}" class="app-btn app-btn-secondary app-btn-sm flex-1">View details</button>
+                @if($ord->payment)
+                    <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'receipt', 'id' => $ord->id]) }}" class="app-btn app-btn-secondary app-btn-sm">Receipt</button>
+                @endif
             </div>
         </div>
         @empty
-        <div class="app-card"><div class="app-empty"><span class="text-xs font-medium">No orders found.</span></div></div>
+        <div class="col-span-full app-card"><div class="app-empty"><span class="text-xs font-medium">No orders found.</span></div></div>
         @endforelse
-        @if($orders->hasPages())
-        <div class="pt-1">{{ $orders->links() }}</div>
-        @endif
     </div>
+    @if($orders->hasPages())
+    <div>{{ $orders->links() }}</div>
+    @endif
 
-    {{-- Table --}}
-    <div class="app-card hidden md:block" data-tour="list">
+    {{-- Table (desktop, List layout = table) --}}
+    <div class="app-card app-list-table" data-tour="list">
         <div class="app-scroll-x">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">

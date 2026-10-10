@@ -141,6 +141,23 @@ html { scrollbar-gutter: stable; }
         white-space: nowrap;
     }
 
+    /* ---- List layout engine -------------------------------------------
+       One standard: cards on phones (always), and on tablet/desktop either
+       cards or the table depending on the user's List layout setting
+       (html[data-list]). No per-page toggles. */
+    .app-list-cards { display: grid; gap: 1rem; }
+    .app-list-table { display: none; }
+    @media (min-width: 768px) {
+        html[data-list="table"] .app-list-cards { display: none; }
+        html[data-list="table"] .app-list-table { display: block; }
+    }
+
+    /* Card density preference (Settings → Card density). */
+    .app-list-card { padding: 1.25rem; }
+    html[data-card-density="compact"] .app-list-cards { gap: 0.625rem; }
+    html[data-card-density="compact"] .app-list-card { padding: 0.9rem 1rem; }
+    html[data-card-density="compact"] .app-list-card-extra { display: none; }
+
     /* ---- Bottom sheet (detail panels on phones) --------------------- */
     .app-sheet {
         border-top-left-radius: 1.5rem;

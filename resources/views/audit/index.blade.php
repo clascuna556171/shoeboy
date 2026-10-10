@@ -20,6 +20,10 @@
     <x-table-toolbar :action="route('audit.index')" :search="$search"
                      search-placeholder="Search action, user, or IP..."
                      :reset-url="route('audit.index')"
+                     :sorts="[
+                         ['column' => 'created_at', 'direction' => 'desc', 'label' => 'Newest'],
+                         ['column' => 'action', 'direction' => 'asc', 'label' => 'Action'],
+                     ]"
                      :filters="[
                          ['name' => 'category', 'selected' => $category, 'options' => [
                              '' => 'All Categories',
@@ -31,38 +35,36 @@
                          ]],
                      ]" />
 
-    {{-- Mobile list rows --}}
-    <div class="md:hidden space-y-2.5">
+    {{-- Cards (phones + desktop when List layout = cards) --}}
+    <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3" data-tour="list">
         @forelse($logs as $log)
-        <div x-data="{ open: false }" class="app-card p-4">
+        <div class="app-card app-list-card flex flex-col gap-3">
             <div class="flex items-center justify-between gap-2">
                 <span class="badge {{ $log->category_badge_class }}">{{ $log->category }}</span>
                 <span class="font-mono text-[11px] text-neutral-500">{{ $log->created_at->format('M d, g:i A') }}</span>
             </div>
-            <button type="button" @click="open = !open" class="mt-2 w-full text-left">
-                <div class="font-medium text-neutral-800 dark:text-neutral-100">{{ $log->headline }}</div>
-                @if(count($log->chips))
-                <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
-                    @foreach($log->chips as $chip)<span class="badge badge-neutral">{{ $chip }}</span>@endforeach
-                </div>
-                @endif
-            </button>
-            <div x-show="open" x-cloak class="mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800 space-y-2 text-sm">
+            <div class="font-medium text-neutral-800 dark:text-neutral-100">{{ $log->headline }}</div>
+            @if(count($log->chips))
+            <div class="flex flex-wrap items-center gap-1.5">
+                @foreach($log->chips as $chip)<span class="badge badge-neutral">{{ $chip }}</span>@endforeach
+            </div>
+            @endif
+            <div class="app-list-card-extra space-y-1.5 text-sm">
                 <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">Actor</span><span class="text-neutral-700 dark:text-neutral-300">{{ $log->user?->name ?? 'System' }}</span></div>
                 <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">IP</span><span class="font-mono text-neutral-700 dark:text-neutral-300">{{ $log->ip_address ?? '—' }}</span></div>
-                <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'audit', 'id' => $log->id]) }}" class="app-btn app-btn-secondary app-btn-sm w-full mt-1">Full details</button>
             </div>
+            <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'audit', 'id' => $log->id]) }}" class="app-btn app-btn-secondary app-btn-sm w-full mt-auto">View details</button>
         </div>
         @empty
-        <div class="app-card"><div class="app-empty"><span class="text-xs font-medium">No audit entries match.</span></div></div>
+        <div class="col-span-full app-card"><div class="app-empty"><span class="text-xs font-medium">No audit entries match.</span></div></div>
         @endforelse
-        @if($logs->hasPages())
-        <div class="pt-1">{{ $logs->links() }}</div>
-        @endif
     </div>
+    @if($logs->hasPages())
+    <div>{{ $logs->links() }}</div>
+    @endif
 
-    {{-- Table --}}
-    <div class="app-card hidden md:block">
+    {{-- Table (desktop, List layout = table) --}}
+    <div class="app-card app-list-table">
         <div class="app-scroll-x">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">

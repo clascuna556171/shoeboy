@@ -3,7 +3,7 @@
 @section('title', 'Supplier Records')
 
 @section('content')
-<div class="space-y-6" x-data="{ showSupplierModal: false, view: localStorage.getItem('shoeboy.suppliers.view') || localStorage.getItem('shoeboy.view') || 'cards', editingSupplier: null, setView(v){ this.view = v; localStorage.setItem('shoeboy.suppliers.view', v); } }">
+<div class="space-y-6" x-data="{ showSupplierModal: false, editingSupplier: null }">
 
     {{-- Page header --}}
     <div class="app-card p-5 lg:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -14,22 +14,7 @@
                 </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-            <div class="flex items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl">
-                <button type="button" @click="setView('cards')"
-                        :class="view === 'cards' ? 'bg-white dark:bg-[#2C2C2E] shadow-sm font-semibold text-neutral-900 dark:text-white' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'"
-                        class="px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1.5">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
-                    Cards
-                </button>
-                <button type="button" @click="setView('table')"
-                        :class="view === 'table' ? 'bg-white dark:bg-[#2C2C2E] shadow-sm font-semibold text-neutral-900 dark:text-white' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'"
-                        class="px-3 py-1.5 rounded-lg text-sm transition-all flex items-center gap-1.5">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                    Table
-                </button>
-            </div>
-
+        <div class="flex flex-nowrap items-center gap-2">
             <button type="button"
                     @click="showSupplierModal = true"
                     data-tour="primary"
@@ -42,10 +27,16 @@
 
     <x-table-toolbar :action="route('suppliers.index')" :search="$search"
                      search-placeholder="Search supplier name or contact..."
-                     :reset-url="route('suppliers.index')" :filters="[]" />
+                     :reset-url="route('suppliers.index')"
+                     :sorts="[
+                         ['column' => 'created_at', 'direction' => 'desc', 'label' => 'Newest'],
+                         ['column' => 'name', 'direction' => 'asc', 'label' => 'Name'],
+                         ['column' => 'batches_count', 'direction' => 'desc', 'label' => 'Most batches'],
+                     ]"
+                     :filters="[]" />
 
-    {{-- Cards --}}
-    <div x-show="view === 'cards'" data-view-panel="cards" data-tour="list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    {{-- Cards (phones + desktop when List layout = cards) --}}
+    <div class="app-list-cards md:grid-cols-2 lg:grid-cols-3" data-tour="list">
         @forelse($suppliers as $sup)
         <div class="app-card app-card-hover p-5 flex flex-col justify-between gap-4">
             <div class="space-y-3">
@@ -94,7 +85,8 @@
     </div>
 
     {{-- Table view --}}
-    <div x-show="view === 'table'" data-view-panel="table" data-tour="list" class="app-card">
+    {{-- Table (desktop, List layout = table) --}}
+    <div class="app-card app-list-table" data-tour="list">
         <div class="app-scroll-x">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
@@ -204,16 +196,6 @@
                 </div>
             </form>
     </x-modal>
-
-    {{-- Show the stored view (cards/table) before Alpine boots. --}}
-    <script>
-        (function () {
-            var view = localStorage.getItem('shoeboy.suppliers.view') || localStorage.getItem('shoeboy.view') || 'cards';
-            document.querySelectorAll('[data-view-panel]').forEach(function (el) {
-                el.style.display = el.getAttribute('data-view-panel') === view ? '' : 'none';
-            });
-        })();
-    </script>
 
 </div>
 @endsection
