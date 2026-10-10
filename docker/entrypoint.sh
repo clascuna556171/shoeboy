@@ -3,7 +3,8 @@ set -e
 
 echo "==> Initializing The Shoe Boy application..."
 
-# Optimize Laravel for production
+# Discover packages & optimize Laravel for production
+php artisan package:discover --ansi || true
 php artisan config:cache || true
 php artisan route:cache || true
 php artisan view:cache || true

@@ -30,7 +30,7 @@ COPY --chown=9999:9999 . .
 COPY --from=frontend --chown=9999:9999 /app/public/build ./public/build
 
 # Install production Composer dependencies (without dev packages)
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN composer install --no-dev --no-interaction --no-scripts --optimize-autoloader
 
 # Set up storage and cache write permissions
 RUN chmod -R 775 storage bootstrap/cache
