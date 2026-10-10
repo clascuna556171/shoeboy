@@ -243,7 +243,7 @@
 
             <div class="flex items-center gap-2.5 shrink-0">
                 @auth
-                <div x-show="navMode !== 'rail'" class="pl-2 border-l border-neutral-200 dark:border-neutral-800">
+                <div data-header-usermenu class="pl-2 border-l border-neutral-200 dark:border-neutral-800">
                     <x-user-menu variant="header" :show-identity="false" :pages="$guidePages" />
                 </div>
 

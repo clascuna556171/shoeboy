@@ -558,7 +558,7 @@
         @endphp
 
 
-        <div class="overflow-x-auto lg:overflow-visible">
+        <div class="app-scroll-x">
 
             <table class="w-full min-w-[950px] text-left">
 

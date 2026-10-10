@@ -109,7 +109,7 @@
             </div>
 
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div data-tour="tabs" class="flex flex-wrap items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl text-xs">
+            <div data-tour="tabs" class="flex flex-nowrap items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl text-xs overflow-x-auto max-w-full">
                 @foreach(['batches' => 'By Batch Intake', 'sessions' => 'By Session / Date', 'tiers' => 'By Price Tier', 'sales' => 'Sales Ledger', 'expenses' => 'Expenses Ledger'] as $key => $label)
                     <button type="button"
                             @click="setReportTab('{{ $key }}')"
@@ -136,7 +136,7 @@
 
         {{-- By batch --}}
         <div x-show="reportTab === 'batches'">
-            <div class="overflow-x-auto lg:overflow-visible">
+            <div class="app-scroll-x">
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                         <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
@@ -179,7 +179,7 @@
 
         {{-- By session --}}
         <div x-show="reportTab === 'sessions'" x-cloak>
-            <div class="overflow-x-auto lg:overflow-visible">
+            <div class="app-scroll-x">
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                         <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
@@ -218,7 +218,7 @@
 
         {{-- By tier --}}
         <div x-show="reportTab === 'tiers'" x-cloak>
-            <div class="overflow-x-auto lg:overflow-visible">
+            <div class="app-scroll-x">
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                         <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
@@ -248,7 +248,7 @@
         @php($salesGross = collect($salesLedger)->sum('awarded_price'))
         @php($salesProfit = collect($salesLedger)->sum('unit_profit'))
         <div x-show="reportTab === 'sales'" x-cloak>
-            <div class="overflow-x-auto lg:overflow-visible">
+            <div class="app-scroll-x">
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                         <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
@@ -313,7 +313,7 @@
         {{-- Expenses ledger --}}
         @php($expenseTotal = collect($expenseLedger)->sum('amount'))
         <div x-show="reportTab === 'expenses'" x-cloak>
-            <div class="overflow-x-auto lg:overflow-visible">
+            <div class="app-scroll-x">
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                         <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">

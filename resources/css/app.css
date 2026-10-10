@@ -114,6 +114,46 @@ html { scrollbar-gutter: stable; }
 
     .app-row { transition: background-color 0.15s ease; }
 
+    /* ---- Responsive table wrapper --------------------------------------
+       Always horizontally scrollable so a wide table can never spill out
+       of its card (even in rail mode / at tablet widths). Sticky headers
+       need the page (not this box) to be the scroll container, so at very
+       wide viewports — and only when the left rail is not eating width —
+       the wrapper gives up its scroll container so headers can pin. */
+    .app-scroll-x {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    @media (min-width: 1536px) {
+        html:not([data-nav="rail"]) .app-scroll-x { overflow-x: visible; }
+    }
+
+    /* ---- Table cell text policy ---------------------------------------
+       Apply consistently so columns stop reflowing when width shrinks.
+       Code/num cells never wrap; long text truncates with a tooltip. */
+    .cell-code { white-space: nowrap; }
+    .cell-num { white-space: nowrap; text-align: right; }
+    .cell-text {
+        display: block;
+        max-width: 18rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* ---- Bottom sheet (detail panels on phones) --------------------- */
+    .app-sheet {
+        border-top-left-radius: 1.5rem;
+        border-top-right-radius: 1.5rem;
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+    @media (min-width: 640px) {
+        .app-sheet {
+            border-radius: 1.5rem;
+            padding-bottom: 0;
+        }
+    }
+
     /* ---- Unified badge ---------------------------------------------- */
     .badge {
         display: inline-flex;
@@ -407,10 +447,10 @@ html { scrollbar-gutter: stable; }
     }
 
     /* ---- Sticky table headers (parked below the top nav) -------------
-       Only at lg+ where list-table wrappers are `lg:overflow-visible`.
-       Inside a horizontal scroll container a positive `top` pushes the
-       header down over the first row, so keep it in flow on small screens. */
-    @media (min-width: 1024px) {
+       Only meaningful at 2xl where `.app-scroll-x` stops being a scroll
+       container (see above). Inside a horizontal scroll container sticky
+       would stick to the box, not the viewport, so it stays off there. */
+    @media (min-width: 1536px) {
         main thead th {
             position: sticky;
             top: var(--app-header-h, 3.5rem);
@@ -485,6 +525,9 @@ html[data-density="compact"] main table th {
 @media (min-width: 1024px) {
     /* Hide the horizontal menu and show the rail */
     html[data-nav="rail"] .app-topnav { display: none !important; }
+    /* Header user menu is redundant in rail mode (the rail has one). Hidden
+       via CSS so it never paints — this is what removes the avatar flicker. */
+    html[data-nav="rail"] [data-header-usermenu] { display: none !important; }
     html[data-nav="rail"] .app-rail {
         display: flex;
         flex-direction: column;
@@ -531,3 +574,23 @@ html[data-density="compact"] main table th {
         color: #ffffff;
     }
 }
+
+/* ============================================================
+   Mobile foundations
+   ============================================================ */
+
+/* Backdrop blur is expensive on phone GPUs — keep the dark scrim only. */
+@media (max-width: 1023px), (pointer: coarse) {
+    .app-modal-backdrop {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+}
+
+/* Comfortable tap targets on touch devices. */
+@media (pointer: coarse) {
+    .app-btn { min-height: 44px; }
+    .app-btn-sm { min-height: 40px; }
+    .app-select, .app-input { min-height: 44px; }
+}
+

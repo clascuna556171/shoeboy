@@ -74,7 +74,7 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto lg:overflow-visible">
+        <div class="app-scroll-x">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                     <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">

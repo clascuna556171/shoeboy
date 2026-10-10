@@ -54,8 +54,15 @@ class OrderController extends Controller
             $query->reorder()
                 ->orderByRaw('CASE WHEN order_number = ? THEN 0 ELSE 1 END', [$focus])
                 ->orderByDesc('date_awarded');
-        } else {
+        } elseif ($request->query('sort')) {
             $this->applySort($query, ['order_number', 'awarded_price', 'status', 'order_type', 'date_awarded', 'created_at'], 'date_awarded', 'desc');
+        } else {
+            // Default view groups by workflow state — active work (Reserved, Paid)
+            // floats to the top, historical rows (Fulfilled, Cancelled) sink — then
+            // newest first within each group. Any explicit column sort overrides this.
+            $query->reorder()
+                ->orderByRaw("CASE status WHEN 'reserved' THEN 0 WHEN 'paid' THEN 1 WHEN 'fulfilled' THEN 2 WHEN 'cancelled' THEN 3 ELSE 4 END")
+                ->orderByDesc('date_awarded');
         }
 
         $orders = $query->paginate(20)->withQueryString();

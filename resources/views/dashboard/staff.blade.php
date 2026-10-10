@@ -210,7 +210,7 @@
                 <span class="w-2 h-2 rounded-full bg-rose-500"></span>
                 <span class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Live Operations Console</span>
                 <span class="text-neutral-300 dark:text-neutral-600">•</span>
-                <form method="GET" action="{{ route('dashboard') }}" class="flex items-center gap-1.5">
+                <form method="GET" action="{{ route('staff.workspace') }}" class="flex items-center gap-1.5">
                     <input type="hidden" name="tab" :value="activeTab">
                     <label for="batch-picker" class="text-xs text-neutral-500">Batch:</label>
                     <select id="batch-picker" name="batch" onchange="this.form.requestSubmit()"
@@ -606,12 +606,12 @@
                            placeholder="Filter catalog by brand, model or SKU..."
                            class="app-input">
 
-                    <div class="flex flex-wrap items-center gap-1.5 text-xs">
-                        <span class="text-xs text-neutral-500 font-medium mr-1">Brand:</span>
+                    <div class="flex flex-nowrap items-center gap-1.5 text-xs overflow-x-auto pb-1">
+                        <span class="text-xs text-neutral-500 font-medium mr-1 shrink-0">Brand:</span>
                         <template x-for="brand in ['All', 'Li-Ning', 'Anta', 'Peak', 'Nike', 'Jordan', 'Asics', 'New Balance']" :key="brand">
                             <button @click="posBrandFilter = brand"
                                     :class="posBrandFilter === brand ? 'bg-[#1D1D1F] text-white dark:bg-white dark:text-[#1D1D1F] font-semibold' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-900 dark:hover:bg-white hover:text-white dark:hover:text-neutral-900'"
-                                    class="px-2.5 py-1 rounded-lg text-xs transition-all"
+                                    class="px-2.5 py-1 rounded-lg text-xs transition-all shrink-0"
                                     x-text="brand"></button>
                         </template>
                     </div>
@@ -831,7 +831,7 @@
                 </div>
             </div>
 
-            <div class="overflow-x-auto lg:overflow-visible">
+            <div class="app-scroll-x">
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200/80 dark:border-neutral-800 pb-2">
                         <tr>
