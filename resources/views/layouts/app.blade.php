@@ -489,9 +489,10 @@
     <div x-show="settingsOpen" x-cloak
          x-effect="settingsOpen ? window.appScrollLock?.lock() : window.appScrollLock?.unlock()"
          @keydown.escape.window="settingsOpen = false"
-         class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/30 dark:bg-black/50 backdrop-blur-[2px] app-modal-backdrop">
-        <div class="app-modal-panel w-full max-w-md bg-white dark:bg-[#1C1C1E] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6"
+         class="fixed inset-0 z-[110] flex items-end sm:items-center justify-center sm:p-4 bg-black/30 dark:bg-black/50 backdrop-blur-[2px] app-modal-backdrop">
+        <div class="app-modal-panel w-full max-w-md bg-white dark:bg-[#1C1C1E] rounded-t-3xl sm:rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 max-h-[90vh] overflow-y-auto app-sheet"
              @click.outside="settingsOpen = false">
+            <div class="mx-auto mb-4 h-1.5 w-12 rounded-full bg-neutral-300 dark:bg-neutral-700 sm:hidden"></div>
             <div class="flex items-center justify-between">
                 <h3 class="font-bold text-base text-[#1D1D1F] dark:text-white">Settings</h3>
                 <button type="button" @click="settingsOpen = false" class="p-1.5 rounded-lg text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
@@ -558,9 +559,10 @@
          x-cloak
          x-effect="$store.dialog.open ? window.appScrollLock?.lock() : window.appScrollLock?.unlock()"
          @keydown.escape.window="$store.dialog.cancel()"
-         class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/30 dark:bg-black/50 backdrop-blur-[2px] app-modal-backdrop">
-        <div class="app-modal-panel w-full max-w-sm bg-white dark:bg-[#1C1C1E] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6"
+         class="fixed inset-0 z-[110] flex items-end sm:items-center justify-center sm:p-4 bg-black/30 dark:bg-black/50 backdrop-blur-[2px] app-modal-backdrop">
+        <div class="app-modal-panel w-full max-w-sm bg-white dark:bg-[#1C1C1E] rounded-t-3xl sm:rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 max-h-[90vh] overflow-y-auto app-sheet"
              @click.outside="$store.dialog.cancel()">
+            <div class="mx-auto mb-4 h-1.5 w-12 rounded-full bg-neutral-300 dark:bg-neutral-700 sm:hidden"></div>
             <div class="flex items-start gap-3.5">
                 <span class="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
                       :class="{
