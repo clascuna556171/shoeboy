@@ -8,6 +8,7 @@
           navMode: localStorage.getItem('shoeboy.nav') || 'top',
           railCollapsed: localStorage.getItem('shoeboy.nav.collapsed') === '1',
           settingsOpen: false,
+          mobileNav: false,
           showTourPrompt: false,
           init() {
               this.applyTheme();
@@ -131,9 +132,36 @@
             $navItems[] = ['route' => 'suppliers.index','pattern' => 'suppliers.*','label' => 'Suppliers','tint' => 'text-teal-400',   'icon' => 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'];
         }
 
+        // Grouped for the mobile drawer — every module stays present and equal,
+        // organized lightly by workflow rather than ranked.
+        $navGroupOf = [
+            'dashboard' => 'Sell & Serve',
+            'staff.workspace' => 'Sell & Serve',
+            'orders.index' => 'Sell & Serve',
+            'deliveries.index' => 'Sell & Serve',
+            'batches.index' => 'Inventory',
+            'items.index' => 'Inventory',
+            'expenses.index' => 'Money',
+            'reports.index' => 'Money',
+            'staff.index' => 'Admin',
+            'suppliers.index' => 'Admin',
+        ];
+        $navGroups = [];
+        foreach ($navItems as $item) {
+            $navGroups[$navGroupOf[$item['route']] ?? 'More'][] = $item;
+        }
+
+        // Identity shown at the top of the mobile drawer.
+        $dlUser = auth()->user();
+        $dlInitials = collect(preg_split('/\s+/', trim((string) ($dlUser?->name ?? ''))))
+            ->filter()
+            ->map(fn ($w) => \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($w, 0, 1)))
+            ->take(2)
+            ->implode('');
+        $dlOwner = (bool) $dlUser?->isOwner();
+
         // Anchor key per nav route, used by the general tour to name each module.
-        $navTour = [
-            'dashboard' => 'nav-workspace',
+        $navTour = [            'dashboard' => 'nav-workspace',
             'batches.index' => 'nav-batches',
             'items.index' => 'nav-inventory',
             'staff.workspace' => 'nav-console',
@@ -214,7 +242,9 @@
     </aside>
     @endauth
 
-    <header x-data="{ mobileNav: false }"
+    <header
+            @keydown.escape.window="mobileNav = false"
+            x-effect="mobileNav ? window.appScrollLock?.lock() : window.appScrollLock?.unlock()"
             class="sticky top-0 z-40 w-full apple-glass border-b border-[#E5E5EA] dark:border-[#2C2C2E] px-4 lg:px-6 py-2.5 transition-colors duration-200">
         <div class="max-w-[1720px] mx-auto flex items-center justify-between gap-4">
 
@@ -229,7 +259,7 @@
             </div>
 
             @auth
-            <nav data-tour="nav" class="app-topnav hidden lg:flex items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl border border-neutral-200 dark:border-neutral-800 text-xs">
+            <nav data-tour="nav" class="app-topnav hidden xl:flex items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl border border-neutral-200 dark:border-neutral-800 text-xs">
                 @foreach($navItems as $item)
                 <a href="{{ route($item['route']) }}"
                    data-tour="{{ $navTour[$item['route']] ?? '' }}"
@@ -250,7 +280,7 @@
                 <button type="button"
                         @click="mobileNav = !mobileNav"
                         title="Menu"
-                        class="lg:hidden p-2 rounded-xl text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors">
+                        class="xl:hidden p-2 rounded-xl text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors">
                     <svg x-show="!mobileNav" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                     <svg x-show="mobileNav" x-cloak class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
@@ -264,23 +294,86 @@
         </div>
 
         @auth
-        <div x-show="mobileNav"
-             x-cloak
-             x-transition:enter="transition ease-out duration-150"
-             x-transition:enter-start="opacity-0 -translate-y-2"
-             x-transition:enter-end="opacity-100 translate-y-0"
-             x-transition:leave="transition ease-in duration-100"
-             x-transition:leave-start="opacity-100 translate-y-0"
-             x-transition:leave-end="opacity-0 -translate-y-2"
-             class="lg:hidden mt-3 max-w-[1720px] mx-auto grid grid-cols-2 sm:grid-cols-3 gap-2 pb-1">
-            @foreach($navItems as $item)
-            <a href="{{ route($item['route']) }}"
-               data-tour="{{ $navTour[$item['route']] ?? '' }}"
-               class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs border transition-colors {{ request()->routeIs($item['pattern']) ? 'bg-neutral-900 text-white border-transparent font-semibold dark:bg-white dark:text-neutral-900' : 'bg-white dark:bg-[#1C1C1E] border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-200' }}">
-                <svg class="w-4 h-4 {{ $item['tint'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/></svg>
-                <span>{{ $item['label'] }}</span>
-            </a>
-            @endforeach
+        <div x-show="mobileNav" x-cloak class="xl:hidden fixed inset-0 z-[90]" role="dialog" aria-modal="true" aria-label="Navigation menu">
+            <div x-show="mobileNav"
+                 x-transition:enter="transition-opacity ease-out duration-200"
+                 x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition-opacity ease-in duration-150"
+                 x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                 @click="mobileNav = false"
+                 class="absolute inset-0 bg-black/40"></div>
+
+            <aside x-show="mobileNav"
+                   x-transition:enter="transition ease-out duration-200"
+                   x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
+                   x-transition:leave="transition ease-in duration-150"
+                   x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full"
+                   class="absolute left-0 top-0 bottom-0 w-[86vw] max-w-xs bg-white dark:bg-[#1C1C1E] border-r border-neutral-200 dark:border-neutral-800 shadow-2xl flex flex-col"
+                   @click.outside="mobileNav = false">
+
+                <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-neutral-100 dark:border-neutral-800">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <span class="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold bg-neutral-700 text-white dark:bg-neutral-600 dark:text-neutral-100 shrink-0">{{ $dlInitials }}</span>
+                        <div class="min-w-0">
+                            <div class="text-xs font-bold text-[#1D1D1F] dark:text-white truncate">{{ $dlUser?->name }}</div>
+                            <div class="text-[10px] uppercase tracking-wider {{ $dlOwner ? 'text-amber-600 dark:text-amber-400' : 'text-neutral-500' }}">{{ $dlUser?->role }}</div>
+                        </div>
+                    </div>
+                    <button type="button" @click="mobileNav = false" class="p-2 -m-1 rounded-xl text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <nav class="flex-1 overflow-y-auto px-2 py-3 space-y-4">
+                    @foreach($navGroups as $group => $items)
+                    <div>
+                        <div class="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-400">{{ $group }}</div>
+                        <div class="space-y-0.5">
+                            @foreach($items as $item)
+                            <a href="{{ route($item['route']) }}" @click="mobileNav = false"
+                               class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors {{ request()->routeIs($item['pattern']) ? 'bg-neutral-900 text-white font-semibold dark:bg-white dark:text-neutral-900' : 'text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800' }}">
+                                <svg class="w-4 h-4 {{ request()->routeIs($item['pattern']) ? '' : $item['tint'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/></svg>
+                                <span>{{ $item['label'] }}</span>
+                            </a>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endforeach
+                </nav>
+
+                <div class="border-t border-neutral-100 dark:border-neutral-800 p-2 space-y-0.5">
+                    <a href="{{ route('help.index') }}" @click="mobileNav = false"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-4 h-4 text-[#0071E3] dark:text-[#0A84FF] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>Help &amp; Guide</span>
+                    </a>
+                    <button type="button" @click="mobileNav = false; settingsOpen = true"
+                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        <span>Settings</span>
+                    </button>
+                    @if($isOwner)
+                    <a href="{{ route('backups.index') }}" @click="mobileNav = false"
+                       class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-5L9 5H6a2 2 0 00-2 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 12v4m-2-2h4"/></svg>
+                        <span>Data &amp; Backups</span>
+                    </a>
+                    @endif
+                    <form action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button type="button"
+                                data-confirm="Sign out?"
+                                data-confirm-variant="danger"
+                                data-confirm-icon="logout"
+                                data-confirm-message="You will be returned to the login screen."
+                                data-confirm-label="Sign out"
+                                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                            <span>Sign out</span>
+                        </button>
+                    </form>
+                </div>
+            </aside>
         </div>
         @endauth
     </header>
