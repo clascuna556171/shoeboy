@@ -557,8 +557,30 @@
             $totalProfit = collect($batchSummaries)->sum('order_profit_sum');
         @endphp
 
+        {{-- Cards (phones + desktop when List layout = cards) --}}
+        <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3 p-5 lg:p-6 pt-0">
+            @foreach($batchSummaries as $batch)
+            <div class="app-card app-list-card flex flex-col gap-3">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <a href="{{ route('batches.show', $batch['batch_id']) }}" class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF] hover:underline">{{ $batch['batch_code'] }}</a>
+                        <div class="mt-0.5 text-[11px] text-neutral-500">{{ $batch['date_acquired'] }} · {{ $batch['total_sacks'] }} sack(s)</div>
+                    </div>
+                    <div class="text-right shrink-0 font-mono font-bold text-emerald-600 dark:text-emerald-400">+₱{{ number_format($batch['order_profit_sum'], 2) }}</div>
+                </div>
+                <div class="text-sm text-neutral-700 dark:text-neutral-300 truncate">{{ $batch['supplier_name'] }}</div>
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="badge badge-sold">{{ $batch['sold_pairs'] }} sold</span>
+                    <span class="badge badge-reserved">{{ $batch['reserved_pairs'] }} reserved</span>
+                    <span class="badge badge-available">{{ $batch['available_pairs'] }} available</span>
+                </div>
+                <div class="app-list-card-extra flex items-center justify-between text-sm"><span class="text-neutral-500">Sales</span><span class="font-mono font-semibold text-neutral-900 dark:text-white"><x-money :value="$batch['realized_revenue']" /></span></div>
+                <div class="flex items-center justify-between text-sm"><span class="text-neutral-500">Batch outlay</span><span class="font-mono text-neutral-500"><x-money :value="$batch['total_cost']" /></span></div>
+            </div>
+            @endforeach
+        </div>
 
-        <div class="app-scroll-x">
+        <div class="app-list-table"><div class="app-scroll-x">
 
             <table class="w-full min-w-[950px] text-left">
 
@@ -749,7 +771,7 @@
 
             </table>
 
-        </div>
+        </div></div>
 
     </section>
 

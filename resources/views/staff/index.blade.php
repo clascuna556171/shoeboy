@@ -26,12 +26,69 @@
     <x-table-toolbar :action="route('staff.index')" :search="$search"
                      search-placeholder="Search name or email..."
                      :reset-url="route('staff.index')"
+                     :sorts="[
+                         ['column' => 'name', 'direction' => 'asc', 'label' => 'Name'],
+                         ['column' => 'role', 'direction' => 'asc', 'label' => 'Role'],
+                         ['column' => 'orders_count', 'direction' => 'desc', 'label' => 'Most orders'],
+                     ]"
                      :filters="[
                          ['name' => 'role', 'selected' => $role, 'options' => ['' => 'All Roles', 'owner' => 'Owner', 'staff' => 'Staff']],
                      ]" />
 
-    {{-- Table --}}
-    <div class="app-card" data-tour="list">
+    {{-- Cards (phones + desktop when List layout = cards) --}}
+    <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3" data-tour="list">
+        @foreach($users as $user)
+        <div class="app-card app-list-card flex flex-col gap-3">
+            <div class="flex items-start gap-3">
+                <span class="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 flex items-center justify-center shrink-0 text-sm font-bold">
+                    {{ strtoupper(substr($user->name, 0, 1)) }}
+                </span>
+                <div class="min-w-0 flex-1">
+                    <div class="font-semibold text-neutral-800 dark:text-neutral-200 truncate">{{ $user->name }}</div>
+                    <x-cell :value="$user->email" muted class="font-mono text-xs" />
+                </div>
+                <x-status-badge kind="role" :value="$user->role" />
+            </div>
+
+            <div class="flex flex-wrap items-center gap-1.5">
+                @if($user->is_active)
+                    <span class="inline-flex items-center gap-1.5 badge badge-fulfilled"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active</span>
+                @else
+                    <span class="inline-flex items-center gap-1.5 badge badge-cancelled"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Deactivated</span>
+                @endif
+                <span class="badge badge-neutral font-mono">{{ $user->orders_count }} orders</span>
+                <span class="badge badge-neutral font-mono">{{ $user->verified_payments_count }} verified</span>
+            </div>
+
+            <div class="app-list-card-extra text-xs text-neutral-500 font-mono">
+                {{ $user->contact_number ?? 'No contact number' }}
+            </div>
+
+            <div class="mt-auto flex flex-wrap items-center gap-2 pt-1">
+                <x-action-btn icon="edit" tone="secondary"
+                              @click="editingUser = {{ Js::from(['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'role' => $user->role, 'contact_number' => $user->contact_number, 'is_active' => (bool) $user->is_active]) }}">Edit</x-action-btn>
+                @if($user->id !== auth()->id())
+                <form action="{{ route('staff.toggle', $user->id) }}" method="POST" class="inline">
+                    @csrf
+                    @method('PATCH')
+                    <x-action-btn icon="power" tone="secondary" type="submit"
+                                  class="{{ $user->is_active ? 'text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/60' : 'text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/60' }}"
+                                  data-confirm="{{ $user->is_active ? 'Deactivate' : 'Reactivate' }} {{ $user->name }}?"
+                                  data-confirm-variant="{{ $user->is_active ? 'warning' : 'success' }}"
+                                  data-confirm-icon="{{ $user->is_active ? 'user-x' : 'user-check' }}"
+                                  data-confirm-message="{{ $user->is_active ? 'They will no longer be able to sign in.' : 'They will regain access to the console.' }}"
+                                  data-confirm-label="{{ $user->is_active ? 'Deactivate' : 'Reactivate' }}">{{ $user->is_active ? 'Deactivate' : 'Reactivate' }}</x-action-btn>
+                </form>
+                @else
+                <span class="text-[11px] text-neutral-500 italic">Current session</span>
+                @endif
+            </div>
+        </div>
+        @endforeach
+    </div>
+
+    {{-- Table (desktop, List layout = table) --}}
+    <div class="app-card app-list-table" data-tour="list">
         <div class="flex items-center justify-between px-5 py-3.5 border-b border-neutral-200 dark:border-neutral-800">
             <h3 class="font-bold text-base text-[#1D1D1F] dark:text-white">Active Team Members &amp; Permissions</h3>
             <span class="badge badge-neutral">{{ $users->count() }} accounts</span>

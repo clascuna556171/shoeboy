@@ -67,12 +67,59 @@
     </div>
 
     {{-- Pairs in this batch --}}
-    <div class="app-card">
-        <div class="px-5 lg:px-6 py-4 border-b border-neutral-200 dark:border-neutral-800">
+    <div>
+        <div class="mb-4">
             <h2 class="font-bold text-base text-[#1D1D1F] dark:text-white">Pairs in this batch</h2>
             <p class="text-xs text-neutral-500 mt-0.5">Add, edit, triage, or remove pairs here. The Inventory page lists every batch together.</p>
         </div>
 
+        {{-- Cards (phones + desktop when List layout = cards) --}}
+        <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3" data-tour="list">
+            @forelse($items as $item)
+            <div class="app-card app-list-card flex flex-col gap-3">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $item->sku }}</span>
+                        <div class="mt-0.5 font-semibold text-neutral-800 dark:text-neutral-200 truncate">{{ $item->brand }} {{ $item->model }}</div>
+                    </div>
+                    <div class="text-right shrink-0 font-mono font-bold text-neutral-900 dark:text-white"><x-money :value="$item->listed_price" /></div>
+                </div>
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <x-status-badge kind="item" :value="$item->status" />
+                    @if($item->status === 'available')
+                        <x-status-badge kind="triage" :value="$item->triage_status" />
+                    @endif
+                    <span class="font-mono text-[11px] text-neutral-500">{{ $item->size }}</span>
+                </div>
+                <div class="app-list-card-extra text-sm text-neutral-600 dark:text-neutral-300">Condition: {{ $item->condition }}</div>
+                <div class="mt-auto flex flex-wrap items-center gap-2 pt-1">
+                    @if($item->status === 'available')
+                        <button type="button" class="app-btn app-btn-secondary app-btn-sm flex-1"
+                                @click="editItem = {{ Js::from([
+                                    'id' => $item->id, 'sku' => $item->sku, 'brand' => $item->brand, 'model' => $item->model,
+                                    'size' => $item->size, 'condition' => $item->condition, 'listed_price' => $item->listed_price,
+                                    'repair_cost' => $item->repair_cost, 'category' => $item->category, 'triage_status' => $item->triage_status,
+                                ]) }}">Edit</button>
+                        <form action="{{ route('items.destroy', $item) }}" method="POST">
+                            @csrf
+                            @method('DELETE')
+                            <button type="button" class="app-btn app-btn-sm app-btn-ghost"
+                                    data-confirm="Delete pair {{ $item->sku }}?"
+                                    data-confirm-message="The pair is removed from inventory. An Undo option appears right after."
+                                    data-confirm-variant="danger" data-confirm-icon="trash" data-confirm-label="Delete">Delete</button>
+                        </form>
+                    @else
+                        <span class="text-xs text-neutral-500">Locked ({{ $item->status }})</span>
+                    @endif
+                </div>
+            </div>
+            @empty
+            <div class="col-span-full app-card"><div class="app-empty"><span class="text-xs font-medium">No pairs logged for this batch yet.</span></div></div>
+            @endforelse
+        </div>
+
+        {{-- Table (desktop, List layout = table) --}}
+        <div class="app-card app-list-table" data-tour="list">
         <div class="app-scroll-x">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
@@ -150,6 +197,7 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
         </div>
     </div>
 

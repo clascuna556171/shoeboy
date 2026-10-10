@@ -73,14 +73,42 @@
     @endif
 
     {{-- Stored backups --}}
-    <div class="app-card" data-tour="list">
-        <div class="px-5 lg:px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
-            <div>
-                <h2 class="font-bold text-base text-[#1D1D1F] dark:text-white">Stored backups</h2>
-                <p class="text-xs text-neutral-500 mt-0.5">{{ count($backups) }} snapshot(s) on this device. The most recent {{ \App\Services\BackupService::MAX_BACKUPS }} are kept automatically.</p>
-            </div>
+    <section data-tour="list">
+        <div class="mb-4">
+            <h2 class="font-bold text-base text-[#1D1D1F] dark:text-white">Stored backups</h2>
+            <p class="text-xs text-neutral-500 mt-0.5">{{ count($backups) }} snapshot(s) on this device. The most recent {{ \App\Services\BackupService::MAX_BACKUPS }} are kept automatically.</p>
         </div>
 
+        <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3">
+            @forelse($backups as $b)
+            <div class="app-card app-list-card flex flex-col gap-3">
+                <x-cell :value="$b['name']" class="font-mono text-sm text-neutral-800 dark:text-neutral-200" />
+                <div class="text-xs text-neutral-500">
+                    {{ \Illuminate\Support\Carbon::createFromTimestamp($b['modified'])->format('M d, Y g:i A') }}
+                    <span class="block text-[11px] text-neutral-400">{{ \Illuminate\Support\Carbon::createFromTimestamp($b['modified'])->diffForHumans() }}</span>
+                </div>
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="badge badge-neutral font-mono">{{ $b['size'] >= 1048576 ? number_format($b['size'] / 1048576, 2).' MB' : number_format($b['size'] / 1024, 1).' KB' }}</span>
+                </div>
+                <div class="mt-auto flex flex-wrap items-center gap-2 pt-1">
+                    <a href="{{ route('backups.file', $b['name']) }}" class="app-btn app-btn-secondary app-btn-sm flex-1">Download</a>
+                    <form action="{{ route('backups.restore', $b['name']) }}" method="POST">
+                        @csrf
+                        <button type="button" data-confirm="Restore this backup?" data-confirm-message="The current database will be replaced with {{ $b['name'] }}. A safety snapshot is taken first." data-confirm-variant="danger" data-confirm-icon="warning" data-confirm-label="Restore" class="app-btn app-btn-amber app-btn-sm">Restore</button>
+                    </form>
+                    <form action="{{ route('backups.destroy', $b['name']) }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <button type="button" data-confirm="Delete this backup?" data-confirm-message="{{ $b['name'] }} will be permanently removed." data-confirm-variant="danger" data-confirm-icon="trash" data-confirm-label="Delete" class="app-btn app-btn-ghost app-btn-sm text-rose-600 dark:text-rose-400">Delete</button>
+                    </form>
+                </div>
+            </div>
+            @empty
+            <div class="col-span-full app-card"><div class="app-empty"><span class="text-xs font-medium">No backups yet. Create one above.</span></div></div>
+            @endforelse
+        </div>
+
+        <div class="app-card app-list-table">
         <div class="app-scroll-x">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
@@ -144,7 +172,8 @@
                 </tbody>
             </table>
         </div>
-    </div>
+        </div>
+    </section>
 
 </div>
 @endsection

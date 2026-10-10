@@ -831,6 +831,46 @@
                 </div>
             </div>
 
+            {{-- Cards (phones + desktop when List layout = cards) --}}
+            <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3">
+                <template x-for="item in triageItems" :key="item.id">
+                    <div class="app-card app-list-card flex flex-col gap-3">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]" x-text="item.sku"></span>
+                                <div class="mt-0.5 font-semibold text-neutral-800 dark:text-neutral-200 truncate" x-text="`${item.brand} ${item.model}`"></div>
+                            </div>
+                            <span class="badge shrink-0"
+                                  :class="item.triage_status === 'washing' ? 'badge-washing' : (item.triage_status === 'under_repair' ? 'badge-repair' : 'badge-available')"
+                                  x-text="item.triage_status === 'washing' ? 'Washing' : (item.triage_status === 'under_repair' ? 'Under repair' : 'Ready')"></span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <span class="inline-flex items-center rounded-md bg-neutral-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300" x-text="item.batch ? item.batch.batch_code : ''"></span>
+                            <span class="text-[11px] text-neutral-500" x-text="item.condition"></span>
+                        </div>
+                        <div class="app-list-card-extra text-xs text-neutral-500">Repair cost: <span class="font-mono" x-text="'₱' + Number(item.repair_cost).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span></div>
+                        <div class="mt-auto flex flex-wrap items-center gap-2 pt-1">
+                            <template x-if="item.triage_status === 'washing'">
+                                <button type="button" class="app-btn app-btn-secondary app-btn-sm flex-1" :disabled="triageBusy === item.id" @click="setTriage(item, 'under_repair')">To repair</button>
+                            </template>
+                            <template x-if="item.triage_status === 'under_repair'">
+                                <button type="button" class="app-btn app-btn-secondary app-btn-sm flex-1" :disabled="triageBusy === item.id" @click="setTriage(item, 'washing')">Back to wash</button>
+                            </template>
+                            <template x-if="item.triage_status !== 'available'">
+                                <button type="button" class="app-btn app-btn-emerald app-btn-sm" :disabled="triageBusy === item.id" @click="setTriage(item, 'available')">Mark ready</button>
+                            </template>
+                            <template x-if="item.triage_status === 'available'">
+                                <span class="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Ready</span>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+                <template x-if="triageItems.length === 0">
+                    <div class="col-span-full app-card"><div class="app-empty"><span class="text-xs font-medium">No pairs match your search or filter.</span></div></div>
+                </template>
+            </div>
+
+            <div class="app-list-table">
             <div class="app-scroll-x">
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200/80 dark:border-neutral-800 pb-2">
@@ -891,6 +931,7 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
             </div>
         </div>
     </div>
