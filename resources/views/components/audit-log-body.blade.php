@@ -6,7 +6,21 @@
         <span class="font-mono text-xs text-neutral-500">{{ $log->created_at->format('M d, Y g:i:s A') }}</span>
     </div>
 
-    <p class="leading-snug text-neutral-700 dark:text-neutral-200">{{ $log->sentence }}</p>
+    <div>
+        <div class="font-semibold text-neutral-900 dark:text-white">{{ $log->headline }}</div>
+        @if(count($log->chips))
+        <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+            @foreach($log->chips as $chip)
+                <span class="badge badge-neutral">{{ $chip }}</span>
+            @endforeach
+        </div>
+        @endif
+    </div>
+
+    <div>
+        <div class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 mb-1">Full description</div>
+        <p class="leading-snug text-neutral-700 dark:text-neutral-200">{{ $log->sentence }}</p>
+    </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div class="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#1C1C1E] p-3.5">

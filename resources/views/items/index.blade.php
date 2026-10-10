@@ -36,8 +36,69 @@
                          ['name' => 'triage', 'selected' => request('triage'), 'options' => ['' => 'All Stages', 'washing' => 'Washing', 'under_repair' => 'Under repair', 'available' => 'Ready']],
                      ]" />
 
+    {{-- Mobile list rows --}}
+    <div class="md:hidden space-y-2.5" data-tour="list">
+        @forelse($items as $item)
+        <div x-data="{ open: false }" class="app-card p-4">
+            <button type="button" @click="open = !open" class="w-full text-left">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $item->sku }}</span>
+                        <div class="mt-0.5 font-semibold text-neutral-800 dark:text-neutral-200 truncate">{{ $item->brand }} {{ $item->model }}</div>
+                        <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                            <x-status-badge kind="item" :value="$item->status" />
+                            @if($item->status === 'available')
+                                <x-status-badge kind="triage" :value="$item->triage_status" />
+                            @endif
+                            <span class="font-mono text-[11px] text-neutral-500">{{ $item->size }}</span>
+                        </div>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <div class="font-mono font-bold text-neutral-900 dark:text-white"><x-money :value="$item->listed_price" /></div>
+                        <svg :class="open && 'rotate-180'" class="w-4 h-4 ml-auto mt-1.5 text-neutral-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </div>
+            </button>
+            <div x-show="open" x-cloak class="mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800 space-y-2 text-sm">
+                <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">Condition</span><span class="text-neutral-700 dark:text-neutral-300">{{ $item->condition }}</span></div>
+                <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">Price tier</span><span class="text-neutral-500">{{ $item->price_tier }}</span></div>
+                @if($item->repair_cost)
+                <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">Repair cost</span><span class="font-mono text-neutral-700 dark:text-neutral-300"><x-money :value="$item->repair_cost" /></span></div>
+                @endif
+                <div class="flex flex-wrap items-center gap-2 pt-1">
+                    @if($item->status === 'available')
+                        <button type="button" class="app-btn app-btn-secondary app-btn-sm flex-1"
+                                @click="editItem = {{ Js::from([
+                                    'id' => $item->id, 'sku' => $item->sku, 'brand' => $item->brand, 'model' => $item->model,
+                                    'size' => $item->size, 'condition' => $item->condition, 'listed_price' => $item->listed_price,
+                                    'repair_cost' => $item->repair_cost, 'category' => $item->category, 'triage_status' => $item->triage_status,
+                                ]) }}">Edit</button>
+                        <form action="{{ route('items.destroy', $item) }}" method="POST">
+                            @csrf
+                            @method('DELETE')
+                            <button type="button" class="app-btn app-btn-sm app-btn-ghost"
+                                    data-confirm="Delete pair {{ $item->sku }}?"
+                                    data-confirm-message="The pair is removed from inventory. An Undo option appears right after."
+                                    data-confirm-variant="danger" data-confirm-icon="trash" data-confirm-label="Delete">Delete</button>
+                        </form>
+                    @elseif($item->status === 'sold' && ($soldOrder = $item->orders->whereIn('status', ['paid', 'fulfilled'])->sortByDesc('date_awarded')->first()))
+                        <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $soldOrder->id]) }}" class="app-btn app-btn-secondary app-btn-sm flex-1">View order</button>
+                    @elseif($item->status === 'reserved' && ($resOrder = $item->orders->where('status', 'reserved')->sortByDesc('date_awarded')->first()))
+                        <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $resOrder->id]) }}" class="app-btn app-btn-secondary app-btn-sm flex-1">View order</button>
+                    @endif
+                </div>
+            </div>
+        </div>
+        @empty
+        <div class="app-card"><div class="app-empty"><span class="text-xs font-medium">No inventory items match the current filters.</span></div></div>
+        @endforelse
+        @if($items->hasPages())
+        <div class="pt-1">{{ $items->links() }}</div>
+        @endif
+    </div>
+
     {{-- Table --}}
-    <div class="app-card" data-tour="list">
+    <div class="app-card hidden md:block" data-tour="list">
         <div class="app-scroll-x">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
@@ -57,7 +118,7 @@
                     @forelse($items as $item)
                     <tr class="app-row hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30">
                         <td class="py-3.5 px-4 font-mono font-bold text-[#0071E3] dark:text-[#0A84FF] whitespace-nowrap">{{ $item->sku }}</td>
-                        <td class="py-3.5 px-4 font-semibold text-neutral-800 dark:text-neutral-200">{{ $item->brand }} {{ $item->model }}</td>
+                        <td class="py-3.5 px-4"><x-cell :value="$item->brand.' '.$item->model" class="font-semibold text-neutral-800 dark:text-neutral-200" /></td>
                         <td class="py-3.5 px-4 font-mono text-neutral-600 dark:text-neutral-300">{{ $item->size }}</td>
                         <td class="py-3.5 px-4 text-neutral-600 dark:text-neutral-300">{{ $item->condition }}</td>
                         <td class="py-3.5 px-4 text-neutral-500">{{ $item->price_tier }}</td>

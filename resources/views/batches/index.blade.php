@@ -3,7 +3,7 @@
 @section('title', 'Batch Intake & Registry')
 
 @section('content')
-<div class="space-y-6" x-data="{ showIntakeModal: false, view: localStorage.getItem('shoeboy.batches.view') || 'cards', editingBatch: null, setView(v){ this.view = v; localStorage.setItem('shoeboy.batches.view', v); } }">
+<div class="space-y-6" x-data="{ showIntakeModal: false, view: localStorage.getItem('shoeboy.batches.view') || localStorage.getItem('shoeboy.view') || 'cards', editingBatch: null, setView(v){ this.view = v; localStorage.setItem('shoeboy.batches.view', v); } }">
 
     {{-- Page header --}}
     <div class="app-card p-5 lg:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -135,7 +135,7 @@
                             <span class="block font-mono font-bold text-[#1D1D1F] dark:text-white">{{ $batch->batch_code }}</span>
                             <span class="font-mono text-xs text-neutral-500">{{ $batch->date_acquired->format('M d, Y') }}</span>
                         </td>
-                        <td class="py-3.5 px-4 font-semibold text-neutral-800 dark:text-neutral-200">{{ $batch->supplier->name }}</td>
+                        <td class="py-3.5 px-4"><x-cell :value="$batch->supplier->name" class="font-semibold text-neutral-800 dark:text-neutral-200" /></td>
                         <td class="py-3.5 px-4 text-center font-mono text-neutral-600 dark:text-neutral-300">{{ $batch->items->count() }} / {{ $batch->total_pairs }}</td>
                         <td class="py-3.5 px-4 text-right font-mono font-bold text-neutral-800 dark:text-neutral-200">₱{{ number_format($batch->total_cost, 2) }}</td>
                         <td class="py-3.5 px-4 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">₱{{ number_format($batch->average_item_cost, 2) }}</td>
@@ -294,7 +294,7 @@
     {{-- Show the stored view (cards/table) before Alpine boots. --}}
     <script>
         (function () {
-            var view = localStorage.getItem('shoeboy.batches.view') || 'cards';
+            var view = localStorage.getItem('shoeboy.batches.view') || localStorage.getItem('shoeboy.view') || 'cards';
             document.querySelectorAll('[data-view-panel]').forEach(function (el) {
                 el.style.display = el.getAttribute('data-view-panel') === view ? '' : 'none';
             });

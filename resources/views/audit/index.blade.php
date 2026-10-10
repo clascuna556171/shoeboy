@@ -31,8 +31,38 @@
                          ]],
                      ]" />
 
+    {{-- Mobile list rows --}}
+    <div class="md:hidden space-y-2.5">
+        @forelse($logs as $log)
+        <div x-data="{ open: false }" class="app-card p-4">
+            <div class="flex items-center justify-between gap-2">
+                <span class="badge {{ $log->category_badge_class }}">{{ $log->category }}</span>
+                <span class="font-mono text-[11px] text-neutral-500">{{ $log->created_at->format('M d, g:i A') }}</span>
+            </div>
+            <button type="button" @click="open = !open" class="mt-2 w-full text-left">
+                <div class="font-medium text-neutral-800 dark:text-neutral-100">{{ $log->headline }}</div>
+                @if(count($log->chips))
+                <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                    @foreach($log->chips as $chip)<span class="badge badge-neutral">{{ $chip }}</span>@endforeach
+                </div>
+                @endif
+            </button>
+            <div x-show="open" x-cloak class="mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800 space-y-2 text-sm">
+                <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">Actor</span><span class="text-neutral-700 dark:text-neutral-300">{{ $log->user?->name ?? 'System' }}</span></div>
+                <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">IP</span><span class="font-mono text-neutral-700 dark:text-neutral-300">{{ $log->ip_address ?? '—' }}</span></div>
+                <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'audit', 'id' => $log->id]) }}" class="app-btn app-btn-secondary app-btn-sm w-full mt-1">Full details</button>
+            </div>
+        </div>
+        @empty
+        <div class="app-card"><div class="app-empty"><span class="text-xs font-medium">No audit entries match.</span></div></div>
+        @endforelse
+        @if($logs->hasPages())
+        <div class="pt-1">{{ $logs->links() }}</div>
+        @endif
+    </div>
+
     {{-- Table --}}
-    <div class="app-card">
+    <div class="app-card hidden md:block">
         <div class="app-scroll-x">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
@@ -52,8 +82,15 @@
                             <span class="block font-mono text-xs text-neutral-700 dark:text-neutral-200">{{ $log->created_at->format('M d, Y') }}</span>
                             <span class="text-[11px] text-neutral-500 font-mono">{{ $log->created_at->format('g:i:s A') }}</span>
                         </td>
-                        <td class="py-3.5 px-4 max-w-xl">
-                            <p class="leading-snug text-neutral-700 dark:text-neutral-200">{{ $log->sentence }}</p>
+                        <td class="py-3.5 px-4">
+                            <x-cell :value="$log->headline" class="font-medium text-neutral-800 dark:text-neutral-100" />
+                            @if(count($log->chips))
+                            <div class="mt-1 flex flex-wrap items-center gap-1.5">
+                                @foreach($log->chips as $chip)
+                                    <span class="badge badge-neutral">{{ $chip }}</span>
+                                @endforeach
+                            </div>
+                            @endif
                         </td>
                         <td class="py-3.5 px-4">
                             <span class="badge {{ $log->category_badge_class }}">{{ $log->category }}</span>

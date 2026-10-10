@@ -36,8 +36,48 @@
                          ['name' => 'category', 'selected' => $category, 'options' => ['' => 'All Categories'] + $categories->mapWithKeys(fn ($c) => [$c => $c])->all()],
                      ]" />
 
+    {{-- Mobile list rows --}}
+    <div class="md:hidden space-y-2.5" data-tour="list">
+        @forelse($expenses as $exp)
+        <div x-data="{ open: false }" class="app-card p-4">
+            <button type="button" @click="open = !open" class="w-full text-left">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <x-cell :value="$exp->description" class="font-semibold text-neutral-800 dark:text-neutral-200" />
+                        <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                            <span class="badge badge-neutral">{{ $exp->category }}</span>
+                            <span class="font-mono text-[11px] text-neutral-500">{{ $exp->date->format('M d, Y') }}</span>
+                        </div>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <div class="font-mono font-bold text-rose-600 dark:text-rose-400">−₱{{ number_format($exp->amount, 2) }}</div>
+                        <svg :class="open && 'rotate-180'" class="w-4 h-4 ml-auto mt-1.5 text-neutral-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </div>
+            </button>
+            <div x-show="open" x-cloak class="mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800 space-y-2 text-sm">
+                <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">Reference</span><span class="font-mono text-neutral-700 dark:text-neutral-300">{{ $exp->reference_no ?? '—' }}</span></div>
+                <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">Batch</span><span class="font-mono text-neutral-700 dark:text-neutral-300">{{ $exp->batch?->batch_code ?? 'General Overhead' }}</span></div>
+                <form action="{{ route('expenses.destroy', $exp->id) }}" method="POST" class="pt-1">
+                    @csrf
+                    @method('DELETE')
+                    <button type="button" class="app-btn app-btn-sm app-btn-ghost w-full"
+                            data-confirm="Delete this expense?" data-confirm-variant="danger"
+                            data-confirm-message="You can undo this right after from the notification toast."
+                            data-confirm-label="Delete">Delete expense</button>
+                </form>
+            </div>
+        </div>
+        @empty
+        <div class="app-card"><div class="app-empty"><span class="text-xs font-medium">No expenses recorded yet.</span></div></div>
+        @endforelse
+        @if($expenses->hasPages())
+        <div class="pt-1">{{ $expenses->links() }}</div>
+        @endif
+    </div>
+
     {{-- Table --}}
-    <div class="app-card" data-tour="list">
+    <div class="app-card hidden md:block" data-tour="list">
         <div class="app-scroll-x">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
@@ -58,8 +98,8 @@
                         <td class="py-3.5 px-4">
                             <span class="badge badge-neutral">{{ $exp->category }}</span>
                         </td>
-                        <td class="py-3.5 px-4 font-semibold text-neutral-800 dark:text-neutral-200">{{ $exp->description }}</td>
-                        <td class="py-3.5 px-4 font-mono text-neutral-500">{{ $exp->reference_no ?? '—' }}</td>
+                        <td class="py-3.5 px-4"><x-cell :value="$exp->description" class="font-semibold text-neutral-800 dark:text-neutral-200" /></td>
+                        <td class="py-3.5 px-4"><x-cell :value="$exp->reference_no ?? '—'" class="font-mono text-neutral-500" /></td>
                         <td class="py-3.5 px-4 font-mono text-neutral-500">{{ $exp->batch?->batch_code ?? 'General Overhead' }}</td>
                         <td class="py-3.5 px-4 text-right font-mono font-bold text-rose-600 dark:text-rose-400">−₱{{ number_format($exp->amount, 2) }}</td>
                         <td class="py-3.5 px-4 text-right">

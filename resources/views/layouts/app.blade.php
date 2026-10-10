@@ -6,6 +6,7 @@
           darkMode: false,
           density: localStorage.getItem('shoeboy.density') || 'compact',
           navMode: localStorage.getItem('shoeboy.nav') || 'top',
+          listView: localStorage.getItem('shoeboy.view') || 'cards',
           railCollapsed: localStorage.getItem('shoeboy.nav.collapsed') === '1',
           settingsOpen: false,
           mobileNav: false,
@@ -44,6 +45,7 @@
           },
           toggleTheme() { this.setTheme(this.darkMode ? 'light' : 'dark'); },
           setDensity(d) { this.density = d; localStorage.setItem('shoeboy.density', d); this.applyDensity(); },
+          setListView(v) { this.listView = v; localStorage.setItem('shoeboy.view', v); },
           applyDensity() { document.documentElement.setAttribute('data-density', this.density); },
           setNav(m) { this.navMode = m; localStorage.setItem('shoeboy.nav', m); this.applyNav(); },
           applyNav() {
@@ -534,6 +536,18 @@
                             class="app-btn app-btn-sm" :class="navMode === 'rail' ? 'app-btn-primary' : 'app-btn-secondary'">Left rail</button>
                 </div>
                 <p class="mt-1.5 text-[11px] text-neutral-500">The left rail can be collapsed from the menu header.</p>
+            </div>
+
+            {{-- Default list layout --}}
+            <div class="mt-6">
+                <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">List layout</div>
+                <div class="mt-2 grid grid-cols-2 gap-2">
+                    <button type="button" @click="setListView('cards')"
+                            class="app-btn app-btn-sm" :class="listView === 'cards' ? 'app-btn-primary' : 'app-btn-secondary'">Cards</button>
+                    <button type="button" @click="setListView('table')"
+                            class="app-btn app-btn-sm" :class="listView === 'table' ? 'app-btn-primary' : 'app-btn-secondary'">Table</button>
+                </div>
+                <p class="mt-1.5 text-[11px] text-neutral-500">Default for list pages. Phones always use list rows.</p>
             </div>
         </div>
     </div>

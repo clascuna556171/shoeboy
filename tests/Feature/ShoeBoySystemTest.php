@@ -754,7 +754,8 @@ class ShoeBoySystemTest extends TestCase
         ]);
 
         $this->assertEquals('Signed in', $log->description);
-        $this->assertStringContainsString('signed in', $log->sentence);
+        $this->assertStringContainsString('Signed in', $log->sentence);
+        $this->assertEquals('Signed in', $log->headline);
         $this->assertEquals('Role', $log->detail_items[0]['label']);
         $this->assertEquals('owner', $log->detail_items[0]['value']);
     }

@@ -3,7 +3,7 @@
 @section('title', 'Supplier Records')
 
 @section('content')
-<div class="space-y-6" x-data="{ showSupplierModal: false, view: localStorage.getItem('shoeboy.suppliers.view') || 'cards', editingSupplier: null, setView(v){ this.view = v; localStorage.setItem('shoeboy.suppliers.view', v); } }">
+<div class="space-y-6" x-data="{ showSupplierModal: false, view: localStorage.getItem('shoeboy.suppliers.view') || localStorage.getItem('shoeboy.view') || 'cards', editingSupplier: null, setView(v){ this.view = v; localStorage.setItem('shoeboy.suppliers.view', v); } }">
 
     {{-- Page header --}}
     <div class="app-card p-5 lg:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -208,7 +208,7 @@
     {{-- Show the stored view (cards/table) before Alpine boots. --}}
     <script>
         (function () {
-            var view = localStorage.getItem('shoeboy.suppliers.view') || 'cards';
+            var view = localStorage.getItem('shoeboy.suppliers.view') || localStorage.getItem('shoeboy.view') || 'cards';
             document.querySelectorAll('[data-view-panel]').forEach(function (el) {
                 el.style.display = el.getAttribute('data-view-panel') === view ? '' : 'none';
             });

@@ -253,41 +253,47 @@
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                         <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
                             <th class="py-3 px-4 font-semibold">Order</th>
-                            <th class="py-3 px-4 font-semibold">Date</th>
+                            <th class="py-3 px-4 font-semibold">Item</th>
                             <th class="py-3 px-4 font-semibold">Channel</th>
-                            <th class="py-3 px-4 font-semibold">SKU</th>
-                            <th class="py-3 px-4 font-semibold">Brand &amp; Model</th>
-                            <th class="py-3 px-4 font-semibold">Size</th>
                             <th class="py-3 px-4 font-semibold text-right">Price</th>
                             <th class="py-3 px-4 font-semibold text-right">Profit</th>
                             <th class="py-3 px-4 font-semibold">Customer</th>
-                            <th class="py-3 px-4 font-semibold">Payment</th>
-                            <th class="py-3 px-4 font-semibold">Staff</th>
+                            <th class="py-3 px-4 font-semibold">Settlement</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800/60">
                         @forelse($salesLedger as $s)
                         <tr class="app-row hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30">
-                            <td class="py-3.5 px-4 font-mono font-semibold text-[#0071E3] dark:text-[#0A84FF] whitespace-nowrap">{{ $s['order_number'] }}</td>
-                            <td class="py-3.5 px-4 text-neutral-600 dark:text-neutral-400 whitespace-nowrap">{{ $s['date'] }}</td>
+                            <td class="py-3.5 px-4">
+                                <span class="block font-mono font-semibold text-[#0071E3] dark:text-[#0A84FF] whitespace-nowrap">{{ $s['order_number'] }}</span>
+                                <span class="text-[11px] text-neutral-500 whitespace-nowrap">{{ $s['date'] }}</span>
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-mono text-xs text-neutral-500 whitespace-nowrap">{{ $s['sku'] }}</span>
+                                    <x-cell :value="$s['brand_model']" class="font-semibold text-neutral-800 dark:text-neutral-200" />
+                                </div>
+                                <span class="mt-0.5 block font-mono text-[11px] text-neutral-500">{{ $s['size'] }}</span>
+                            </td>
                             <td class="py-3.5 px-4 whitespace-nowrap"><span class="badge {{ $s['channel'] === 'Live Stream' ? 'badge-live' : 'badge-pos' }}">{{ $s['channel'] }}</span></td>
-                            <td class="py-3.5 px-4 font-mono whitespace-nowrap">{{ $s['sku'] }}</td>
-                            <td class="py-3.5 px-4 font-semibold text-neutral-800 dark:text-neutral-200">{{ $s['brand_model'] }}</td>
-                            <td class="py-3.5 px-4 font-mono">{{ $s['size'] }}</td>
                             <td class="py-3.5 px-4 text-right font-mono font-bold"><x-money :value="$s['awarded_price']" /></td>
                             <td class="py-3.5 px-4 text-right font-mono font-bold {{ $s['unit_profit'] >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500' }}">{{ $s['unit_profit'] >= 0 ? '+' : '−' }}₱{{ number_format(abs($s['unit_profit']), 2) }}</td>
-                            <td class="py-3.5 px-4 text-neutral-600 dark:text-neutral-400">{{ $s['customer'] }}</td>
-                            <td class="py-3.5 px-4 whitespace-nowrap">
-                                <span class="badge {{ strtolower($s['payment_method']) === 'gcash' ? 'badge-gcash' : 'badge-cash' }}">{{ $s['payment_method'] }}</span>
-                                @if($s['payment_ref'])
-                                    <span class="block mt-1 text-[11px] font-mono text-neutral-400 truncate max-w-[10rem]" title="{{ $s['payment_ref'] }}">{{ $s['payment_ref'] }}</span>
-                                @endif
+                            <td class="py-3.5 px-4">
+                                <x-cell :value="$s['customer']" class="text-neutral-700 dark:text-neutral-300" />
                             </td>
-                            <td class="py-3.5 px-4 text-neutral-600 dark:text-neutral-400">{{ $s['staff'] }}</td>
+                            <td class="py-3.5 px-4">
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    <span class="badge {{ strtolower($s['payment_method']) === 'gcash' ? 'badge-gcash' : 'badge-cash' }}">{{ $s['payment_method'] }}</span>
+                                    @if($s['payment_ref'])
+                                        <x-cell :value="$s['payment_ref']" class="font-mono text-[11px] text-neutral-500 dark:text-neutral-400" />
+                                    @endif
+                                </div>
+                                <x-cell :value="$s['staff']" muted class="mt-0.5 text-[11px]" />
+                            </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="11">
+                            <td colspan="7">
                                 <div class="app-empty">
                                     <svg class="w-8 h-8 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                                     <span class="text-xs font-medium">No individual sales match the date range.</span>
@@ -299,10 +305,10 @@
                     @if(count($salesLedger))
                     <tfoot class="border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-800/30">
                         <tr>
-                            <td colspan="6" class="py-3 px-4 text-right text-xs font-semibold uppercase tracking-wider text-neutral-500">Totals — {{ count($salesLedger) }} {{ count($salesLedger) === 1 ? 'pair' : 'pairs' }}</td>
+                            <td colspan="3" class="py-3 px-4 text-right text-xs font-semibold uppercase tracking-wider text-neutral-500">Totals — {{ count($salesLedger) }} {{ count($salesLedger) === 1 ? 'pair' : 'pairs' }}</td>
                             <td class="py-3 px-4 text-right font-mono font-bold">₱{{ number_format($salesGross, 2) }}</td>
                             <td class="py-3 px-4 text-right font-mono font-bold {{ $salesProfit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500' }}">{{ $salesProfit >= 0 ? '+' : '−' }}₱{{ number_format(abs($salesProfit), 2) }}</td>
-                            <td colspan="3"></td>
+                            <td colspan="2"></td>
                         </tr>
                     </tfoot>
                     @endif

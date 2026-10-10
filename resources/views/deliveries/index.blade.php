@@ -29,8 +29,89 @@
                          ['name' => 'method', 'selected' => request('method'), 'options' => ['' => 'All Methods', 'pickup' => 'Pickup', 'jnt_delivery' => 'J&T']],
                      ]" />
 
+    {{-- Mobile list rows --}}
+    <div class="md:hidden space-y-2.5" data-tour="list">
+        @forelse($deliveries as $del)
+        <div x-data="{
+                open: false,
+                orig: { method: @js($del->method), tracking: @js($del->tracking_number), status: @js($del->status) },
+                method: @js($del->method),
+                tracking: @js($del->tracking_number),
+                status: @js($del->status),
+                get changed() { return this.method !== this.orig.method || this.tracking !== this.orig.tracking || this.status !== this.orig.status; }
+            }"
+            class="app-card p-4" :class="changed ? 'ring-2 ring-amber-300 dark:ring-amber-800' : ''">
+            <button type="button" @click="open = !open" class="w-full text-left">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $del->order->order_number }}</span>
+                        <div class="mt-0.5 font-semibold text-neutral-800 dark:text-neutral-200 truncate">{{ $del->order->customer->display_handle }}</div>
+                        <div class="mt-1.5 flex flex-wrap items-center gap-1.5">
+                            <x-status-badge kind="method" :value="$del->method" />
+                            <x-status-badge kind="delivery" :value="$del->status" />
+                        </div>
+                    </div>
+                    <svg :class="open && 'rotate-180'" class="w-4 h-4 mt-1 text-neutral-400 shrink-0 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+            </button>
+            <div x-show="open" x-cloak class="mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800 space-y-2 text-sm">
+                <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">Ordered</span><span class="text-neutral-700 dark:text-neutral-300">{{ $del->order->date_awarded?->format('M d, Y H:i') }}</span></div>
+                @if($del->order->customer->phone)
+                <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">Phone</span><span class="font-mono text-neutral-700 dark:text-neutral-300">{{ $del->order->customer->phone }}</span></div>
+                @endif
+                @if($del->order->customer->shipping_address)
+                <div class="flex items-start justify-between gap-3"><span class="text-neutral-500 shrink-0">Address</span><span class="text-right text-neutral-700 dark:text-neutral-300">{{ $del->order->customer->shipping_address }}</span></div>
+                @endif
+                <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">Tracking</span><span class="font-mono text-neutral-700 dark:text-neutral-300 truncate">{{ $del->tracking_number ?? '—' }}</span></div>
+
+                @if($del->status === 'completed')
+                    <div class="flex items-center justify-center gap-1.5 rounded-lg border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/60 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 text-xs font-semibold py-2 mt-1">
+                        Completed &amp; locked
+                    </div>
+                @else
+                    <form action="{{ route('deliveries.update', $del->id) }}" method="POST"
+                          @submit.prevent="status === 'completed'
+                              ? $store.dialog.show({ variant: 'success', icon: 'truck', title: 'Complete this delivery?', message: 'Marking as completed is permanent and cannot be undone. The order will be marked as fulfilled.', confirmLabel: 'Complete permanently' }).then(ok => ok && $el.submit())
+                              : (window.appLoading.start($event.submitter), $el.submit())"
+                          class="space-y-2.5 pt-1">
+                        @csrf
+                        @method('PUT')
+                        <div>
+                            <label class="app-label">Method</label>
+                            <select name="method" x-model="method" @change="if (method === 'pickup') tracking = null" class="app-select">
+                                <option value="pickup">Pickup</option>
+                                <option value="jnt_delivery">J&amp;T</option>
+                            </select>
+                        </div>
+                        <div x-show="method === 'jnt_delivery'">
+                            <label class="app-label">Tracking / Waybill</label>
+                            <input type="text" name="tracking_number" x-model="tracking" maxlength="40" class="app-input font-mono"
+                                   :required="method === 'jnt_delivery' && status !== 'pending'"
+                                   :placeholder="status === 'pending' ? 'Optional while pending' : 'Tracking / waybill #'">
+                        </div>
+                        <div>
+                            <label class="app-label">Status</label>
+                            <select name="status" x-model="status" class="app-select">
+                                <option value="pending">Pending</option>
+                                <option value="shipped">Shipped</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        <button type="submit" :disabled="!changed" class="app-btn app-btn-primary w-full">Save</button>
+                    </form>
+                @endif
+            </div>
+        </div>
+        @empty
+        <div class="app-card"><div class="app-empty"><span class="text-xs font-medium">No deliveries found.</span></div></div>
+        @endforelse
+        @if($deliveries->hasPages())
+        <div class="pt-1">{{ $deliveries->links() }}</div>
+        @endif
+    </div>
+
     {{-- Table --}}
-    <div class="app-card" data-tour="list">
+    <div class="app-card hidden md:block" data-tour="list">
         <div class="app-scroll-x">
             <table class="w-full text-left text-sm">
                 <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
