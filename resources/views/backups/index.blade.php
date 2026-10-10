@@ -12,7 +12,7 @@
             <h1 class="text-xl md:text-2xl font-bold tracking-tight text-[#1D1D1F] dark:text-white mt-0.5">Data Backup &amp; Recovery</h1>
             <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">Keep local copies of the database and restore the business data whenever needed.</p>
         </div>
-        <div data-tour="primary" class="flex flex-wrap items-center gap-2 shrink-0">
+        <div data-tour="primary" class="flex flex-nowrap items-center gap-2 shrink-0">
             <a href="{{ route('backups.download') }}"
                class="app-btn app-btn-secondary">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>

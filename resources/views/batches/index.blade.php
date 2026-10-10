@@ -38,7 +38,7 @@
     {{-- Cards (phones + desktop when List layout = cards) --}}
     <div class="app-list-cards md:grid-cols-2 lg:grid-cols-3" data-tour="list">
         @forelse($batches as $batch)
-        <div class="app-card app-card-hover p-5 flex flex-col justify-between gap-5 group">
+        <div class="app-card app-list-card app-card-hover flex flex-col justify-between gap-5 group">
             <div class="space-y-3">
                 <div class="flex items-start justify-between">
                     <div>

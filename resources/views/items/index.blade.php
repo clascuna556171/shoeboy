@@ -13,7 +13,7 @@
                 <h1 class="text-xl md:text-2xl font-bold tracking-tight text-[#1D1D1F] dark:text-white mt-0.5">Footwear Inventory Units</h1>
                 </div>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-nowrap items-center gap-2 overflow-x-auto max-w-full">
             <x-header-counts class="mr-1" :counts="[
                 ['label' => 'Available', 'value' => $availableCount, 'tone' => 'emerald'],
                 ['label' => 'Reserved', 'value' => $reservedCount, 'tone' => 'amber'],

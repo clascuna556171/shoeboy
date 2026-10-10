@@ -38,7 +38,7 @@
     {{-- Cards (phones + desktop when List layout = cards) --}}
     <div class="app-list-cards md:grid-cols-2 lg:grid-cols-3" data-tour="list">
         @forelse($suppliers as $sup)
-        <div class="app-card app-card-hover p-5 flex flex-col justify-between gap-4">
+        <div class="app-card app-list-card app-card-hover flex flex-col justify-between gap-4">
             <div class="space-y-3">
                 <div class="flex items-start justify-between gap-2">
                     <div class="flex items-center gap-3 min-w-0">

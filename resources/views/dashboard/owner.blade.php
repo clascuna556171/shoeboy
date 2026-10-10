@@ -28,7 +28,7 @@
 
 
         {{-- Header Actions --}}
-        <div class="flex flex-wrap items-center gap-2 shrink-0">
+        <div class="flex flex-nowrap items-center gap-2 shrink-0 overflow-x-auto max-w-full">
 
             <a href="{{ route('reports.index') }}"
                title="Open financial and profitability reports"
