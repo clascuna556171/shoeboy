@@ -68,6 +68,24 @@ class BackupServiceTest extends TestCase
         $this->assertContains(basename($path), $names);
     }
 
+    public function test_sqlite_driver_is_file_based_and_creates_a_file_snapshot(): void
+    {
+        $service = app(BackupService::class);
+
+        $this->assertTrue($service->isFileBased());
+        $this->assertSame('sqlite', $service->driver());
+
+        // Point the connection at a real file so the copy path is exercised.
+        $dbFile = $this->makeSqliteFile();
+        config(['database.connections.sqlite.database' => $dbFile]);
+
+        $path = $service->create();
+        $this->assertNotNull($path);
+        $this->created[] = $path;
+        $this->assertFileExists($path);
+        $this->assertStringEndsWith('.sqlite', $path);
+    }
+
     private function makeSqliteFile(): string
     {
         $path = app(BackupService::class)->directory().DIRECTORY_SEPARATOR.'test_'.uniqid().'.sqlite';

@@ -8,6 +8,7 @@ use App\Models\Order;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Process;
 
 /**
  * Local, file-based backup & restore for the SQLite database.
@@ -32,12 +33,63 @@ class BackupService
         return $dir;
     }
 
-    /** Absolute path to the active database file. */
+    /** Absolute path to the active database file (SQLite only). */
     public function databasePath(): string
     {
         $connection = config('database.default');
 
         return (string) (config("database.connections.{$connection}.database") ?: database_path('database.sqlite'));
+    }
+
+    /** Active database driver (sqlite, pgsql, mysql, ...). */
+    public function driver(): string
+    {
+        return (string) config('database.default');
+    }
+
+    /** Whether backups are a straight copy of a local database file. */
+    public function isFileBased(): bool
+    {
+        return $this->driver() === 'sqlite';
+    }
+
+    /** Stored backup file extensions for the active driver. */
+    protected function extensions(): array
+    {
+        return $this->isFileBased() ? ['*.sqlite'] : ['*.sql', '*.dump'];
+    }
+
+    /** Connection string / URL used to hand off to a dump utility. */
+    protected function connectionUrl(): ?string
+    {
+        $conn = config('database.connections.'.$this->driver(), []);
+
+        if (! empty($conn['url'])) {
+            return $conn['url'];
+        }
+
+        $host = $conn['host'] ?? '127.0.0.1';
+        $port = $conn['port'] ?? ($this->driver() === 'pgsql' ? 5432 : 3306);
+        $database = $conn['database'] ?? '';
+        $user = $conn['username'] ?? '';
+        $pass = $conn['password'] ?? '';
+        $scheme = $this->driver() === 'pgsql' ? 'postgresql' : 'mysql';
+
+        if ($database === '' || $host === '') {
+            return null;
+        }
+
+        return sprintf('%s://%s:%s@%s:%s/%s', $scheme, urlencode((string) $user), urlencode((string) $pass), $host, $port, $database);
+    }
+
+    /** Whether a required CLI utility is callable. */
+    protected function binaryAvailable(string $binary): bool
+    {
+        try {
+            return Process::timeout(5)->run([$binary, '--version'])->successful();
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     /** Whether any business records exist yet (used to nudge an import). */
@@ -48,8 +100,16 @@ class BackupService
             && Batch::query()->count() === 0;
     }
 
-    /** Create a snapshot copy of the current database. Returns the path or null. */
+    /** Create a snapshot of the current database. Returns the path or null. */
     public function create(?string $prefix = null): ?string
+    {
+        return $this->isFileBased()
+            ? $this->createFromFile($prefix)
+            : $this->createFromDump($prefix);
+    }
+
+    /** SQLite: a straight copy of the database file. */
+    protected function createFromFile(?string $prefix): ?string
     {
         $database = $this->databasePath();
 
@@ -74,13 +134,62 @@ class BackupService
     }
 
     /**
+     * PostgreSQL/MySQL: shell out to pg_dump/mysqldump. Returns null when the
+     * utility is not installed in the runtime (e.g. a slim container) so the UI
+     * can report gracefully rather than pretending a backup happened.
+     */
+    protected function createFromDump(?string $prefix): ?string
+    {
+        $binary = $this->driver() === 'pgsql' ? 'pg_dump' : 'mysqldump';
+        $url = $this->connectionUrl();
+
+        if (! $url || ! $this->binaryAvailable($binary)) {
+            return null;
+        }
+
+        $stamp = now()->format('Ymd_His');
+        $name = 'shoeboy_backup_'.$stamp.($prefix ? "_{$prefix}" : '').'.sql';
+        $target = $this->directory().DIRECTORY_SEPARATOR.$name;
+
+        try {
+            $command = $this->driver() === 'pgsql'
+                ? [$binary, '--dbname='.$url, '--file='.$target, '--no-owner', '--no-privileges']
+                : [$binary, '--result-file='.$target, $url];
+
+            $result = Process::timeout(180)->run($command);
+
+            if (! $result->successful() || ! File::exists($target) || filesize($target) === 0) {
+                File::delete($target);
+
+                return null;
+            }
+        } catch (\Throwable $e) {
+            File::delete($target);
+
+            return null;
+        }
+
+        AuditService::log('system_backup_created', null, [
+            'file' => $name,
+            'size_bytes' => filesize($target),
+        ]);
+
+        $this->prune();
+
+        return $target;
+    }
+
+    /**
      * All backups, newest first.
      *
      * @return array<int, array{name: string, path: string, size: int, modified: int}>
      */
     public function all(): array
     {
-        $files = File::glob($this->directory().DIRECTORY_SEPARATOR.'*.sqlite') ?: [];
+        $files = [];
+        foreach ($this->extensions() as $pattern) {
+            $files = array_merge($files, File::glob($this->directory().DIRECTORY_SEPARATOR.$pattern) ?: []);
+        }
 
         usort($files, fn ($a, $b) => filemtime($b) <=> filemtime($a));
 
@@ -147,6 +256,12 @@ class BackupService
      */
     public function restore(string $sourcePath, string $auditName): bool
     {
+        if (! $this->isFileBased()) {
+            // Restoring a SQL dump in-process is destructive and platform
+            // specific; cloud restores go through the host's database tooling.
+            return false;
+        }
+
         if (! $this->isValidSqlite($sourcePath)) {
             return false;
         }
@@ -236,7 +351,10 @@ class BackupService
 
     protected function pruneDir(string $dir, int $keep): void
     {
-        $files = File::glob($dir.DIRECTORY_SEPARATOR.'*.sqlite') ?: [];
+        $files = [];
+        foreach ($this->extensions() as $pattern) {
+            $files = array_merge($files, File::glob($dir.DIRECTORY_SEPARATOR.$pattern) ?: []);
+        }
 
         if (count($files) <= $keep) {
             return;

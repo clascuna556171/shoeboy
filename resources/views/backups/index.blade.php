@@ -28,7 +28,7 @@
         </div>
     </div>
 
-    @if($isEmpty)
+    @if($isEmpty && $isFileBased)
     {{-- Empty install: nudge an import --}}
     <div class="app-card p-6 border-2 border-dashed border-emerald-300 dark:border-emerald-900/60 bg-emerald-50/40 dark:bg-emerald-950/10">
         <div class="flex items-start gap-4">
@@ -43,6 +43,7 @@
     </div>
     @endif
 
+    @if($isFileBased)
     {{-- Import / restore from file --}}
     <div class="app-card p-5 lg:p-6">
         <h2 class="font-bold text-base text-[#1D1D1F] dark:text-white">Restore / Import a backup</h2>
@@ -64,6 +65,12 @@
             </button>
         </form>
     </div>
+    @else
+    <div class="app-card p-5 lg:p-6">
+        <h2 class="font-bold text-base text-[#1D1D1F] dark:text-white">Restore a backup</h2>
+        <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-0.5">This installation runs on a server database, so snapshots are <span class="font-mono">.sql</span> dumps created with <span class="font-mono">pg_dump</span>. Restore them using your database host (for example <span class="font-mono">psql</span>, or your platform's restore tool).</p>
+    </div>
+    @endif
 
     {{-- Stored backups --}}
     <div class="app-card" data-tour="list">

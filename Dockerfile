@@ -27,6 +27,10 @@ WORKDIR /var/www/html
 USER root
 RUN mkdir -p /var/www/html && chown -R www-data:www-data /var/www/html
 
+# Postgres client tools so the app can create pg_dump backups at runtime.
+RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
 # Switch to unprivileged user to run Composer
 USER www-data
 

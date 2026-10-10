@@ -17,6 +17,7 @@ class BackupController extends Controller
         return view('backups.index', [
             'backups' => $this->backups->all(),
             'isEmpty' => $this->backups->isEmpty(),
+            'isFileBased' => $this->backups->isFileBased(),
         ]);
     }
 
@@ -27,12 +28,21 @@ class BackupController extends Controller
 
         return $path
             ? back()->with('success', 'Backup created: '.basename($path))
-            : back()->with('error', 'No database file was found to back up.');
+            : back()->with('error', $this->backups->isFileBased()
+                ? 'No database file was found to back up.'
+                : 'Could not create a database dump. Ensure pg_dump/mysqldump is available in the runtime.');
     }
 
     /** Download a snapshot of the live database (export). */
     public function downloadCurrent(): BinaryFileResponse
     {
+        if (! $this->backups->isFileBased()) {
+            $path = $this->backups->create('export');
+            abort_unless($path, 404);
+
+            return response()->download($path, basename($path));
+        }
+
         $database = $this->backups->databasePath();
         abort_unless(file_exists($database), 404);
 
@@ -54,6 +64,10 @@ class BackupController extends Controller
         $path = $this->backups->find($file);
         abort_unless($path, 404);
 
+        if (! $this->backups->isFileBased()) {
+            return back()->with('error', 'In-app restore is only supported for SQLite. Restore the SQL dump using your database host (psql, or the platform\'s restore tool).');
+        }
+
         if (! $this->backups->restore($path, basename($path))) {
             return back()->with('error', 'That backup could not be restored — it is not a valid SQLite database.');
         }
@@ -72,6 +86,10 @@ class BackupController extends Controller
         ]);
 
         $file = $request->file('backup');
+
+        if (! $this->backups->isFileBased()) {
+            return back()->with('error', 'Importing a .sqlite file is only available when the app runs on SQLite.');
+        }
 
         if (! $this->backups->isValidSqlite($file->getRealPath())) {
             return back()->with('error', 'That file is not a valid SQLite database backup.');
