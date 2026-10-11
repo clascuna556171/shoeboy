@@ -63,25 +63,54 @@
                     <span class="badge badge-neutral shrink-0">Totals</span>
                 </div>
 
-                <div class="mt-4 divide-y divide-neutral-100 dark:divide-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
-                    <div class="flex items-center justify-between gap-3 px-3 py-2.5">
-                        <span class="text-xs font-medium text-neutral-500">Gross Sales</span>
+                {{-- Desktop: card equation --}}
+                <div class="mt-4 hidden xl:flex flex-col items-stretch gap-2 xl:flex-row xl:items-center">
+                    <div class="flex-1 min-w-0 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-800/30 p-3">
+                        <div class="text-xs font-medium uppercase tracking-wider text-neutral-500">Gross Sales</div>
+                        <x-money :value="$metrics['total_revenue']" class="mt-1 block font-mono text-lg font-bold text-[#1D1D1F] dark:text-white" />
+                    </div>
+                    <div class="self-center font-mono text-lg text-neutral-500 dark:text-neutral-400">−</div>
+                    <div class="flex-1 min-w-0 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-800/30 p-3">
+                        <div class="text-xs font-medium uppercase tracking-wider text-neutral-500">Allocated COGS</div>
+                        <x-money :value="$metrics['total_cogs']" class="mt-1 block font-mono text-lg font-bold text-neutral-800 dark:text-neutral-200" />
+                    </div>
+                    <div class="self-center font-mono text-lg text-neutral-500 dark:text-neutral-400">=</div>
+                    <div class="flex-1 min-w-0 rounded-xl border border-emerald-200/70 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 p-3">
+                        <div class="text-xs font-medium uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Gross Profit</div>
+                        <x-money :value="$metrics['gross_profit']" class="mt-1 block font-mono text-lg font-bold text-emerald-700 dark:text-emerald-300" />
+                    </div>
+                    <div class="self-center font-mono text-lg text-neutral-500 dark:text-neutral-400">−</div>
+                    <div class="flex-1 min-w-0 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-800/30 p-3">
+                        <div class="text-xs font-medium uppercase tracking-wider text-neutral-500">Store Expenses</div>
+                        <x-money :value="$metrics['total_expenses']" class="mt-1 block font-mono text-lg font-bold text-rose-600 dark:text-rose-400" />
+                    </div>
+                </div>
+
+                {{-- Mobile/tablet: aligned compact equation --}}
+                <div class="mt-4 xl:hidden divide-y divide-neutral-100 dark:divide-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
+                    <div class="flex items-center gap-2.5 px-3 py-2.5">
+                        <span class="w-4 shrink-0 text-center font-mono text-sm text-transparent">+</span>
+                        <span class="flex-1 text-xs font-medium text-neutral-500">Gross Sales</span>
                         <x-money :value="$metrics['total_revenue']" class="font-mono text-sm font-bold text-[#1D1D1F] dark:text-white" />
                     </div>
-                    <div class="flex items-center justify-between gap-3 px-3 py-2.5">
-                        <span class="text-xs font-medium text-neutral-500">− Allocated COGS</span>
+                    <div class="flex items-center gap-2.5 px-3 py-2.5">
+                        <span class="w-4 shrink-0 text-center font-mono text-sm text-neutral-400">−</span>
+                        <span class="flex-1 text-xs font-medium text-neutral-500">Allocated COGS</span>
                         <x-money :value="$metrics['total_cogs']" class="font-mono text-sm font-bold text-neutral-800 dark:text-neutral-200" />
                     </div>
-                    <div class="flex items-center justify-between gap-3 px-3 py-2.5 bg-emerald-50/40 dark:bg-emerald-950/10">
-                        <span class="text-xs font-medium text-emerald-700 dark:text-emerald-400">= Gross Profit</span>
+                    <div class="flex items-center gap-2.5 px-3 py-2.5 bg-emerald-50/40 dark:bg-emerald-950/10">
+                        <span class="w-4 shrink-0 text-center font-mono text-sm text-emerald-600 dark:text-emerald-400">=</span>
+                        <span class="flex-1 text-xs font-medium text-emerald-700 dark:text-emerald-400">Gross Profit</span>
                         <x-money :value="$metrics['gross_profit']" class="font-mono text-sm font-bold text-emerald-700 dark:text-emerald-300" />
                     </div>
-                    <div class="flex items-center justify-between gap-3 px-3 py-2.5">
-                        <span class="text-xs font-medium text-neutral-500">− Store Expenses</span>
+                    <div class="flex items-center gap-2.5 px-3 py-2.5">
+                        <span class="w-4 shrink-0 text-center font-mono text-sm text-neutral-400">−</span>
+                        <span class="flex-1 text-xs font-medium text-neutral-500">Store Expenses</span>
                         <x-money :value="$metrics['total_expenses']" class="font-mono text-sm font-bold text-rose-600 dark:text-rose-400" />
                     </div>
-                    <div class="flex items-center justify-between gap-3 px-3 py-2.5 bg-neutral-50 dark:bg-neutral-800/40">
-                        <span class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Net Balance</span>
+                    <div class="flex items-center gap-2.5 px-3 py-2.5 bg-neutral-50 dark:bg-neutral-800/40">
+                        <span class="w-4 shrink-0 text-center font-mono text-sm {{ $netPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400' }}">=</span>
+                        <span class="flex-1 text-xs font-semibold uppercase tracking-wider text-neutral-500">Net Balance</span>
                         <span class="font-mono text-base font-bold {{ $netPositive ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400' }}">{{ $net < 0 ? '−' : '' }}₱{{ number_format(abs($net), 2) }}</span>
                     </div>
                 </div>
@@ -304,6 +333,13 @@
         @php($salesGross = collect($salesLedger)->sum('awarded_price'))
         @php($salesProfit = collect($salesLedger)->sum('unit_profit'))
         <div x-show="reportTab === 'sales'" x-cloak>
+            <div class="flex flex-wrap items-center justify-between gap-3 p-4 pb-0 text-xs">
+                <span class="font-semibold uppercase tracking-wider text-neutral-500">Totals — {{ count($salesLedger) }} {{ count($salesLedger) === 1 ? 'pair' : 'pairs' }}</span>
+                <span class="flex items-center gap-4">
+                    <span class="text-neutral-500">Gross <strong class="font-mono text-neutral-900 dark:text-white">₱{{ number_format($salesGross, 2) }}</strong></span>
+                    <span class="text-neutral-500">Profit <strong class="font-mono {{ $salesProfit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500' }}">{{ $salesProfit >= 0 ? '+' : '−' }}₱{{ number_format(abs($salesProfit), 2) }}</strong></span>
+                </span>
+            </div>
             <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3 p-4">
                 @forelse($salesLedger as $s)
                 <div class="app-card app-list-card app-card-hover flex flex-col gap-2.5">
@@ -406,6 +442,10 @@
         {{-- Expenses ledger --}}
         @php($expenseTotal = collect($expenseLedger)->sum('amount'))
         <div x-show="reportTab === 'expenses'" x-cloak>
+            <div class="flex flex-wrap items-center justify-between gap-3 p-4 pb-0 text-xs">
+                <span class="font-semibold uppercase tracking-wider text-neutral-500">Total — {{ count($expenseLedger) }} {{ count($expenseLedger) === 1 ? 'entry' : 'entries' }}</span>
+                <span class="font-mono font-bold text-rose-500">₱{{ number_format($expenseTotal, 2) }}</span>
+            </div>
             <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3 p-4">
                 @forelse($expenseLedger as $e)
                 <div class="app-card app-list-card app-card-hover flex flex-col gap-2.5">

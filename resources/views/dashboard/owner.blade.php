@@ -557,7 +557,16 @@
             $totalProfit = collect($batchSummaries)->sum('order_profit_sum');
         @endphp
 
-        {{-- Cards (phones + desktop when List layout = cards) --}}
+        {{-- Mobile totals (the table carries its own tfoot) --}}
+        <div class="md:hidden flex flex-wrap items-center justify-between gap-3 px-5 lg:px-6 pb-2 text-xs">
+            <span class="font-semibold uppercase tracking-wider text-neutral-500">Totals</span>
+            <span class="flex items-center gap-4">
+                <span class="text-neutral-500">Sales <strong class="font-mono text-neutral-900 dark:text-white"><x-money :value="$totalSales" /></strong></span>
+                <span class="text-neutral-500">Profit <strong class="font-mono text-emerald-600 dark:text-emerald-400">+₱{{ number_format($totalProfit, 2) }}</strong></span>
+            </span>
+        </div>
+
+        {{-- Cards (phones) --}}
         <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3 p-5 lg:p-6 pt-0">
             @foreach($batchSummaries as $batch)
             <div class="app-card app-list-card app-card-hover flex flex-col gap-3">

@@ -247,6 +247,7 @@
 
     <header
             @keydown.escape.window="mobileNav = false"
+            @tour:nav.window="mobileNav = $event.detail.open"
             x-effect="mobileNav ? window.appScrollLock?.lock() : window.appScrollLock?.unlock()"
             class="sticky top-0 z-40 w-full apple-glass border-b border-[#E5E5EA] dark:border-[#2C2C2E] px-4 lg:px-6 py-2.5 transition-colors duration-200">
         <div class="max-w-[1720px] mx-auto flex items-center justify-between gap-4">
@@ -334,7 +335,7 @@
                         <div class="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-neutral-400">{{ $group }}</div>
                         <div class="space-y-0.5">
                             @foreach($items as $item)
-                            <a href="{{ route($item['route']) }}" @click="mobileNav = false"
+                            <a href="{{ route($item['route']) }}" data-tour="{{ $navTour[$item['route']] ?? '' }}" @click="mobileNav = false"
                                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors {{ request()->routeIs($item['pattern']) ? 'bg-neutral-900 text-white font-semibold dark:bg-white dark:text-neutral-900' : 'text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800' }}">
                                 <svg class="w-4 h-4 {{ request()->routeIs($item['pattern']) ? '' : $item['tint'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/></svg>
                                 <span>{{ $item['label'] }}</span>

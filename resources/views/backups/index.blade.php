@@ -79,6 +79,23 @@
             <p class="text-xs text-neutral-500 mt-0.5">{{ count($backups) }} snapshot(s) on this device. The most recent {{ \App\Services\BackupService::MAX_BACKUPS }} are kept automatically.</p>
         </div>
 
+        <form method="GET" action="{{ route('backups.index') }}" class="mb-4 flex flex-wrap items-center gap-2">
+            <div class="relative flex-1 min-w-[8rem]">
+                <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-500">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </span>
+                <input type="text" name="search" value="{{ $search }}" placeholder="Search backup filename..."
+                       class="app-input app-input-sm pl-9">
+            </div>
+            <select name="sort" class="app-select app-input-sm !w-auto shrink-0">
+                <option value="newest" @selected($sort === 'newest')>Newest</option>
+                <option value="oldest" @selected($sort === 'oldest')>Oldest</option>
+                <option value="largest" @selected($sort === 'largest')>Largest</option>
+                <option value="smallest" @selected($sort === 'smallest')>Smallest</option>
+            </select>
+            <button type="submit" class="app-btn app-btn-primary app-btn-sm shrink-0">Apply</button>
+        </form>
+
         <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3">
             @forelse($backups as $b)
             <div class="app-card app-list-card app-card-hover flex flex-col gap-3">

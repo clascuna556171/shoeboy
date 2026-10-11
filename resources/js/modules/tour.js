@@ -114,12 +114,19 @@ export default function registerTour() {
         backBtn.style.visibility = index === 0 ? 'hidden' : 'visible';
         nextBtn.textContent = index === steps.length - 1 ? 'Finish' : 'Next';
 
+        // Steps that point at a nav item: open the mobile drawer so the target
+        // is on screen (the top bar is hidden below xl), then re-place once the
+        // drawer's slide animation has finished.
+        const navStep = !!step.sel && step.sel.includes('nav-');
+        window.dispatchEvent(new CustomEvent('tour:nav', { detail: { open: navStep } }));
+
         const target = step.sel ? findVisible(step.sel) : null;
         if (target) {
             try { target.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { /* ignore */ }
         }
         // Position immediately, then keep tracking as the smooth scroll proceeds.
         place();
+        if (navStep) setTimeout(place, 300);
         tip.style.visibility = 'visible';
         try { tip.focus({ preventScroll: true }); } catch (e) { /* ignore */ }
     }
@@ -247,9 +254,6 @@ export default function registerTour() {
         if (!list.length) return;
         steps = list;
         index = 0;
-        // Reveal the navigation for the duration of the tour so nav steps can
-        // be highlighted even on tablet/phone (where it is normally hidden).
-        document.documentElement.classList.add('touring');
         root.style.display = 'block';
         tip.style.visibility = 'hidden';
         showStep();
@@ -257,7 +261,8 @@ export default function registerTour() {
 
     function end() {
         if (root) root.style.display = 'none';
-        document.documentElement.classList.remove('touring');
+        // Close the mobile drawer if a nav step opened it.
+        window.dispatchEvent(new CustomEvent('tour:nav', { detail: { open: false } }));
         steps = [];
         index = 0;
         try { localStorage.setItem('shoeboy.tour.seen', '1'); } catch (e) { /* ignore */ }

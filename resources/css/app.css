@@ -634,14 +634,6 @@ html[data-density="compact"] main table th {
 /* ============================================================
    Guided tour
    ============================================================ */
-/* Reveal the navigation while a tour runs so nav steps can be highlighted
-   even on tablet/phone where the bar/drawer would otherwise be hidden. */
-html.touring .app-topnav {
-    display: flex !important;
-    overflow-x: auto;
-    max-width: 100%;
-}
-
 /* On phones the tour card docks to the bottom of the screen. */
 .app-tour-dock {
     left: 12px !important;

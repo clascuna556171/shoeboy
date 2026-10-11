@@ -12,12 +12,33 @@ class BackupController extends Controller
 {
     public function __construct(protected BackupService $backups) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
+        $search = (string) $request->query('search');
+        $sort = (string) $request->query('sort', 'newest');
+
+        $backups = $this->backups->all();
+
+        if ($search !== '') {
+            $backups = array_values(array_filter(
+                $backups,
+                fn ($b) => stripos($b['name'], $search) !== false
+            ));
+        }
+
+        usort($backups, match ($sort) {
+            'oldest' => fn ($a, $b) => $a['modified'] <=> $b['modified'],
+            'largest' => fn ($a, $b) => $b['size'] <=> $a['size'],
+            'smallest' => fn ($a, $b) => $a['size'] <=> $b['size'],
+            default => fn ($a, $b) => $b['modified'] <=> $a['modified'],
+        });
+
         return view('backups.index', [
-            'backups' => $this->backups->all(),
+            'backups' => $backups,
             'isEmpty' => $this->backups->isEmpty(),
             'isFileBased' => $this->backups->isFileBased(),
+            'search' => $search,
+            'sort' => $sort,
         ]);
     }
 
