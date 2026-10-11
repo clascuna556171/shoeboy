@@ -333,7 +333,7 @@
         @php($salesGross = collect($salesLedger)->sum('awarded_price'))
         @php($salesProfit = collect($salesLedger)->sum('unit_profit'))
         <div x-show="reportTab === 'sales'" x-cloak>
-            <div class="flex flex-wrap items-center justify-between gap-3 p-4 pb-0 text-xs">
+            <div class="md:hidden flex flex-wrap items-center justify-between gap-3 p-4 pb-0 text-xs">
                 <span class="font-semibold uppercase tracking-wider text-neutral-500">Totals — {{ count($salesLedger) }} {{ count($salesLedger) === 1 ? 'pair' : 'pairs' }}</span>
                 <span class="flex items-center gap-4">
                     <span class="text-neutral-500">Gross <strong class="font-mono text-neutral-900 dark:text-white">₱{{ number_format($salesGross, 2) }}</strong></span>
@@ -442,7 +442,7 @@
         {{-- Expenses ledger --}}
         @php($expenseTotal = collect($expenseLedger)->sum('amount'))
         <div x-show="reportTab === 'expenses'" x-cloak>
-            <div class="flex flex-wrap items-center justify-between gap-3 p-4 pb-0 text-xs">
+            <div class="md:hidden flex flex-wrap items-center justify-between gap-3 p-4 pb-0 text-xs">
                 <span class="font-semibold uppercase tracking-wider text-neutral-500">Total — {{ count($expenseLedger) }} {{ count($expenseLedger) === 1 ? 'entry' : 'entries' }}</span>
                 <span class="font-mono font-bold text-rose-500">₱{{ number_format($expenseTotal, 2) }}</span>
             </div>
