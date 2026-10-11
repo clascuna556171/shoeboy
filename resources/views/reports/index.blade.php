@@ -138,15 +138,16 @@
                 @endforeach
             </div>
 
-            <form method="GET" action="{{ route('reports.index') }}" class="flex flex-nowrap items-center gap-2 text-xs overflow-x-auto max-w-full">
+            <form method="GET" action="{{ route('reports.index') }}" class="flex w-full items-center gap-2 text-xs sm:w-auto">
                 <input type="hidden" name="reportTab" :value="reportTab">
-                <span class="hidden lg:inline text-neutral-500 shrink-0">Date range</span>
-                <input type="date" name="start_date" value="{{ $startDate }}" class="app-input app-input-sm !w-auto shrink-0">
-                <span class="text-neutral-500 shrink-0">to</span>
-                <input type="date" name="end_date" value="{{ $endDate }}" class="app-input app-input-sm !w-auto shrink-0">
+                <input type="date" name="start_date" value="{{ $startDate }}" class="app-input app-input-sm flex-1 min-w-0 sm:!w-auto">
+                <span class="text-neutral-500 shrink-0 hidden sm:inline">to</span>
+                <input type="date" name="end_date" value="{{ $endDate }}" class="app-input app-input-sm flex-1 min-w-0 sm:!w-auto">
                 <button type="submit" class="app-btn app-btn-secondary app-btn-sm shrink-0">Filter</button>
                 @if($startDate || $endDate)
-                    <a href="{{ route('reports.index', ['reportTab' => request('reportTab', 'batches')]) }}" class="app-btn app-btn-secondary app-btn-sm shrink-0">Reset</a>
+                    <a href="{{ route('reports.index', ['reportTab' => request('reportTab', 'batches')]) }}" class="app-btn app-btn-secondary app-btn-sm shrink-0" title="Reset dates">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    </a>
                 @endif
             </form>
             </div>
@@ -154,31 +155,6 @@
 
         {{-- By batch --}}
         <div x-show="reportTab === 'batches'">
-            <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3 p-4">
-                @foreach($batchReports as $b)
-                <div class="app-card app-list-card app-card-hover flex flex-col gap-2.5">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="min-w-0">
-                            <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $b['batch_code'] }}</span>
-                            <div class="mt-0.5 text-[11px] text-neutral-500">{{ $b['date_acquired'] }} · {{ $b['supplier_name'] }}</div>
-                        </div>
-                        <div class="text-right shrink-0 font-mono font-bold {{ $b['net_proceeds'] >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-neutral-500' }}">{{ $b['net_proceeds'] >= 0 ? '+' : '' }}₱{{ number_format($b['net_proceeds'], 2) }}</div>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-1.5">
-                        <span class="badge badge-sold">{{ $b['sold_pairs'] }} sold</span>
-                        <span class="badge badge-reserved">{{ $b['reserved_pairs'] }} reserved</span>
-                        <span class="badge badge-available">{{ $b['available_pairs'] }} available</span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                        <div class="flex justify-between"><span class="text-neutral-500">Batch cost</span><span class="font-mono"><x-money :value="$b['total_cost']" /></span></div>
-                        <div class="flex justify-between"><span class="text-neutral-500">Sales</span><span class="font-mono"><x-money :value="$b['realized_revenue']" /></span></div>
-                        <div class="flex justify-between"><span class="text-neutral-500">Profit</span><span class="font-mono text-emerald-600 dark:text-emerald-400">+₱{{ number_format($b['order_profit_sum'], 2) }}</span></div>
-                        <div class="flex justify-between"><span class="text-neutral-500">Expenses</span><span class="font-mono text-rose-500"><x-money :value="$b['batch_expenses']" /></span></div>
-                    </div>
-                </div>
-                @endforeach
-            </div>
-            <div class="app-list-table">
             <div class="app-scroll-x">
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
@@ -218,32 +194,10 @@
                     </tbody>
                 </table>
             </div>
-            </div>
         </div>
 
         {{-- By session --}}
         <div x-show="reportTab === 'sessions'" x-cloak>
-            <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3 p-4">
-                @forelse($sessionReports as $s)
-                <div class="app-card app-list-card app-card-hover flex flex-col gap-2.5">
-                    <div class="flex items-start justify-between gap-3">
-                        <span class="font-mono font-bold text-neutral-800 dark:text-neutral-200">{{ $s['date'] }}</span>
-                        <div class="text-right shrink-0 font-mono font-bold text-emerald-600 dark:text-emerald-400">+₱{{ number_format($s['net_profit'], 2) }}</div>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-1.5">
-                        <span class="badge badge-neutral">{{ $s['orders_count'] }} orders</span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                        <div class="flex justify-between"><span class="text-neutral-500">Gross</span><span class="font-mono"><x-money :value="$s['gross_sales']" /></span></div>
-                        <div class="flex justify-between"><span class="text-neutral-500">Cash</span><span class="font-mono"><x-money :value="$s['cash_collected']" /></span></div>
-                        <div class="flex justify-between"><span class="text-neutral-500">GCash</span><span class="font-mono text-[#0071E3] dark:text-[#0A84FF]"><x-money :value="$s['gcash_collected']" /></span></div>
-                    </div>
-                </div>
-                @empty
-                <div class="col-span-full app-empty"><span class="text-xs font-medium">No session transactions match the date range.</span></div>
-                @endforelse
-            </div>
-            <div class="app-list-table">
             <div class="app-scroll-x">
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
@@ -279,29 +233,10 @@
                     </tbody>
                 </table>
             </div>
-            </div>
         </div>
 
         {{-- By tier --}}
         <div x-show="reportTab === 'tiers'" x-cloak>
-            <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3 p-4">
-                @foreach($tierReports as $t)
-                <div class="app-card app-list-card app-card-hover flex flex-col gap-2.5">
-                    <div class="flex items-start justify-between gap-3">
-                        <span class="font-semibold text-neutral-800 dark:text-neutral-200">{{ $t['tier'] }}</span>
-                        <div class="text-right shrink-0 font-mono font-bold text-emerald-600 dark:text-emerald-400">+₱{{ number_format($t['net_profit'], 2) }}</div>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-1.5">
-                        <span class="badge badge-neutral">{{ $t['sold_count'] }} / {{ $t['total_items'] }} sold</span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                        <div class="flex justify-between"><span class="text-neutral-500">Gross</span><span class="font-mono"><x-money :value="$t['total_revenue']" /></span></div>
-                        <div class="flex justify-between"><span class="text-neutral-500">COGS</span><span class="font-mono text-neutral-500"><x-money :value="$t['total_cogs']" /></span></div>
-                    </div>
-                </div>
-                @endforeach
-            </div>
-            <div class="app-list-table">
             <div class="app-scroll-x">
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
@@ -333,43 +268,6 @@
         @php($salesGross = collect($salesLedger)->sum('awarded_price'))
         @php($salesProfit = collect($salesLedger)->sum('unit_profit'))
         <div x-show="reportTab === 'sales'" x-cloak>
-            <div class="md:hidden flex flex-wrap items-center justify-between gap-3 p-4 pb-0 text-xs">
-                <span class="font-semibold uppercase tracking-wider text-neutral-500">Totals — {{ count($salesLedger) }} {{ count($salesLedger) === 1 ? 'pair' : 'pairs' }}</span>
-                <span class="flex items-center gap-4">
-                    <span class="text-neutral-500">Gross <strong class="font-mono text-neutral-900 dark:text-white">₱{{ number_format($salesGross, 2) }}</strong></span>
-                    <span class="text-neutral-500">Profit <strong class="font-mono {{ $salesProfit >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500' }}">{{ $salesProfit >= 0 ? '+' : '−' }}₱{{ number_format(abs($salesProfit), 2) }}</strong></span>
-                </span>
-            </div>
-            <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3 p-4">
-                @forelse($salesLedger as $s)
-                <div class="app-card app-list-card app-card-hover flex flex-col gap-2.5">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="min-w-0">
-                            <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $s['order_number'] }}</span>
-                            <div class="mt-0.5 text-[11px] text-neutral-500 whitespace-nowrap">{{ $s['date'] }}</div>
-                        </div>
-                        <div class="text-right shrink-0">
-                            <div class="font-mono font-bold text-neutral-900 dark:text-white"><x-money :value="$s['awarded_price']" /></div>
-                            <div class="text-[11px] font-mono font-bold {{ $s['unit_profit'] >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500' }}">{{ $s['unit_profit'] >= 0 ? '+' : '−' }}₱{{ number_format(abs($s['unit_profit']), 2) }} profit</div>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-1.5">
-                        <span class="badge {{ $s['channel'] === 'Live Stream' ? 'badge-live' : 'badge-pos' }}">{{ $s['channel'] }}</span>
-                        <span class="font-mono text-[11px] text-neutral-500">{{ $s['sku'] }}</span>
-                    </div>
-                    <div class="text-sm font-semibold text-neutral-800 dark:text-neutral-200 truncate">{{ $s['brand_model'] }}</div>
-                    <div class="app-list-card-extra grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                        <div class="flex justify-between"><span class="text-neutral-500">Size</span><span class="font-mono">{{ $s['size'] }}</span></div>
-                        <div class="flex justify-between"><span class="text-neutral-500">Customer</span><span class="truncate">{{ $s['customer'] }}</span></div>
-                        <div class="flex justify-between"><span class="text-neutral-500">Payment</span><span class="uppercase">{{ $s['payment_method'] }}</span></div>
-                        <div class="flex justify-between"><span class="text-neutral-500">Staff</span><span class="truncate">{{ $s['staff'] }}</span></div>
-                    </div>
-                </div>
-                @empty
-                <div class="col-span-full app-empty"><span class="text-xs font-medium">No individual sales match the date range.</span></div>
-                @endforelse
-            </div>
-            <div class="app-list-table">
             <div class="app-scroll-x">
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
@@ -436,37 +334,11 @@
                     @endif
                 </table>
             </div>
-            </div>
         </div>
 
         {{-- Expenses ledger --}}
         @php($expenseTotal = collect($expenseLedger)->sum('amount'))
         <div x-show="reportTab === 'expenses'" x-cloak>
-            <div class="md:hidden flex flex-wrap items-center justify-between gap-3 p-4 pb-0 text-xs">
-                <span class="font-semibold uppercase tracking-wider text-neutral-500">Total — {{ count($expenseLedger) }} {{ count($expenseLedger) === 1 ? 'entry' : 'entries' }}</span>
-                <span class="font-mono font-bold text-rose-500">₱{{ number_format($expenseTotal, 2) }}</span>
-            </div>
-            <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3 p-4">
-                @forelse($expenseLedger as $e)
-                <div class="app-card app-list-card app-card-hover flex flex-col gap-2.5">
-                    <div class="flex items-start justify-between gap-3">
-                        <x-cell :value="$e['description']" class="font-semibold text-neutral-800 dark:text-neutral-200" />
-                        <div class="text-right shrink-0 font-mono font-bold text-rose-600 dark:text-rose-400">−₱{{ number_format($e['amount'], 2) }}</div>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-1.5">
-                        <span class="badge badge-neutral">{{ $e['category'] }}</span>
-                        <span class="font-mono text-[11px] text-neutral-500">{{ $e['date'] }}</span>
-                    </div>
-                    <div class="app-list-card-extra grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                        <div class="flex justify-between"><span class="text-neutral-500">Reference</span><span class="font-mono truncate">{{ $e['reference_no'] ?? '—' }}</span></div>
-                        <div class="flex justify-between"><span class="text-neutral-500">Batch</span><span class="font-mono truncate">{{ $e['batch'] }}</span></div>
-                    </div>
-                </div>
-                @empty
-                <div class="col-span-full app-empty"><span class="text-xs font-medium">No individual expenses match the date range.</span></div>
-                @endforelse
-            </div>
-            <div class="app-list-table">
             <div class="app-scroll-x">
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
@@ -509,7 +381,6 @@
                     </tfoot>
                     @endif
                 </table>
-            </div>
             </div>
         </div>
     </div>

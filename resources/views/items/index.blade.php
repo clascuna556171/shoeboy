@@ -74,24 +74,24 @@
 
             <div class="mt-auto flex flex-wrap items-center gap-2 pt-1">
                 @if($item->status === 'available')
-                    <button type="button" class="app-btn app-btn-secondary app-btn-sm flex-1"
+                    <x-action-btn icon="edit" tone="secondary" class="flex-1"
                             @click="editItem = {{ Js::from([
                                 'id' => $item->id, 'sku' => $item->sku, 'brand' => $item->brand, 'model' => $item->model,
                                 'size' => $item->size, 'condition' => $item->condition, 'listed_price' => $item->listed_price,
                                 'repair_cost' => $item->repair_cost, 'category' => $item->category, 'triage_status' => $item->triage_status,
-                            ]) }}">Edit</button>
+                            ]) }}">Edit</x-action-btn>
                     <form action="{{ route('items.destroy', $item) }}" method="POST">
                         @csrf
                         @method('DELETE')
-                        <button type="button" class="app-btn app-btn-sm app-btn-ghost"
+                        <x-action-btn icon="trash" tone="ghost-danger" type="submit"
                                 data-confirm="Delete pair {{ $item->sku }}?"
                                 data-confirm-message="The pair is removed from inventory. An Undo option appears right after."
-                                data-confirm-variant="danger" data-confirm-icon="trash" data-confirm-label="Delete">Delete</button>
+                                data-confirm-variant="danger" data-confirm-icon="trash" data-confirm-label="Delete">Delete</x-action-btn>
                     </form>
                 @elseif($item->status === 'sold' && ($soldOrder = $item->orders->whereIn('status', ['paid', 'fulfilled'])->sortByDesc('date_awarded')->first()))
-                    <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $soldOrder->id]) }}" class="app-btn app-btn-secondary app-btn-sm flex-1">View details</button>
+                    <x-action-btn icon="eye" tone="secondary" class="flex-1" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $soldOrder->id]) }}">View details</x-action-btn>
                 @elseif($item->status === 'reserved' && ($resOrder = $item->orders->where('status', 'reserved')->sortByDesc('date_awarded')->first()))
-                    <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $resOrder->id]) }}" class="app-btn app-btn-secondary app-btn-sm flex-1">View details</button>
+                    <x-action-btn icon="eye" tone="secondary" class="flex-1" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $resOrder->id]) }}">View details</x-action-btn>
                 @endif
             </div>
         </div>

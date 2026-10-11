@@ -68,10 +68,10 @@
             <form action="{{ route('expenses.destroy', $exp->id) }}" method="POST" class="mt-auto pt-1">
                 @csrf
                 @method('DELETE')
-                <button type="button" class="app-btn app-btn-sm app-btn-ghost w-full"
+                <x-action-btn icon="trash" tone="ghost-danger" type="button" class="w-full"
                         data-confirm="Delete this expense?" data-confirm-variant="danger"
                         data-confirm-message="You can undo this right after from the notification toast."
-                        data-confirm-label="Delete">Delete expense</button>
+                        data-confirm-label="Delete">Delete expense</x-action-btn>
             </form>
         </div>
         @empty

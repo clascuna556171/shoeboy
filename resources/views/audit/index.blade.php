@@ -53,7 +53,7 @@
                 <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">Actor</span><span class="text-neutral-700 dark:text-neutral-300">{{ $log->user?->name ?? 'System' }}</span></div>
                 <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">IP</span><span class="font-mono text-neutral-700 dark:text-neutral-300">{{ $log->ip_address ?? '—' }}</span></div>
             </div>
-            <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'audit', 'id' => $log->id]) }}" class="app-btn app-btn-secondary app-btn-sm w-full mt-auto">View details</button>
+            <x-action-btn icon="eye" tone="secondary" class="w-full mt-auto" data-panel-url="{{ route('panels.show', ['type' => 'audit', 'id' => $log->id]) }}">View details</x-action-btn>
         </div>
         @empty
         <div class="col-span-full app-card"><div class="app-empty"><span class="text-xs font-medium">No audit entries match.</span></div></div>

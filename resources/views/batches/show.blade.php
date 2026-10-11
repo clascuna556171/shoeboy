@@ -94,19 +94,19 @@
                 <div class="app-list-card-extra text-sm text-neutral-600 dark:text-neutral-300">Condition: {{ $item->condition }}</div>
                 <div class="mt-auto flex flex-wrap items-center gap-2 pt-1">
                     @if($item->status === 'available')
-                        <button type="button" class="app-btn app-btn-secondary app-btn-sm flex-1"
+                        <x-action-btn icon="edit" tone="secondary" class="flex-1"
                                 @click="editItem = {{ Js::from([
                                     'id' => $item->id, 'sku' => $item->sku, 'brand' => $item->brand, 'model' => $item->model,
                                     'size' => $item->size, 'condition' => $item->condition, 'listed_price' => $item->listed_price,
                                     'repair_cost' => $item->repair_cost, 'category' => $item->category, 'triage_status' => $item->triage_status,
-                                ]) }}">Edit</button>
+                                ]) }}">Edit</x-action-btn>
                         <form action="{{ route('items.destroy', $item) }}" method="POST">
                             @csrf
                             @method('DELETE')
-                            <button type="button" class="app-btn app-btn-sm app-btn-ghost"
+                            <x-action-btn icon="trash" tone="ghost-danger" type="submit"
                                     data-confirm="Delete pair {{ $item->sku }}?"
                                     data-confirm-message="The pair is removed from inventory. An Undo option appears right after."
-                                    data-confirm-variant="danger" data-confirm-icon="trash" data-confirm-label="Delete">Delete</button>
+                                    data-confirm-variant="danger" data-confirm-icon="trash" data-confirm-label="Delete">Delete</x-action-btn>
                         </form>
                     @else
                         <span class="text-xs text-neutral-500">Locked ({{ $item->status }})</span>

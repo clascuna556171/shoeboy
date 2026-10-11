@@ -66,7 +66,7 @@
                 <div class="flex items-start justify-between gap-3"><span class="text-neutral-500 shrink-0">Address</span><span class="text-right text-neutral-700 dark:text-neutral-300">{{ $del->order->customer->shipping_address }}</span></div>
                 @endif
                 <div class="flex items-center justify-between gap-3"><span class="text-neutral-500">Tracking</span><span class="font-mono text-neutral-700 dark:text-neutral-300 truncate">{{ $del->tracking_number ?? '—' }}</span></div>
-                <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $del->order->id]) }}" class="app-btn app-btn-secondary app-btn-sm w-full mt-1">View details</button>
+                <x-action-btn icon="eye" tone="secondary" class="w-full mt-1" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $del->order->id]) }}">View details</x-action-btn>
             </div>
 
             @if($del->status === 'completed')
@@ -104,7 +104,10 @@
                                :required="method === 'jnt_delivery' && status !== 'pending'"
                                :placeholder="status === 'pending' ? 'Optional while pending' : 'Tracking / waybill #'">
                     </div>
-                    <button type="submit" :disabled="!changed" class="app-btn app-btn-primary app-btn-sm w-full">Save update</button>
+                    <button type="submit" :disabled="!changed" class="app-btn app-btn-primary app-btn-sm w-full">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span>Save update</span>
+                    </button>
                 </form>
             @endif
         </div>

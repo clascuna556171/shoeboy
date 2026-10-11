@@ -145,7 +145,7 @@ html { scrollbar-gutter: stable; }
        Automatic, not customizable: cards on phones, tables on tablet and
        desktop. (Batches, Suppliers and Staff opt out with their own toggle
        — see [data-view-panel] below.) */
-    .app-list-cards { display: grid; gap: 1rem; }
+    .app-list-cards { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
     .app-list-table { display: none; }
     @media (min-width: 768px) {
         .app-list-cards { display: none; }
@@ -161,7 +161,7 @@ html { scrollbar-gutter: stable; }
     }
 
     /* Card density preference (Settings → Card density, mobile only). */
-    .app-list-card { padding: 1.25rem; }
+    .app-list-card { padding: 1.25rem; min-width: 0; }
     html[data-card-density="compact"] .app-list-cards { gap: 0.625rem; }
     html[data-card-density="compact"] .app-list-card { padding: 0.9rem 1rem; }
     html[data-card-density="compact"] .app-list-card-extra { display: none; }

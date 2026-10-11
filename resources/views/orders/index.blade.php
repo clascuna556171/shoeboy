@@ -67,9 +67,9 @@
             </div>
 
             <div class="mt-auto flex flex-wrap gap-2 pt-1">
-                <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $ord->id]) }}" class="app-btn app-btn-secondary app-btn-sm flex-1">View details</button>
+                <x-action-btn icon="eye" tone="secondary" class="flex-1" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $ord->id]) }}">View details</x-action-btn>
                 @if($ord->payment)
-                    <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'receipt', 'id' => $ord->id]) }}" class="app-btn app-btn-secondary app-btn-sm">Receipt</button>
+                    <x-action-btn icon="receipt" tone="secondary" data-panel-url="{{ route('panels.show', ['type' => 'receipt', 'id' => $ord->id]) }}">Receipt</x-action-btn>
                 @endif
             </div>
         </div>

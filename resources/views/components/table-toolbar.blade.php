@@ -11,16 +11,18 @@
     $sortCol = request('sort');
     $sortDir = request('direction', 'desc');
     $currentSort = $sortCol ? $sortCol.'~'.$sortDir : '~';
-    $hasActive = $search || $sortCol || collect($filters)->contains(fn ($f) => ! empty($f['selected']));
+    $activeFilters = collect($filters)->filter(fn ($f) => ! empty($f['selected']));
+    $hasActive = $search || $sortCol || $activeFilters->isNotEmpty();
 @endphp
 
-{{-- One wrapped toolbar: search + filters + sort + actions. Wraps to a
-     second line only when there are several filters — never scrolls. --}}
+{{-- Single-row toolbar: search + Filters (popover) + Sort + actions. Keeping
+     the filters in a popover means the row never needs to scroll or wrap. --}}
 <div class="app-card p-3 lg:p-4">
     <form method="GET" action="{{ $action }}"
-          x-data="{ sortSel: '{{ $currentSort }}' }"
+          x-data="{ sortSel: '{{ $currentSort }}', filtersOpen: false }"
           @submit="const p = sortSel.split('~'); $refs.sortEl.value = p[0] || ''; $refs.dirEl.value = p[1] || 'desc';"
-          class="flex flex-wrap items-center gap-2">
+          @click.outside="filtersOpen = false"
+          class="relative flex flex-wrap items-center gap-2">
         <input type="hidden" name="sort" x-ref="sortEl" value="{{ $sortCol }}">
         <input type="hidden" name="direction" x-ref="dirEl" value="{{ $sortDir }}">
 
@@ -32,14 +34,33 @@
                    class="app-input app-input-sm pl-9">
         </div>
 
-        @foreach($filters as $filter)
-            <select name="{{ $filter['name'] }}" @if($loop->first) data-tour="filters" @endif
-                    class="app-select app-input-sm !w-auto shrink-0">
-                @foreach($filter['options'] as $value => $label)
-                    <option value="{{ $value }}" @selected((string) ($filter['selected'] ?? '') === (string) $value)>{{ $label }}</option>
-                @endforeach
-            </select>
-        @endforeach
+        @if(count($filters))
+            <div class="relative shrink-0">
+                <button type="button" @click="filtersOpen = !filtersOpen" data-tour="filters"
+                        class="app-btn app-btn-secondary app-btn-sm flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L14 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 018 21v-7.586L3.293 6.707A1 1 0 013 6V4z"/></svg>
+                    <span>Filters</span>
+                    @if($activeFilters->isNotEmpty())
+                        <span class="ml-0.5 rounded-full bg-[#0071E3] text-white text-[10px] font-bold px-1.5 leading-4">{{ $activeFilters->count() }}</span>
+                    @endif
+                    <svg class="w-3 h-3 transition-transform" :class="filtersOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+
+                <div x-show="filtersOpen" x-cloak x-transition.opacity.duration.120ms
+                     class="absolute right-0 z-40 mt-2 w-56 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#1C1C1E] shadow-xl p-3 space-y-2.5">
+                    @foreach($filters as $filter)
+                        <div>
+                            <label class="app-label">{{ $filter['label'] ?? \Illuminate\Support\Str::headline($filter['name']) }}</label>
+                            <select name="{{ $filter['name'] }}" class="app-select app-input-sm">
+                                @foreach($filter['options'] as $value => $label)
+                                    <option value="{{ $value }}" @selected((string) ($filter['selected'] ?? '') === (string) $value)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
 
         @if(count($sorts))
             <select x-model="sortSel" class="app-select app-input-sm !w-auto shrink-0" title="Sort">
