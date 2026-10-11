@@ -149,12 +149,15 @@ html { scrollbar-gutter: stable; }
         .app-list-table { display: block; }
     }
 
-    /* Explicit "List style" override (Settings → List style, phone only).
-       "auto" leaves the responsive default above in place. */
-    html[data-list="cards"] .app-list-cards { display: grid; }
-    html[data-list="cards"] .app-list-table { display: none; }
-    html[data-list="table"] .app-list-cards { display: none; }
-    html[data-list="table"] .app-list-table { display: block; }
+    /* Explicit "List style" override (Settings → List style, phones only).
+       "auto" leaves the responsive default above in place. Scoped to phones so
+       a phone choice never leaks onto larger screens. */
+    @media (max-width: 767px) {
+        html[data-list="cards"] .app-list-cards { display: grid; }
+        html[data-list="cards"] .app-list-table { display: none; }
+        html[data-list="table"] .app-list-cards { display: none; }
+        html[data-list="table"] .app-list-table { display: block; }
+    }
 
     /* Per-page Cards/Table toggle (Batches, Suppliers, Staff only).
        Phones always show cards; the toggle is desktop-only. */

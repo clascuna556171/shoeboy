@@ -307,7 +307,7 @@
                             <div class="text-[10px] uppercase tracking-wider {{ $dlOwner ? 'text-amber-600 dark:text-amber-400' : 'text-neutral-500' }}">{{ $dlUser?->role }}</div>
                         </div>
                     </div>
-                    <button type="button" @click="mobileNav = false" class="p-2 -m-1 rounded-xl text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 shrink-0">
+                    <button type="button" @click="if (!document.documentElement.classList.contains('tour-open')) mobileNav = false" class="p-2 -m-1 rounded-xl text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 shrink-0">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
