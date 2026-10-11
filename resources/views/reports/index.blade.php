@@ -157,9 +157,9 @@
 
             <form method="GET" action="{{ route('reports.index') }}" class="flex w-full items-center gap-2 text-xs sm:w-auto">
                 <input type="hidden" name="reportTab" :value="reportTab">
-                <input type="date" name="start_date" value="{{ $startDate }}" class="app-input app-input-sm flex-1 min-w-0 sm:!w-auto">
+                <input type="date" name="start_date" value="{{ $startDate }}" autocomplete="off" class="app-input app-input-sm flex-1 min-w-0 sm:!w-auto">
                 <span class="text-neutral-500 shrink-0 hidden sm:inline">to</span>
-                <input type="date" name="end_date" value="{{ $endDate }}" class="app-input app-input-sm flex-1 min-w-0 sm:!w-auto">
+                <input type="date" name="end_date" value="{{ $endDate }}" autocomplete="off" class="app-input app-input-sm flex-1 min-w-0 sm:!w-auto">
                 <button type="submit" class="app-btn app-btn-secondary app-btn-sm shrink-0">Filter</button>
                 @if($startDate || $endDate)
                     <a href="{{ route('reports.index', ['reportTab' => request('reportTab', 'batches')]) }}" class="app-btn app-btn-secondary app-btn-sm shrink-0" title="Reset dates">

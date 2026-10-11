@@ -150,12 +150,12 @@
 
                 <div>
                     <label class="app-label">Supplier Name <span class="app-req">*</span></label>
-                    <input type="text" name="name" required placeholder="e.g. Suntop Bales Warehouse" class="app-input">
+                    <input type="text" name="name" required autocomplete="organization" placeholder="e.g. Suntop Bales Warehouse" class="app-input">
                 </div>
 
                 <div>
                     <label class="app-label">Contact Number <span class="app-optional">(optional, numeric)</span></label>
-                    <input type="text" name="contact_number" placeholder="09171234567" class="app-input">
+                    <input type="tel" inputmode="tel" name="contact_number" autocomplete="tel" placeholder="09171234567" class="app-input">
                 </div>
 
                 <div>
@@ -179,12 +179,12 @@
 
                 <div>
                     <label class="app-label">Supplier Name <span class="app-req">*</span></label>
-                    <input type="text" name="name" :value="editingSupplier?.name" required class="app-input">
+                    <input type="text" name="name" :value="editingSupplier?.name" required autocomplete="organization" class="app-input">
                 </div>
 
                 <div>
                     <label class="app-label">Contact Number <span class="app-optional">(optional)</span></label>
-                    <input type="text" name="contact_number" :value="editingSupplier?.contact_number" class="app-input">
+                    <input type="tel" inputmode="tel" name="contact_number" :value="editingSupplier?.contact_number" autocomplete="tel" class="app-input">
                 </div>
 
                 <div>

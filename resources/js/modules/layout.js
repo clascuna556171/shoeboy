@@ -20,6 +20,7 @@ export default function registerLayout() {
     registerEnhancements();
     registerPrintButtons();
     registerConfirmDialog();
+    registerValidationFocus();
 }
 
 /**
@@ -143,5 +144,32 @@ function registerConfirmDialog() {
             message: trigger.dataset.confirmMessage || '',
             confirmLabel: trigger.dataset.confirmLabel || 'Confirm',
         }).then((ok) => { if (ok) proceed(); });
+    }, true);
+}
+
+/**
+ * Surface the browser's own required-field feedback on mobile.
+ *
+ * Firefox-for-Android often blocks a submit with an invalid control but can't
+ * render the native validation bubble inside a fixed modal that's under body
+ * scroll-lock, so the tap looks like it did nothing. When the browser flags a
+ * field invalid, bring the first one into view and focus it so the user sees
+ * which field is required. Chrome already does this itself, so it's a no-op
+ * there. We never submit and never block a valid form — purely a visual aid.
+ */
+function registerValidationFocus() {
+    let handled = false;
+
+    document.addEventListener('invalid', (event) => {
+        const el = event.target;
+        if (!(el instanceof HTMLElement) || handled) return;
+
+        handled = true;
+        window.setTimeout(() => { handled = false; }, 800);
+
+        requestAnimationFrame(() => {
+            try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { /* ignore */ }
+            el.focus({ preventScroll: true });
+        });
     }, true);
 }

@@ -194,31 +194,31 @@
                     </select>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="app-label">Batch Short Code <span class="app-req">*</span></label>
-                        <input type="text" name="batch_code" required placeholder="e.g. B06" class="app-input font-mono uppercase">
+                        <input type="text" name="batch_code" required autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="e.g. B06" class="app-input font-mono uppercase">
                     </div>
                     <div>
                         <label class="app-label">Date Acquired <span class="app-req">*</span></label>
-                        <input type="date" name="date_acquired" required value="{{ date('Y-m-d') }}" class="app-input">
+                        <input type="date" name="date_acquired" required value="{{ date('Y-m-d') }}" autocomplete="off" class="app-input">
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="app-label">Total Sacks / Bales <span class="app-req">*</span></label>
-                        <input type="number" name="total_sacks" required min="1" value="1" class="app-input font-mono">
+                        <input type="number" inputmode="numeric" name="total_sacks" required min="1" value="1" class="app-input font-mono">
                     </div>
                     <div>
                         <label class="app-label">Total Footwear Pairs <span class="app-req">*</span></label>
-                        <input type="number" name="total_pairs" x-model="pairs" required min="1" value="24" class="app-input font-mono">
+                        <input type="number" inputmode="numeric" name="total_pairs" x-model="pairs" required min="1" value="24" class="app-input font-mono">
                     </div>
                 </div>
 
                 <div>
                     <label class="app-label">Total Batch Cost (₱) <span class="app-req">*</span></label>
-                    <input type="number" step="0.01" name="total_cost" x-model="cost" required min="0" value="18000" class="app-input font-mono">
+                    <input type="number" inputmode="decimal" step="0.01" name="total_cost" x-model="cost" required min="0" value="18000" class="app-input font-mono">
                 </div>
 
                 <div class="p-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800/70 text-xs flex items-center justify-between">
@@ -250,31 +250,31 @@
                     </select>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="app-label">Batch Short Code <span class="app-req">*</span></label>
-                        <input type="text" name="batch_code" :value="editingBatch?.batch_code" required class="app-input font-mono uppercase">
+                        <input type="text" name="batch_code" :value="editingBatch?.batch_code" required autocomplete="off" autocapitalize="characters" spellcheck="false" class="app-input font-mono uppercase">
                     </div>
                     <div>
                         <label class="app-label">Date Acquired <span class="app-req">*</span></label>
-                        <input type="date" name="date_acquired" :value="editingBatch?.date_acquired" required class="app-input">
+                        <input type="date" name="date_acquired" :value="editingBatch?.date_acquired" required autocomplete="off" class="app-input">
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="app-label">Total Sacks / Bales <span class="app-req">*</span></label>
-                        <input type="number" name="total_sacks" :value="editingBatch?.total_sacks" required min="1" class="app-input font-mono">
+                        <input type="number" inputmode="numeric" name="total_sacks" :value="editingBatch?.total_sacks" required min="1" class="app-input font-mono">
                     </div>
                     <div>
                         <label class="app-label">Total Footwear Pairs <span class="app-req">*</span></label>
-                        <input type="number" name="total_pairs" :value="editingBatch?.total_pairs" required min="1" class="app-input font-mono">
+                        <input type="number" inputmode="numeric" name="total_pairs" :value="editingBatch?.total_pairs" required min="1" class="app-input font-mono">
                     </div>
                 </div>
 
                 <div>
                     <label class="app-label">Total Batch Cost (₱) <span class="app-req">*</span></label>
-                    <input type="number" step="0.01" name="total_cost" :value="editingBatch?.total_cost" required min="0" class="app-input font-mono">
+                    <input type="number" inputmode="decimal" step="0.01" name="total_cost" :value="editingBatch?.total_cost" required min="0" class="app-input font-mono">
                 </div>
 
                 <div class="flex gap-2 pt-4">

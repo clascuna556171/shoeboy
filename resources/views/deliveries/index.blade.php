@@ -81,7 +81,7 @@
                       class="mt-auto space-y-2.5 pt-3 border-t border-neutral-100 dark:border-neutral-800">
                     @csrf
                     @method('PUT')
-                    <div class="grid grid-cols-2 gap-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div>
                             <label class="app-label">Method</label>
                             <select name="method" x-model="method" @change="if (method === 'pickup') tracking = null" class="app-select app-input-sm">
@@ -100,7 +100,7 @@
                     </div>
                     <div x-show="method === 'jnt_delivery'">
                         <label class="app-label">Tracking / Waybill</label>
-                        <input type="text" name="tracking_number" x-model="tracking" maxlength="40" class="app-input app-input-sm font-mono"
+                        <input type="text" name="tracking_number" x-model="tracking" maxlength="40" autocomplete="off" spellcheck="false" class="app-input app-input-sm font-mono"
                                :required="method === 'jnt_delivery' && status !== 'pending'"
                                :placeholder="status === 'pending' ? 'Optional while pending' : 'Tracking / waybill #'">
                     </div>
@@ -207,7 +207,7 @@
                                     <option value="pickup">Pickup</option>
                                     <option value="jnt_delivery">J&amp;T</option>
                                 </select>
-                                <input type="text" name="tracking_number" x-model="tracking" x-show="method === 'jnt_delivery'"
+                                <input type="text" name="tracking_number" x-model="tracking" x-show="method === 'jnt_delivery'" autocomplete="off" spellcheck="false"
                                        @if($del->method !== 'jnt_delivery') style="display:none" @endif
                                        :required="method === 'jnt_delivery' && status !== 'pending'"
                                        :minlength="(method === 'jnt_delivery' && status !== 'pending') ? 6 : false"

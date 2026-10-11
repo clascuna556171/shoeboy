@@ -21,21 +21,21 @@
     </div>
 @endif
 
-<div class="grid grid-cols-2 gap-3">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
     <div>
         <label class="app-label">Brand <span class="app-req">*</span></label>
-        <input type="text" name="brand" required placeholder="Li-Ning, Nike..." class="app-input">
+        <input type="text" name="brand" required autocomplete="off" placeholder="Li-Ning, Nike..." class="app-input">
     </div>
     <div>
         <label class="app-label">Model Name <span class="app-req">*</span></label>
-        <input type="text" name="model" required placeholder="Way of Wade 10..." class="app-input">
+        <input type="text" name="model" required autocomplete="off" placeholder="Way of Wade 10..." class="app-input">
     </div>
 </div>
 
-<div class="grid grid-cols-2 gap-3">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
     <div>
         <label class="app-label">Size <span class="app-req">*</span></label>
-        <input type="text" name="size" required placeholder="US 10.5" class="app-input font-mono">
+        <input type="text" name="size" required autocomplete="off" placeholder="US 10.5" class="app-input font-mono">
     </div>
     <div>
         <label class="app-label">Condition <span class="app-req">*</span></label>
@@ -48,26 +48,26 @@
     </div>
 </div>
 
-<div class="grid grid-cols-2 gap-3">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
     <div>
         <label class="app-label">Target Listed Price (₱) <span class="app-req">*</span></label>
-        <input type="number" step="0.01" min="0" name="listed_price" required placeholder="3500.00" class="app-input font-mono">
+        <input type="number" inputmode="decimal" step="0.01" min="0" name="listed_price" required placeholder="3500.00" class="app-input font-mono">
         <p class="mt-1 text-[11px] text-neutral-500">Tier auto-assigns &mdash; T1 &lt; ₱1k &middot; T2 ₱1k&ndash;2k &middot; T3 ₱2k+</p>
     </div>
     <div>
         <label class="app-label">Repair Cost (₱) <span class="app-optional">(optional)</span></label>
-        <input type="number" step="0.01" min="0" name="repair_cost" value="0.00" class="app-input font-mono">
+        <input type="number" inputmode="decimal" step="0.01" min="0" name="repair_cost" value="0.00" class="app-input font-mono">
     </div>
 </div>
 
-<div class="grid grid-cols-2 gap-3">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
     <div>
         <label class="app-label">Custom SKU <span class="app-optional">(optional)</span></label>
-        <input type="text" name="sku" placeholder="Auto if empty" class="app-input font-mono uppercase">
+        <input type="text" name="sku" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Auto if empty" class="app-input font-mono uppercase">
     </div>
     <div>
         <label class="app-label">Category <span class="app-optional">(optional)</span></label>
-        <input type="text" name="category" placeholder="Basketball, Running..." class="app-input">
+        <input type="text" name="category" autocomplete="off" placeholder="Basketball, Running..." class="app-input">
     </div>
 </div>
 

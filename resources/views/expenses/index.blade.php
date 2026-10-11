@@ -157,18 +157,18 @@
 
                 <div>
                     <label class="app-label">Description <span class="app-req">*</span></label>
-                    <input type="text" name="description" required placeholder="e.g. Freight cargo from Cebu port" class="app-input">
+                    <input type="text" name="description" required autocomplete="off" placeholder="e.g. Freight cargo from Cebu port" class="app-input">
                 </div>
 
                 <div>
                     <label class="app-label">Reference No. <span class="app-optional">(optional — OR / receipt no.)</span></label>
-                    <input type="text" name="reference_no" placeholder="e.g. OR-2026-00123 / Bill #4567" class="app-input font-mono">
+                    <input type="text" name="reference_no" autocomplete="off" spellcheck="false" placeholder="e.g. OR-2026-00123 / Bill #4567" class="app-input font-mono">
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="app-label">Amount (₱) <span class="app-req">*</span></label>
-                        <input type="number" step="0.01" name="amount" required placeholder="0.00" class="app-input font-mono">
+                        <input type="number" inputmode="decimal" step="0.01" name="amount" required placeholder="0.00" class="app-input font-mono">
                     </div>
                     <div>
                         <label class="app-label">Date <span class="app-req">*</span></label>

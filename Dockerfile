@@ -28,7 +28,13 @@ USER root
 RUN mkdir -p /var/www/html && chown -R www-data:www-data /var/www/html
 
 # Postgres client tools so the app can create pg_dump backups at runtime.
-RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client \
+# Installed from the PGDG repo at v18 so the client is never older than the
+# server (Render runs Postgres 13-18) — a newer client can dump any of them.
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates gnupg \
+    && install -d /usr/share/postgresql-common/pgdg \
+    && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+    && . /etc/os-release && echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt ${VERSION_CODENAME}-pgdg main" > /etc/apt/sources.list.d/pgdg.list \
+    && apt-get update && apt-get install -y --no-install-recommends postgresql-client-18 \
     && rm -rf /var/lib/apt/lists/*
 
 # Switch to unprivileged user to run Composer

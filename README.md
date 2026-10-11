@@ -10,8 +10,16 @@
 [![Alpine.js](https://img.shields.io/badge/Alpine.js-3.x-8BC0D0?style=for-the-badge&logo=alpinedotjs)](https://alpinejs.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Maintained](https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=for-the-badge)](https://github.com/clascuna556171/shoeboy/graphs/commit-activity)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-online-brightgreen?style=for-the-badge&logo=render)](https://the-shoe-boy.onrender.com)
 
 **The Shoe Boy** is a production-grade order and inventory management platform engineered with **Laravel 13**. It powers a footwear reselling business that sells imported sneakers through **Facebook live streams** and a **walk-in point-of-sale** — tracking every pair from supplier intake, through triage and reservation, to verified payment and doorstep delivery.
+
+<p align="center">
+  <a href="https://the-shoe-boy.onrender.com"><strong>🌐 Live Deployment → https://the-shoe-boy.onrender.com</strong></a><br>
+  <sub>Deployed on Render (Docker + managed PostgreSQL). The first request may take ~30–50s while the free instance wakes up.</sub>
+</p>
+
+> **Test logins:** Owner — `admin@theshoeboy.com` / `password` &nbsp;·&nbsp; Staff — `staff@theshoeboy.com` / `password`
 
 ---
 
@@ -47,6 +55,20 @@
 
 ---
 
+## 📱 Mobile Experience
+
+The interface is fully responsive: data tables collapse into touch-friendly cards, navigation moves into a slide-in drawer, and dialogs become keyboard-aware sheets. Captured live at a **390 × 844** phone viewport.
+
+| Secure Sign-in | Navigation Drawer | Owner Dashboard | Staff Workspace | Inventory Catalog |
+| :---: | :---: | :---: | :---: | :---: |
+| <img src="public/screenshots/mobile_login.png" width="150"> | <img src="public/screenshots/mobile_nav.png" width="150"> | <img src="public/screenshots/mobile_dashboard.png" width="150"> | <img src="public/screenshots/mobile_console.png" width="150"> | <img src="public/screenshots/mobile_inventory.png" width="150"> |
+
+| Orders Console | Batch Intake | Deliveries & J&T | Expenses Ledger | Reports & Analytics |
+| :---: | :---: | :---: | :---: | :---: |
+| <img src="public/screenshots/mobile_orders.png" width="150"> | <img src="public/screenshots/mobile_batches.png" width="150"> | <img src="public/screenshots/mobile_deliveries.png" width="150"> | <img src="public/screenshots/mobile_expenses.png" width="150"> | <img src="public/screenshots/mobile_reports.png" width="150"> |
+
+---
+
 ## 🛠️ Technical Architecture & Stack
 
 | Layer | Technology | Operational Purpose |
@@ -57,7 +79,7 @@
 | **Asset Pipeline** | Vite 8 | HMR in development, bundled/minified production assets |
 | **Domain Services** | `OrderService`, `PaymentService`, `ReportingService`, `AuditService` | Fat service layer; thin, testable controllers |
 | **Reporting** | Native `XlsxWriter` (OOXML) | Multi-sheet, filterable `.xlsx` financial exports with no external library |
-| **Testing** | PHPUnit 12 + `RefreshDatabase` | 89 feature tests covering business rules, access control, and reporting |
+| **Testing** | PHPUnit 12 + `RefreshDatabase` | 96 feature tests covering business rules, access control, and reporting |
 | **Security** | RBAC middleware, throttling, audit logging | Role gating, brute-force protection, accountability trail |
 
 ---

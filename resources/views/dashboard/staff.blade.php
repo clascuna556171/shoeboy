@@ -319,6 +319,7 @@
                                @input="handleSearch(claimInput)"
                                placeholder="Type short code (e.g. B04-001, Panda, Kobe, Wade)..."
                                data-tour="search"
+                               autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="search" enterkeyhint="search"
                                class="app-input">
                     </div>
 
@@ -443,11 +444,11 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div class="space-y-1">
                                 <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Buyer FB Handle <span class="app-req">*</span>:</label>
-                                <input type="text" name="messenger_contact" x-model="buyerHandle" required placeholder="@username (e.g. @ken_hoops23)" class="app-input">
+                                <input type="text" name="messenger_contact" x-model="buyerHandle" required autocomplete="off" spellcheck="false" placeholder="@username (e.g. @ken_hoops23)" class="app-input app-input-solid">
                             </div>
                             <div class="space-y-1">
                                 <label class="block font-semibold text-neutral-700 dark:text-neutral-300">Customer Full Name <span class="app-req">*</span>:</label>
-                                <input type="text" name="customer_name" x-model="buyerName" required placeholder="e.g. Ken Hoops" class="app-input">
+                                <input type="text" name="customer_name" x-model="buyerName" required autocomplete="name" placeholder="e.g. Ken Hoops" class="app-input app-input-solid">
                             </div>
                         </div>
 
@@ -464,7 +465,7 @@
                                             <div class="text-[11px] text-neutral-500 font-mono" x-text="item.sku + ' • ' + item.size"></div>
                                         </div>
                                         <div class="flex items-center gap-2">
-                                            <input type="number" step="0.01" min="0" x-model="item.price" class="app-input app-input-sm font-mono text-right w-24">
+                                            <input type="number" inputmode="decimal" step="0.01" min="0" x-model="item.price" class="app-input app-input-solid app-input-sm font-mono text-right w-24">
                                             <button type="button" @click="removeFromClaim(item.id)" class="text-neutral-500 hover:text-rose-500">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                             </button>
@@ -480,7 +481,7 @@
                         <div class="flex items-end justify-between gap-3 pt-2 border-t border-neutral-100 dark:border-neutral-800">
                             <div>
                                 <span class="text-xs text-neutral-500 block">Reservation Window:</span>
-                                <select name="reservation_minutes" x-model="claimReservation" class="app-select mt-1">
+                                <select name="reservation_minutes" x-model="claimReservation" class="app-select app-input-solid mt-1">
                                     <option value="120">2 Hours (Standard Live Window)</option>
                                     <option value="60">1 Hour (Flash Claim)</option>
                                     <option value="1440">24 Hours (Next Day Settlement)</option>
@@ -604,6 +605,7 @@
                     <input type="text"
                            x-model="posSearch"
                            placeholder="Filter catalog by brand, model or SKU..."
+                           autocomplete="off" spellcheck="false" inputmode="search" enterkeyhint="search"
                            class="app-input">
 
                     <div class="flex flex-nowrap items-center gap-1.5 text-xs overflow-x-auto pb-1">
@@ -696,14 +698,14 @@
 
                     <div class="space-y-2 pt-2 border-t border-neutral-100 dark:border-neutral-800 text-sm">
                         <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Adjustments</div>
-                        <div class="grid grid-cols-2 gap-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             <div>
                                 <label class="block text-xs text-neutral-500 font-medium mb-1">Discount (₱):</label>
-                                <input type="number" x-model="posDiscount" placeholder="0.00" class="app-input app-input-sm font-mono">
+                                <input type="number" inputmode="decimal" x-model="posDiscount" placeholder="0.00" class="app-input app-input-solid app-input-sm font-mono">
                             </div>
                             <div>
                                 <label class="block text-xs text-neutral-500 font-medium mb-1">Reason / Note:</label>
-                                <input type="text" x-model="posDiscountNote" placeholder="Regular buyer" class="app-input app-input-sm">
+                                <input type="text" x-model="posDiscountNote" autocomplete="off" placeholder="Regular buyer" class="app-input app-input-solid app-input-sm">
                             </div>
                         </div>
 
@@ -745,7 +747,7 @@
                             <div class="p-3 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/60 text-sm space-y-2">
                                 <div class="flex items-center justify-between">
                                     <label class="text-neutral-500">Cash Received (₱) <span class="app-req">*</span>:</label>
-                                    <input type="number" step="0.01" min="0" x-model="posCashTendered" @input="posError = ''" name="cash_tendered" :required="posPaymentMethod === 'cash'" placeholder="0.00" class="app-input app-input-sm font-mono text-right w-32 !bg-white dark:!bg-neutral-900 !border-neutral-300 dark:!border-neutral-600">
+                                    <input type="number" inputmode="decimal" step="0.01" min="0" x-model="posCashTendered" @input="posError = ''" name="cash_tendered" :required="posPaymentMethod === 'cash'" placeholder="0.00" class="app-input app-input-solid app-input-sm font-mono text-right w-32">
                                 </div>
                                 <template x-if="posError">
                                     <p class="text-[11px] font-medium text-rose-600 dark:text-rose-400" x-text="posError"></p>
@@ -760,7 +762,7 @@
                         <template x-if="posPaymentMethod === 'gcash'">
                             <div class="p-3 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/60 text-sm space-y-1">
                                 <label class="text-neutral-500 block">GCash Reference No <span class="app-req">*</span>:</label>
-                                <input type="text" x-model="posGcashRef" name="gcash_ref" :required="posPaymentMethod === 'gcash'" placeholder="e.g. 1092837482" class="app-input app-input-sm font-mono !bg-white dark:!bg-neutral-900 !border-neutral-300 dark:!border-neutral-600">
+                                <input type="text" inputmode="numeric" x-model="posGcashRef" name="gcash_ref" :required="posPaymentMethod === 'gcash'" autocomplete="off" spellcheck="false" placeholder="e.g. 1092837482" class="app-input app-input-solid app-input-sm font-mono">
                             </div>
                         </template>
 
@@ -791,7 +793,7 @@
                         <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-500">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         </span>
-                        <input type="text" x-model="triageSearch" placeholder="Search SKU, brand, model..."
+                        <input type="text" x-model="triageSearch" placeholder="Search SKU, brand, model..." autocomplete="off" spellcheck="false" inputmode="search" enterkeyhint="search"
                                class="app-input app-input-sm pl-9 w-full">
                     </div>
                     <div class="flex w-full flex-nowrap items-center gap-1">
@@ -967,7 +969,7 @@
 
                 <div>
                     <label class="app-label">Payment Method <span class="app-req">*</span></label>
-                    <select name="method" x-model="payMethod" class="app-select">
+                    <select name="method" x-model="payMethod" class="app-select app-input-solid">
                         <option value="gcash">GCash Transfer</option>
                         <option value="cash">Cash Drawer</option>
                     </select>
@@ -975,7 +977,7 @@
 
                 <div x-show="payMethod === 'gcash'">
                     <label class="app-label">GCash Reference Number <span class="app-req">*</span></label>
-                    <input type="text" name="reference_no" x-model="payRef" :required="payMethod === 'gcash'" placeholder="e.g. 1092837482" class="app-input font-mono uppercase">
+                    <input type="text" inputmode="numeric" name="reference_no" x-model="payRef" :required="payMethod === 'gcash'" autocomplete="off" spellcheck="false" placeholder="e.g. 1092837482" class="app-input app-input-solid font-mono uppercase">
                     <span class="text-xs text-neutral-500 mt-1 block">Unique reference check is enforced.</span>
                 </div>
 

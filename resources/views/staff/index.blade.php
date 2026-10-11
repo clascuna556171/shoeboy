@@ -178,15 +178,15 @@
 
                 <div>
                     <label class="app-label">Staff Full Name <span class="app-req">*</span></label>
-                    <input type="text" name="name" required placeholder="e.g. Maria Helper" class="app-input">
+                    <input type="text" name="name" required autocomplete="name" placeholder="e.g. Maria Helper" class="app-input">
                 </div>
 
                 <div>
                     <label class="app-label">Email Address (Login) <span class="app-req">*</span></label>
-                    <input type="email" name="email" required placeholder="staff@theshoeboy.com" class="app-input">
+                    <input type="email" name="email" required autocomplete="email" placeholder="staff@theshoeboy.com" class="app-input">
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="app-label">Role <span class="app-req">*</span></label>
                         <select name="role" required class="app-select">
@@ -196,18 +196,18 @@
                     </div>
                     <div>
                         <label class="app-label">Contact Number <span class="app-optional">(optional)</span></label>
-                        <input type="text" name="contact_number" placeholder="09171234567" class="app-input">
+                        <input type="tel" inputmode="tel" name="contact_number" autocomplete="tel" placeholder="09171234567" class="app-input">
                     </div>
                 </div>
 
                 <div>
                     <label class="app-label">Password (min 8 characters) <span class="app-req">*</span></label>
-                    <input type="password" name="password" required minlength="8" class="app-input">
+                    <input type="password" name="password" required minlength="8" autocomplete="new-password" class="app-input">
                 </div>
 
                 <div>
                     <label class="app-label">Confirm Password <span class="app-req">*</span></label>
-                    <input type="password" name="password_confirmation" required minlength="8" class="app-input">
+                    <input type="password" name="password_confirmation" required minlength="8" autocomplete="new-password" class="app-input">
                 </div>
 
                 <div class="flex gap-2 pt-4">
@@ -226,15 +226,15 @@
 
                 <div>
                     <label class="app-label">Full Name <span class="app-req">*</span></label>
-                    <input type="text" name="name" :value="editingUser?.name" required class="app-input">
+                    <input type="text" name="name" :value="editingUser?.name" required autocomplete="name" class="app-input">
                 </div>
 
                 <div>
                     <label class="app-label">Email Address (Login) <span class="app-req">*</span></label>
-                    <input type="email" name="email" :value="editingUser?.email" required class="app-input">
+                    <input type="email" name="email" :value="editingUser?.email" required autocomplete="email" class="app-input">
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="app-label">Role <span class="app-req">*</span></label>
                         <select name="role" :value="editingUser?.role" required class="app-select">
@@ -244,7 +244,7 @@
                     </div>
                     <div>
                         <label class="app-label">Contact Number <span class="app-optional">(optional)</span></label>
-                        <input type="text" name="contact_number" :value="editingUser?.contact_number" class="app-input">
+                        <input type="tel" inputmode="tel" name="contact_number" :value="editingUser?.contact_number" autocomplete="tel" class="app-input">
                     </div>
                 </div>
 
@@ -256,14 +256,14 @@
                     </select>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="app-label">New Password <span class="app-optional">(optional)</span></label>
-                        <input type="password" name="password" minlength="8" class="app-input">
+                        <input type="password" name="password" minlength="8" autocomplete="new-password" class="app-input">
                     </div>
                     <div>
                         <label class="app-label">Confirm Password <span class="app-optional">(optional)</span></label>
-                        <input type="password" name="password_confirmation" minlength="8" class="app-input">
+                        <input type="password" name="password_confirmation" minlength="8" autocomplete="new-password" class="app-input">
                     </div>
                 </div>
 

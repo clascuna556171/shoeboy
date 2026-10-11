@@ -218,43 +218,43 @@
                 @csrf
                 @method('PUT')
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="app-label">Brand <span class="app-req">*</span></label>
-                        <input type="text" name="brand" :value="editItem?.brand" required class="app-input">
+                        <input type="text" name="brand" :value="editItem?.brand" required autocomplete="off" class="app-input">
                     </div>
                     <div>
                         <label class="app-label">Model <span class="app-req">*</span></label>
-                        <input type="text" name="model" :value="editItem?.model" required class="app-input">
+                        <input type="text" name="model" :value="editItem?.model" required autocomplete="off" class="app-input">
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="app-label">Size <span class="app-req">*</span></label>
-                        <input type="text" name="size" :value="editItem?.size" required class="app-input font-mono">
+                        <input type="text" name="size" :value="editItem?.size" required autocomplete="off" class="app-input font-mono">
                     </div>
                     <div>
                         <label class="app-label">Condition <span class="app-req">*</span></label>
-                        <input type="text" name="condition" :value="editItem?.condition" required class="app-input">
+                        <input type="text" name="condition" :value="editItem?.condition" required autocomplete="off" class="app-input">
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                         <label class="app-label">Target Price (₱) <span class="app-req">*</span></label>
-                        <input type="number" step="0.01" name="listed_price" :value="editItem?.listed_price" required class="app-input font-mono">
+                        <input type="number" inputmode="decimal" step="0.01" name="listed_price" :value="editItem?.listed_price" required class="app-input font-mono">
                         <p class="mt-1 text-[11px] text-neutral-500">Tier auto-updates from this price.</p>
                     </div>
                     <div>
                         <label class="app-label">Repair Cost (₱) <span class="app-optional">(optional)</span></label>
-                        <input type="number" step="0.01" name="repair_cost" :value="editItem?.repair_cost" class="app-input font-mono">
+                        <input type="number" inputmode="decimal" step="0.01" name="repair_cost" :value="editItem?.repair_cost" class="app-input font-mono">
                     </div>
                 </div>
 
                 <div>
                     <label class="app-label">Category <span class="app-optional">(optional)</span></label>
-                    <input type="text" name="category" :value="editItem?.category" class="app-input">
+                    <input type="text" name="category" :value="editItem?.category" autocomplete="off" class="app-input">
                     <p class="mt-1 text-[11px] text-neutral-500">Status is set automatically when a pair is awarded or sold.</p>
                 </div>
 

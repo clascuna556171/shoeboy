@@ -37,14 +37,14 @@
                         class="px-2.5 py-2 rounded-xl transition-all">Custom…</button>
             </div>
             <input type="hidden" name="preset" :value="preset">
-            <div x-show="isCustom" x-cloak class="grid grid-cols-2 gap-3 pt-1">
+            <div x-show="isCustom" x-cloak class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                 <div>
                     <label class="app-label">Start Date <span class="app-req">*</span></label>
-                    <input type="date" name="start_date" :required="isCustom" class="app-input">
+                    <input type="date" name="start_date" :required="isCustom" autocomplete="off" class="app-input">
                 </div>
                 <div>
                     <label class="app-label">End Date <span class="app-req">*</span></label>
-                    <input type="date" name="end_date" :required="isCustom" class="app-input">
+                    <input type="date" name="end_date" :required="isCustom" autocomplete="off" class="app-input">
                 </div>
             </div>
         </div>
@@ -94,7 +94,7 @@
         {{-- Filters --}}
         <div class="space-y-2">
             <label class="app-label">5 · Filters</label>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                     <label class="block text-[11px] text-neutral-500 mb-1">Channel</label>
                     <select name="channel" x-model="channel" class="app-select app-input-sm">

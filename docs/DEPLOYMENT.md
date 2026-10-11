@@ -64,7 +64,7 @@ The repo includes `Dockerfile`, `docker/entrypoint.sh`, and `render.yaml`.
    php artisan schedule:run
    ```
    Without this, reservations will not auto-release and daily backups will not run.
-5. **Backups:** the app now shells out to `pg_dump` (installed in the image) and stores `.sql` dumps under `storage/app/backups`. In-app **restore/import** is SQLite-only — restore a Postgres dump with `psql` or Render's database tooling.
+5. **Backups:** the image installs the **PostgreSQL 18 client** (`pg_dump`) from the PGDG repo, so it can dump any Render server (13–18) — the client must never be older than the server. Dumps are stored as `.sql` under `storage/app/backups`. In-app **restore/import** is SQLite-only — restore a Postgres dump with `psql` or Render's database tooling. Note the **free tier's disk is ephemeral**: snapshots are lost on redeploy/restart, so **create a backup, then download it immediately**.
 6. The free plan sleeps when idle, so the first request after a while is slow.
 
 ### Environment notes

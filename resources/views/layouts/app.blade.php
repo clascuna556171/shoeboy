@@ -7,7 +7,7 @@
           density: localStorage.getItem('shoeboy.density') || 'compact',
           navMode: localStorage.getItem('shoeboy.nav') || 'top',
           listView: localStorage.getItem('shoeboy.view') || 'auto',
-          cardDensity: localStorage.getItem('shoeboy.cardDensity') || 'compact',
+          cardDensity: localStorage.getItem('shoeboy.cardDensity') || 'comfortable',
           railCollapsed: localStorage.getItem('shoeboy.nav.collapsed') === '1',
           settingsOpen: false,
           mobileNav: false,
@@ -72,7 +72,7 @@
             document.documentElement.setAttribute('data-nav', localStorage.getItem('shoeboy.nav') || 'top');
             document.documentElement.setAttribute('data-rail', localStorage.getItem('shoeboy.nav.collapsed') === '1' ? 'collapsed' : 'expanded');
             document.documentElement.setAttribute('data-list', localStorage.getItem('shoeboy.view') || 'auto');
-            document.documentElement.setAttribute('data-card-density', localStorage.getItem('shoeboy.cardDensity') || 'compact');
+            document.documentElement.setAttribute('data-card-density', localStorage.getItem('shoeboy.cardDensity') || 'comfortable');
         })();
     </script>
 
@@ -282,22 +282,19 @@
         </div>
 
         @auth
-        <div x-show="mobileNav" x-cloak class="xl:hidden fixed inset-0 z-[90]" role="dialog" aria-modal="true" aria-label="Navigation menu">
-            <div x-show="mobileNav"
-                 x-transition:enter="transition-opacity ease-out duration-200"
-                 x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                 x-transition:leave="transition-opacity ease-in duration-150"
-                 x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-                 @click="if (!document.documentElement.classList.contains('tour-open')) mobileNav = false"
-                 class="absolute inset-0 bg-black/40"></div>
+        {{-- Mobile navigation drawer. Kept mounted (no x-show) so its compositing
+             layer stays warm — the first open animates as a pure GPU transform
+             instead of a display:none first-paint hitch. --}}
+        <div x-cloak class="xl:hidden fixed inset-0 z-[90]"
+             :class="mobileNav ? 'pointer-events-auto' : 'pointer-events-none'"
+             :inert="!mobileNav"
+             role="dialog" aria-modal="true" aria-label="Navigation menu">
+            <div @click="if (!document.documentElement.classList.contains('tour-open')) mobileNav = false"
+                 class="absolute inset-0 bg-black/40 transition-opacity ease-out duration-200"
+                 :class="mobileNav ? 'opacity-100' : 'opacity-0'"></div>
 
-            <aside x-show="mobileNav"
-                   x-transition:enter="transition ease-out duration-200"
-                   x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
-                   x-transition:leave="transition ease-in duration-150"
-                   x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full"
-                   class="absolute right-0 top-0 bottom-0 w-[86vw] max-w-xs bg-white dark:bg-[#1C1C1E] border-l border-neutral-200 dark:border-neutral-800 shadow-2xl flex flex-col"
-                   @click.outside="if (!document.documentElement.classList.contains('tour-open')) mobileNav = false">
+            <aside class="absolute right-0 top-0 bottom-0 w-[86vw] max-w-xs bg-white dark:bg-[#1C1C1E] border-l border-neutral-200 dark:border-neutral-800 shadow-2xl flex flex-col transition-transform ease-out duration-200 transform-gpu will-change-transform"
+                   :class="mobileNav ? 'translate-x-0' : 'translate-x-full'">
 
                 <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-neutral-100 dark:border-neutral-800">
                     <div class="flex items-center gap-2.5 min-w-0">
@@ -328,39 +325,6 @@
                     </div>
                     @endforeach
                 </nav>
-
-                <div class="border-t border-neutral-100 dark:border-neutral-800 p-2 space-y-0.5">
-                    <a href="{{ route('help.index') }}" @click="mobileNav = false"
-                       class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
-                        <svg class="w-4 h-4 text-[#0071E3] dark:text-[#0A84FF] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <span>Help &amp; Guide</span>
-                    </a>
-                    <button type="button" @click="mobileNav = false; settingsOpen = true"
-                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        <span>Settings</span>
-                    </button>
-                    @if($isOwner)
-                    <a href="{{ route('backups.index') }}" @click="mobileNav = false"
-                       class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-5L9 5H6a2 2 0 00-2 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 12v4m-2-2h4"/></svg>
-                        <span>Data &amp; Backups</span>
-                    </a>
-                    @endif
-                    <form action="{{ route('logout') }}" method="POST">
-                        @csrf
-                        <button type="button"
-                                data-confirm="Sign out?"
-                                data-confirm-variant="neutral"
-                                data-confirm-icon="logout"
-                                data-confirm-message="You will be returned to the login screen."
-                                data-confirm-label="Sign out"
-                                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors">
-                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                            <span>Sign out</span>
-                        </button>
-                    </form>
-                </div>
             </aside>
         </div>
         @endauth

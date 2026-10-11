@@ -8,6 +8,7 @@ use App\Models\Order;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
 
 /**
@@ -143,7 +144,16 @@ class BackupService
         $binary = $this->driver() === 'pgsql' ? 'pg_dump' : 'mysqldump';
         $url = $this->connectionUrl();
 
-        if (! $url || ! $this->binaryAvailable($binary)) {
+        if (! $url) {
+            return null;
+        }
+
+        if (! $this->binaryAvailable($binary)) {
+            Log::warning('Database backup skipped: dump utility not available.', [
+                'binary' => $binary,
+                'driver' => $this->driver(),
+            ]);
+
             return null;
         }
 
@@ -159,11 +169,23 @@ class BackupService
             $result = Process::timeout(180)->run($command);
 
             if (! $result->successful() || ! File::exists($target) || filesize($target) === 0) {
+                Log::error('Database dump failed.', [
+                    'binary' => $binary,
+                    'exit_code' => $result->exitCode(),
+                    'error' => trim($result->errorOutput()),
+                    'server_version' => $this->serverVersion(),
+                ]);
+
                 File::delete($target);
 
                 return null;
             }
         } catch (\Throwable $e) {
+            Log::error('Database dump threw an exception.', [
+                'binary' => $binary,
+                'exception' => $e->getMessage(),
+            ]);
+
             File::delete($target);
 
             return null;
@@ -177,6 +199,16 @@ class BackupService
         $this->prune();
 
         return $target;
+    }
+
+    /** Best-effort server version string, used only for failure diagnostics. */
+    protected function serverVersion(): ?string
+    {
+        try {
+            return (string) DB::selectOne('select version() as v')->v;
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     /**

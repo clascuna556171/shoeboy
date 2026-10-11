@@ -1,10 +1,11 @@
 /**
  * Shared truncation tooltip.
  *
- * Any element with a `data-tip` attribute (e.g. the <x-cell> component) shows
- * a small styled bubble on hover/focus — but only when its text is actually
- * clipped, so short values stay quiet. The bubble is teleported to <body> and
- * positioned fixed so a table's horizontal scroll container can never clip it.
+ * Any element with a `data-tip` attribute (e.g. the <x-cell> component) or any
+ * element carrying Tailwind's `.truncate` utility shows a small styled bubble on
+ * hover/focus/tap — but only when its text is actually clipped, so short values
+ * stay quiet. The bubble is teleported to <body> and positioned fixed so a
+ * table's horizontal scroll container can never clip it.
  */
 export default function registerTooltip() {
     const tip = document.createElement('div');
@@ -15,13 +16,20 @@ export default function registerTooltip() {
 
     let current = null;
 
+    // Explicit `data-tip` wins; otherwise fall back to a `.truncate` element's
+    // own text so every clipped label is revealable without per-element markup.
+    const targetOf = (el) => el.closest('[data-tip], .truncate');
+
+    const textOf = (target) =>
+        (target.getAttribute('data-tip') || target.textContent || '').trim();
+
     const hide = () => {
         tip.style.display = 'none';
         current = null;
     };
 
     const show = (target) => {
-        const text = target.getAttribute('data-tip');
+        const text = textOf(target);
         if (!text) return;
 
         // Only bother when the value is genuinely truncated.
@@ -47,7 +55,7 @@ export default function registerTooltip() {
     };
 
     document.addEventListener('mouseover', (e) => {
-        const t = e.target.closest('[data-tip]');
+        const t = targetOf(e.target);
         if (t && t !== current) show(t);
     });
 
@@ -56,7 +64,7 @@ export default function registerTooltip() {
     });
 
     document.addEventListener('focusin', (e) => {
-        const t = e.target.closest('[data-tip]');
+        const t = targetOf(e.target);
         if (t) show(t);
     });
 
@@ -64,7 +72,7 @@ export default function registerTooltip() {
 
     // Tap / click to reveal (phones have no hover).
     document.addEventListener('click', (e) => {
-        const t = e.target.closest('[data-tip]');
+        const t = targetOf(e.target);
         if (t) {
             if (current === t) { hide(); } else { show(t); }
         } else {
