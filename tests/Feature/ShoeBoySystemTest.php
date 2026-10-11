@@ -175,6 +175,37 @@ class ShoeBoySystemTest extends TestCase
         $response->assertSee('Ledger test power bill');
     }
 
+    public function test_reports_breakdown_sales_can_be_sorted(): void
+    {
+        $cheap = app(OrderService::class)->awardItem(
+            item: $this->item, customer: $this->customer, staff: $this->staff, awardedPrice: 1000.00
+        );
+        app(PaymentService::class)->recordPayment($cheap, 1000.00, 'cash', null, $this->staff);
+
+        $secondItem = Item::create([
+            'batch_id' => $this->batch->id,
+            'sku' => 'B04-002',
+            'brand' => 'Anta',
+            'model' => 'KT 9',
+            'price_tier' => 'Tier 1',
+            'listed_price' => 4500.00,
+            'condition' => 'Pristine',
+            'size' => 'US 10.5',
+            'status' => 'available',
+            'repair_cost' => 0.00,
+        ]);
+        $expensive = app(OrderService::class)->awardItem(
+            item: $secondItem, customer: $this->customer, staff: $this->staff, awardedPrice: 4500.00
+        );
+        app(PaymentService::class)->recordPayment($expensive, 4500.00, 'cash', null, $this->staff);
+
+        // Ascending price → the cheaper order's ledger row comes first.
+        $this->actingAs($this->owner)
+            ->get('/reports?reportTab=sales&sort=awarded_price&direction=asc')
+            ->assertOk()
+            ->assertSeeInOrder([$cheap->order_number, $expensive->order_number]);
+    }
+
     public function test_staff_can_award_available_item_to_customer(): void
     {
         $response = $this->actingAs($this->staff)->post('/orders/award', [

@@ -10,11 +10,21 @@
 @section('content')
 <div class="space-y-6" x-data="{
         reportTab: @js(request('reportTab', 'batches')),
+        sort: @js($sort),
+        dir: @js($direction),
         setReportTab(key) {
             this.reportTab = key;
             const u = new URL(location.href);
             u.searchParams.set('reportTab', key);
             history.replaceState(null, '', u);
+        },
+        sortUrl(column) {
+            const u = new URL(location.href);
+            u.searchParams.set('reportTab', this.reportTab);
+            const nextDir = (this.sort === column && this.dir === 'asc') ? 'desc' : 'asc';
+            u.searchParams.set('sort', column);
+            u.searchParams.set('direction', nextDir);
+            return u.toString();
         }
      }">
 
@@ -166,14 +176,14 @@
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                         <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
-                            <th class="py-3 px-4 font-semibold">Batch</th>
-                            <th class="py-3 px-4 font-semibold">Supplier</th>
+                            <x-report-sort-th column="batch_code" label="Batch" />
+                            <x-report-sort-th column="supplier_name" label="Supplier" />
                             <th class="py-3 px-4 font-semibold text-center">Pairs (S/R/A)</th>
-                            <th class="py-3 px-4 font-semibold text-right">Batch Cost</th>
-                            <th class="py-3 px-4 font-semibold text-right">Realized Sales</th>
-                            <th class="py-3 px-4 font-semibold text-right">Order Profit</th>
-                            <th class="py-3 px-4 font-semibold text-right">Expenses</th>
-                            <th class="py-3 px-4 font-semibold text-right">Net Proceeds</th>
+                            <x-report-sort-th column="total_cost" label="Batch Cost" align="right" />
+                            <x-report-sort-th column="realized_revenue" label="Realized Sales" align="right" />
+                            <x-report-sort-th column="order_profit_sum" label="Order Profit" align="right" />
+                            <x-report-sort-th column="batch_expenses" label="Expenses" align="right" />
+                            <x-report-sort-th column="net_proceeds" label="Net Proceeds" align="right" />
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800/60">
@@ -223,12 +233,12 @@
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                         <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
-                            <th class="py-3 px-4 font-semibold">Date</th>
-                            <th class="py-3 px-4 font-semibold text-center">Completed Orders</th>
-                            <th class="py-3 px-4 font-semibold text-right">Gross Sales</th>
-                            <th class="py-3 px-4 font-semibold text-right">Realized Net Profit</th>
-                            <th class="py-3 px-4 font-semibold text-right">Cash Collected</th>
-                            <th class="py-3 px-4 font-semibold text-right">GCash Verified</th>
+                            <x-report-sort-th column="date" label="Date" />
+                            <x-report-sort-th column="orders_count" label="Completed Orders" align="center" />
+                            <x-report-sort-th column="gross_sales" label="Gross Sales" align="right" />
+                            <x-report-sort-th column="net_profit" label="Realized Net Profit" align="right" />
+                            <x-report-sort-th column="cash_collected" label="Cash Collected" align="right" />
+                            <x-report-sort-th column="gcash_collected" label="GCash Verified" align="right" />
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800/60">
@@ -274,11 +284,11 @@
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                         <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
-                            <th class="py-3 px-4 font-semibold">Price Tier</th>
-                            <th class="py-3 px-4 font-semibold text-center">Units Sold / Total</th>
-                            <th class="py-3 px-4 font-semibold text-right">Gross Sales</th>
-                            <th class="py-3 px-4 font-semibold text-right">Allocated COGS</th>
-                            <th class="py-3 px-4 font-semibold text-right">Net Profit</th>
+                            <x-report-sort-th column="tier" label="Price Tier" />
+                            <x-report-sort-th column="sold_count" label="Units Sold / Total" align="center" />
+                            <x-report-sort-th column="total_revenue" label="Gross Sales" align="right" />
+                            <x-report-sort-th column="total_cogs" label="Allocated COGS" align="right" />
+                            <x-report-sort-th column="net_profit" label="Net Profit" align="right" />
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800/60">
@@ -314,13 +324,13 @@
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                         <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
-                            <th class="py-3 px-4 font-semibold">Order</th>
-                            <th class="py-3 px-4 font-semibold">Item</th>
+                            <x-report-sort-th column="order_number" label="Order" />
+                            <x-report-sort-th column="brand_model" label="Item" />
                             <th class="py-3 px-4 font-semibold">Channel</th>
-                            <th class="py-3 px-4 font-semibold text-right">Price</th>
-                            <th class="py-3 px-4 font-semibold text-right">Profit</th>
-                            <th class="py-3 px-4 font-semibold">Customer</th>
-                            <th class="py-3 px-4 font-semibold">Settlement</th>
+                            <x-report-sort-th column="awarded_price" label="Price" align="right" />
+                            <x-report-sort-th column="unit_profit" label="Profit" align="right" />
+                            <x-report-sort-th column="customer" label="Customer" />
+                            <x-report-sort-th column="payment_method" label="Settlement" />
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800/60">
@@ -385,12 +395,12 @@
                 <table class="w-full text-left text-sm">
                     <thead class="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">
                         <tr class="bg-neutral-50/60 dark:bg-neutral-800/30">
-                            <th class="py-3 px-4 font-semibold">Date</th>
-                            <th class="py-3 px-4 font-semibold">Category</th>
-                            <th class="py-3 px-4 font-semibold">Description</th>
-                            <th class="py-3 px-4 font-semibold">Reference No</th>
-                            <th class="py-3 px-4 font-semibold">Batch</th>
-                            <th class="py-3 px-4 font-semibold text-right">Amount</th>
+                            <x-report-sort-th column="date" label="Date" />
+                            <x-report-sort-th column="category" label="Category" />
+                            <x-report-sort-th column="description" label="Description" />
+                            <x-report-sort-th column="reference_no" label="Reference No" />
+                            <x-report-sort-th column="batch" label="Batch" />
+                            <x-report-sort-th column="amount" label="Amount" align="right" />
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800/60">

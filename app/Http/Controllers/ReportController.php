@@ -21,13 +21,41 @@ class ReportController extends Controller
 
         $startDate = $request->query('start_date');
         $endDate = $request->query('end_date');
+        $sort = $request->query('sort');
+        $direction = $request->query('direction') === 'asc' ? 'asc' : 'desc';
 
         $metrics = $this->reportingService->getOverallFinancialMetrics();
-        $batchReports = $this->reportingService->getBatchProfitSummary();
-        $tierReports = $this->reportingService->getPriceTierSummary();
-        $sessionReports = $this->reportingService->getSessionSummary($startDate, $endDate);
-        $salesLedger = $this->reportingService->getSalesLedger($startDate, $endDate);
-        $expenseLedger = $this->reportingService->getExpenseLedger($startDate, $endDate);
+
+        $batchReports = $this->sortRows(
+            $this->reportingService->getBatchProfitSummary(),
+            $sort,
+            $direction,
+            ['batch_code', 'supplier_name', 'date_acquired', 'total_pairs', 'sold_pairs', 'reserved_pairs', 'available_pairs', 'total_cost', 'realized_revenue', 'order_profit_sum', 'batch_expenses', 'net_proceeds'],
+        );
+        $tierReports = $this->sortRows(
+            $this->reportingService->getPriceTierSummary(),
+            $sort,
+            $direction,
+            ['tier', 'total_items', 'sold_count', 'total_revenue', 'total_cogs', 'net_profit'],
+        );
+        $sessionReports = $this->sortRows(
+            $this->reportingService->getSessionSummary($startDate, $endDate),
+            $sort,
+            $direction,
+            ['date', 'orders_count', 'gross_sales', 'net_profit', 'cash_collected', 'gcash_collected'],
+        );
+        $salesLedger = $this->sortRows(
+            $this->reportingService->getSalesLedger($startDate, $endDate),
+            $sort,
+            $direction,
+            ['order_number', 'date', 'sku', 'brand_model', 'size', 'awarded_price', 'unit_profit', 'customer', 'payment_method', 'staff'],
+        );
+        $expenseLedger = $this->sortRows(
+            $this->reportingService->getExpenseLedger($startDate, $endDate),
+            $sort,
+            $direction,
+            ['date', 'category', 'description', 'reference_no', 'batch', 'amount'],
+        );
 
         return view('reports.index', compact(
             'metrics',
@@ -37,8 +65,39 @@ class ReportController extends Controller
             'salesLedger',
             'expenseLedger',
             'startDate',
-            'endDate'
+            'endDate',
+            'sort',
+            'direction'
         ));
+    }
+
+    /**
+     * Sort an array of associative rows by a whitelisted column (numeric-aware).
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     * @param  array<int, string>  $allowed
+     * @return array<int, array<string, mixed>>
+     */
+    protected function sortRows(array $rows, ?string $sort, string $direction, array $allowed): array
+    {
+        if (! $sort || ! in_array($sort, $allowed, true)) {
+            return $rows;
+        }
+
+        $multiplier = $direction === 'asc' ? 1 : -1;
+
+        usort($rows, function (array $a, array $b) use ($sort, $multiplier) {
+            $left = $a[$sort] ?? null;
+            $right = $b[$sort] ?? null;
+
+            if (is_numeric($left) && is_numeric($right)) {
+                return ($left <=> $right) * $multiplier;
+            }
+
+            return strcasecmp((string) $left, (string) $right) * $multiplier;
+        });
+
+        return $rows;
     }
 
     public function exportExcel(Request $request): Response
