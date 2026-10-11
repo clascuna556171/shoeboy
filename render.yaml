@@ -16,7 +16,7 @@ services:
       - key: ASSET_URL
         value: "https://the-shoe-boy.onrender.com"
       - key: APP_KEY
-        sync: false
+        value: "base64:ooDQex0Cr3QxZWMsy8Z3o90OUi1B4t+e4vSNkij+JpU="
       - key: DB_CONNECTION
         value: pgsql
       - fromDatabase:
