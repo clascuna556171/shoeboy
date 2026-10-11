@@ -794,9 +794,9 @@
                         <input type="text" x-model="triageSearch" placeholder="Search SKU, brand, model..."
                                class="app-input app-input-sm pl-9 w-full">
                     </div>
-                    <div class="flex flex-wrap items-center gap-1.5">
+                    <div class="flex flex-nowrap items-center gap-1">
                         <button type="button" @click="triageStatus = 'all'"
-                                class="app-btn app-btn-sm"
+                                class="app-btn app-btn-sm !px-2.5 whitespace-nowrap shrink-0"
                                 :class="triageStatus === 'all' ? 'app-btn-primary' : 'app-btn-secondary'">
                             All
                             <span class="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-mono leading-none"
@@ -804,7 +804,7 @@
                                   x-text="shoes.length"></span>
                         </button>
                         <button type="button" @click="triageStatus = 'washing'"
-                                class="app-btn app-btn-sm"
+                                class="app-btn app-btn-sm !px-2.5 whitespace-nowrap shrink-0"
                                 :class="triageStatus === 'washing' ? 'app-btn-primary' : 'app-btn-secondary'">
                             Washing
                             <span class="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-mono leading-none"
@@ -812,15 +812,15 @@
                                   x-text="countByTriage('washing')"></span>
                         </button>
                         <button type="button" @click="triageStatus = 'under_repair'"
-                                class="app-btn app-btn-sm"
+                                class="app-btn app-btn-sm !px-2.5 whitespace-nowrap shrink-0"
                                 :class="triageStatus === 'under_repair' ? 'app-btn-primary' : 'app-btn-secondary'">
-                            Under repair
+                            Repair
                             <span class="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-mono leading-none"
                                   :class="triageStatus === 'under_repair' ? 'bg-white/20 text-white' : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'"
                                   x-text="countByTriage('under_repair')"></span>
                         </button>
                         <button type="button" @click="triageStatus = 'available'"
-                                class="app-btn app-btn-sm"
+                                class="app-btn app-btn-sm !px-2.5 whitespace-nowrap shrink-0"
                                 :class="triageStatus === 'available' ? 'app-btn-primary' : 'app-btn-secondary'">
                             Ready
                             <span class="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-mono leading-none"
@@ -832,13 +832,13 @@
             </div>
 
             {{-- Cards (phones + desktop when List layout = cards) --}}
-            <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3">
+            <div class="app-list-cards">
                 <template x-for="item in triageItems" :key="item.id">
                     <div class="app-card app-list-card app-card-hover flex flex-col gap-3">
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
                                 <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]" x-text="item.sku"></span>
-                                <div class="mt-0.5 font-semibold text-neutral-800 dark:text-neutral-200 truncate" x-text="`${item.brand} ${item.model}`"></div>
+                                <div class="mt-0.5 cell-text font-semibold text-neutral-800 dark:text-neutral-200" :data-tip="`${item.brand} ${item.model}`" x-text="`${item.brand} ${item.model}`"></div>
                             </div>
                             <span class="badge shrink-0"
                                   :class="item.triage_status === 'washing' ? 'badge-washing' : (item.triage_status === 'under_repair' ? 'badge-repair' : 'badge-available')"

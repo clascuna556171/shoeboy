@@ -1,4 +1,4 @@
-@props(['variant' => 'header', 'showIdentity' => true, 'pages' => []])
+@props(['variant' => 'header', 'showIdentity' => true])
 
 @php
     $user = auth()->user();
@@ -61,7 +61,7 @@
             @csrf
             <button type="button"
                     data-confirm="Sign out?"
-                    data-confirm-variant="danger"
+                    data-confirm-variant="neutral"
                     data-confirm-icon="logout"
                     data-confirm-message="You will be returned to the login screen."
                     data-confirm-label="Sign out"

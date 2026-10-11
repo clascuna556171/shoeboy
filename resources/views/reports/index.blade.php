@@ -192,6 +192,18 @@
                         </tr>
                         @endforeach
                     </tbody>
+                    @if(count($batchReports))
+                    <tfoot class="border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-800/30">
+                        <tr>
+                            <td colspan="3" class="py-3 px-4 text-right text-xs font-semibold uppercase tracking-wider text-neutral-500">Totals</td>
+                            <td class="py-3 px-4 text-right font-mono text-neutral-600 dark:text-neutral-400"><x-money :value="collect($batchReports)->sum('total_cost')" /></td>
+                            <td class="py-3 px-4 text-right font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]"><x-money :value="collect($batchReports)->sum('realized_revenue')" /></td>
+                            <td class="py-3 px-4 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">+₱{{ number_format(collect($batchReports)->sum('order_profit_sum'), 2) }}</td>
+                            <td class="py-3 px-4 text-right font-mono text-rose-500"><x-money :value="collect($batchReports)->sum('batch_expenses')" /></td>
+                            <td class="py-3 px-4 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">+₱{{ number_format(collect($batchReports)->sum('net_proceeds'), 2) }}</td>
+                        </tr>
+                    </tfoot>
+                    @endif
                 </table>
             </div>
         </div>
@@ -231,6 +243,18 @@
                         </tr>
                         @endforelse
                     </tbody>
+                    @if(count($sessionReports))
+                    <tfoot class="border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-800/30">
+                        <tr>
+                            <td class="py-3 px-4 text-right text-xs font-semibold uppercase tracking-wider text-neutral-500">Totals</td>
+                            <td class="py-3 px-4 text-center font-mono font-bold">{{ collect($sessionReports)->sum('orders_count') }}</td>
+                            <td class="py-3 px-4 text-right font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]"><x-money :value="collect($sessionReports)->sum('gross_sales')" /></td>
+                            <td class="py-3 px-4 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">+₱{{ number_format(collect($sessionReports)->sum('net_profit'), 2) }}</td>
+                            <td class="py-3 px-4 text-right font-mono text-neutral-700 dark:text-neutral-300"><x-money :value="collect($sessionReports)->sum('cash_collected')" /></td>
+                            <td class="py-3 px-4 text-right font-mono text-[#0071E3] dark:text-[#0A84FF]"><x-money :value="collect($sessionReports)->sum('gcash_collected')" /></td>
+                        </tr>
+                    </tfoot>
+                    @endif
                 </table>
             </div>
         </div>
@@ -259,8 +283,17 @@
                         </tr>
                         @endforeach
                     </tbody>
+                    @if(count($tierReports))
+                    <tfoot class="border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-800/30">
+                        <tr>
+                            <td colspan="2" class="py-3 px-4 text-right text-xs font-semibold uppercase tracking-wider text-neutral-500">Totals</td>
+                            <td class="py-3 px-4 text-right font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]"><x-money :value="collect($tierReports)->sum('total_revenue')" /></td>
+                            <td class="py-3 px-4 text-right font-mono text-neutral-500"><x-money :value="collect($tierReports)->sum('total_cogs')" /></td>
+                            <td class="py-3 px-4 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">+₱{{ number_format(collect($tierReports)->sum('net_profit'), 2) }}</td>
+                        </tr>
+                    </tfoot>
+                    @endif
                 </table>
-            </div>
             </div>
         </div>
 

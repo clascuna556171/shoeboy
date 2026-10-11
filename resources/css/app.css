@@ -129,10 +129,7 @@ html { scrollbar-gutter: stable; }
     }
 
     /* ---- Table cell text policy ---------------------------------------
-       Apply consistently so columns stop reflowing when width shrinks.
-       Code/num cells never wrap; long text truncates with a tooltip. */
-    .cell-code { white-space: nowrap; }
-    .cell-num { white-space: nowrap; text-align: right; }
+       Long text truncates with a tooltip (see the <x-cell> component). */
     .cell-text {
         display: block;
         max-width: 18rem;
@@ -617,12 +614,8 @@ html[data-density="compact"] main table th {
 /* ============================================================
    Mobile foundations
    ============================================================ */
-@media (max-width: 1023px), (pointer: coarse) {
-    .app-modal-backdrop {
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-    }
-}
+/* Dialog backdrops only blur at lg+ (see `lg:backdrop-blur-[2px]` in the
+   markup) — phones/tablets just darken, which is cheaper and safer. */
 
 /* Comfortable tap targets on touch devices. */
 @media (pointer: coarse) {

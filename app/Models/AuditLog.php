@@ -148,24 +148,6 @@ class AuditLog extends Model
         });
     }
 
-    /** Friendly name of the console/page where the action happened. */
-    protected function where(): Attribute
-    {
-        return Attribute::make(get: function () {
-            return match (true) {
-                Str::startsWith($this->action, ['user_login', 'user_logout', 'login_']) => 'Sign-in',
-                Str::startsWith($this->action, ['item_']) => 'Inventory',
-                Str::startsWith($this->action, ['batch_']) => 'Batches',
-                Str::startsWith($this->action, ['order_', 'payment_']) => 'Orders console',
-                Str::startsWith($this->action, ['delivery_']) => 'Deliveries',
-                Str::startsWith($this->action, ['expense_']) => 'Expenses',
-                Str::startsWith($this->action, ['staff_']) => 'Staff Management',
-                Str::startsWith($this->action, ['supplier_']) => 'Suppliers',
-                default => 'the system',
-            };
-        });
-    }
-
     /** The affected entity in plain language. */
     protected function subject(): Attribute
     {

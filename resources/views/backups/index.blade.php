@@ -91,7 +91,7 @@
                              ]" />
         </div>
 
-        <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3">
+        <div class="app-list-cards">
             @forelse($backups as $b)
             <div class="app-card app-list-card app-card-hover flex flex-col gap-3">
                 <x-cell :value="$b['name']" class="font-mono text-sm text-neutral-800 dark:text-neutral-200" />

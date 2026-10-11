@@ -62,6 +62,16 @@ export default function registerTooltip() {
 
     document.addEventListener('focusout', () => hide());
 
+    // Tap / click to reveal (phones have no hover).
+    document.addEventListener('click', (e) => {
+        const t = e.target.closest('[data-tip]');
+        if (t) {
+            if (current === t) { hide(); } else { show(t); }
+        } else {
+            hide();
+        }
+    });
+
     window.addEventListener('scroll', hide, true);
     window.addEventListener('resize', hide);
 }

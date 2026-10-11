@@ -176,35 +176,16 @@
             'suppliers.index' => 'nav-suppliers',
         ];
 
-        // Page guides (profile dropdown) — derived from the shared guide config.
+        // Guided-tour steps derived from the shared guide config.
         $guideRole = $isOwner ? 'owner' : 'staff';
         $guide = config('guides');
         $allowed = fn ($page) => empty($page['roles']) || in_array($guideRole, $page['roles'], true);
-        $consoleTabs = [
-            ['key' => 'console:claims', 'label' => 'Live Claims', 'url' => route('staff.workspace', ['tab' => 'claims'])],
-            ['key' => 'console:pos', 'label' => 'Walk-in POS', 'url' => route('staff.workspace', ['tab' => 'pos'])],
-            ['key' => 'console:triage', 'label' => 'Triage Table', 'url' => route('staff.workspace', ['tab' => 'triage'])],
-        ];
-        $guidePages = [];
         $tourPages = [];
         foreach ($guide['pages'] as $key => $page) {
             if (! $allowed($page)) {
                 continue;
             }
             $tourPages[$key] = ['label' => $page['label'] ?? $key, 'steps' => $page['steps'] ?? []];
-
-            if (empty($page['route'])) {
-                continue; // tab-only entries (console:claims, …) have no menu link
-            }
-            $entry = [
-                'key' => $key,
-                'label' => (! $isOwner && $key === 'console') ? 'Workspace' : ($page['label'] ?? $key),
-                'url' => route($page['route']),
-            ];
-            if ($key === 'console') {
-                $entry['children'] = $consoleTabs;
-            }
-            $guidePages[] = $entry;
         }
 
         $guideJs = [
@@ -234,7 +215,7 @@
                 @endforeach
             </nav>
             <div class="p-2 space-y-1 border-t border-neutral-200 dark:border-neutral-800">
-                    <x-user-menu variant="rail" :pages="$guidePages" />
+                    <x-user-menu variant="rail" />
                 <button type="button" @click="toggleRail()" title="Collapse / expand menu"
                         class="app-rail-item w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-neutral-500 hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors">
                     <svg class="app-rail-toggle shrink-0" style="width:1.125rem;height:1.125rem" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
@@ -287,7 +268,7 @@
             <div class="flex items-center gap-2.5 shrink-0">
                 @auth
                 <div data-header-usermenu class="pl-2 border-l border-neutral-200 dark:border-neutral-800">
-                    <x-user-menu variant="header" :show-identity="false" :pages="$guidePages" />
+                    <x-user-menu variant="header" :show-identity="false" />
                 </div>
                 @else
                 <a href="{{ route('login') }}" class="px-3.5 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 text-xs font-semibold shadow-sm transition-all">
@@ -368,7 +349,7 @@
                         @csrf
                         <button type="button"
                                 data-confirm="Sign out?"
-                                data-confirm-variant="danger"
+                                data-confirm-variant="neutral"
                                 data-confirm-icon="logout"
                                 data-confirm-message="You will be returned to the login screen."
                                 data-confirm-label="Sign out"
@@ -492,7 +473,7 @@
     <div x-show="settingsOpen" x-cloak
          x-effect="settingsOpen ? window.appScrollLock?.lock() : window.appScrollLock?.unlock()"
          @keydown.escape.window="settingsOpen = false"
-         class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/30 dark:bg-black/50 backdrop-blur-[2px] app-modal-backdrop app-modal-dialog">
+         class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/30 dark:bg-black/50 lg:backdrop-blur-[2px] app-modal-backdrop app-modal-dialog">
         <div class="app-modal-panel w-full max-w-md bg-white dark:bg-[#1C1C1E] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 max-h-[85dvh] overflow-y-auto app-sheet"
              @click.outside="settingsOpen = false">
             <div class="flex items-center justify-between">
@@ -561,7 +542,7 @@
          x-cloak
          x-effect="$store.dialog.open ? window.appScrollLock?.lock() : window.appScrollLock?.unlock()"
          @keydown.escape.window="$store.dialog.cancel()"
-         class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/30 dark:bg-black/50 backdrop-blur-[2px] app-modal-backdrop app-modal-dialog">
+         class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/30 dark:bg-black/50 lg:backdrop-blur-[2px] app-modal-backdrop app-modal-dialog">
         <div class="app-modal-panel w-full max-w-sm bg-white dark:bg-[#1C1C1E] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 max-h-[85dvh] overflow-y-auto app-sheet"
              @click.outside="$store.dialog.cancel()">
             <div class="flex items-start gap-3.5">

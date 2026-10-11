@@ -42,7 +42,7 @@
                      ]" />
 
     {{-- Cards (phones + desktop when List layout = cards) --}}
-    <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3" data-tour="list">
+    <div class="app-list-cards" data-tour="list">
         @forelse($expenses as $exp)
         <div class="app-card app-list-card app-card-hover flex flex-col gap-3">
             <div class="flex items-start justify-between gap-3">

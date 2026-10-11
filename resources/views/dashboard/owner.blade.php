@@ -524,7 +524,7 @@
                 </h2>
 
                 <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-                    Unit economics and realized performance by inventory batch.
+                    Top 5 batches by profit — the full list lives under Batches.
                 </p>
 
             </div>
@@ -555,6 +555,7 @@
         @php
             $totalSales = collect($batchSummaries)->sum('realized_revenue');
             $totalProfit = collect($batchSummaries)->sum('order_profit_sum');
+            $topBatches = collect($batchSummaries)->sortByDesc('order_profit_sum')->take(5)->values();
         @endphp
 
         {{-- Mobile totals (the table carries its own tfoot) --}}
@@ -567,8 +568,8 @@
         </div>
 
         {{-- Cards (phones) --}}
-        <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3 p-5 lg:p-6 pt-0">
-            @foreach($batchSummaries as $batch)
+        <div class="app-list-cards p-5 lg:p-6 pt-0">
+            @foreach($topBatches as $batch)
             <div class="app-card app-list-card app-card-hover flex flex-col gap-3">
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
@@ -577,7 +578,7 @@
                     </div>
                     <div class="text-right shrink-0 font-mono font-bold text-emerald-600 dark:text-emerald-400">+₱{{ number_format($batch['order_profit_sum'], 2) }}</div>
                 </div>
-                <div class="text-sm text-neutral-700 dark:text-neutral-300 truncate">{{ $batch['supplier_name'] }}</div>
+                <x-cell :value="$batch['supplier_name']" class="text-sm text-neutral-700 dark:text-neutral-300" />
                 <div class="flex flex-wrap items-center gap-1.5">
                     <span class="badge badge-sold">{{ $batch['sold_pairs'] }} sold</span>
                     <span class="badge badge-reserved">{{ $batch['reserved_pairs'] }} reserved</span>
@@ -640,7 +641,7 @@
 
                 <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800">
 
-                    @foreach($batchSummaries as $batch)
+                    @foreach($topBatches as $batch)
 
                     <tr class="hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30
                                transition-colors">

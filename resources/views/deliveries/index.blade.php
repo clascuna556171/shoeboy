@@ -35,7 +35,7 @@
                      ]" />
 
     {{-- Cards (phones + desktop when List layout = cards) --}}
-    <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3" data-tour="list">
+    <div class="app-list-cards" data-tour="list">
         @forelse($deliveries as $del)
         <div x-data="{
                 orig: { method: @js($del->method), tracking: @js($del->tracking_number), status: @js($del->status) },
@@ -49,7 +49,7 @@
             <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
                     <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $del->order->order_number }}</span>
-                    <div class="mt-0.5 font-semibold text-neutral-800 dark:text-neutral-200 truncate">{{ $del->order->customer->display_handle }}</div>
+                    <x-cell :value="$del->order->customer->display_handle" class="mt-0.5 font-semibold text-neutral-800 dark:text-neutral-200" />
                     <div class="mt-0.5 text-[11px] text-neutral-500 font-mono">Ordered {{ $del->order->date_awarded?->format('M d, Y') }}</div>
                 </div>
                 <div class="flex flex-col items-end gap-1 shrink-0">

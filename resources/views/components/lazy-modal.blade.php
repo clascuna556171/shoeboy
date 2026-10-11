@@ -3,7 +3,7 @@
      x-cloak
      @keydown.escape.window="$store.lazyModal.close()"
      x-effect="$store.lazyModal.open ? window.appScrollLock?.lock() : window.appScrollLock?.unlock()"
-     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 dark:bg-black/50 backdrop-blur-[2px] app-modal-backdrop app-modal-dialog">
+     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 dark:bg-black/50 lg:backdrop-blur-[2px] app-modal-backdrop app-modal-dialog">
     <div class="w-full bg-white dark:bg-[#1C1C1E] border border-neutral-200 dark:border-neutral-800 rounded-3xl p-6 shadow-2xl max-h-[85dvh] overflow-y-auto app-sheet"
          data-lazy-panel
          :class="{

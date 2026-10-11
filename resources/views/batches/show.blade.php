@@ -74,13 +74,13 @@
         </div>
 
         {{-- Cards (phones + desktop when List layout = cards) --}}
-        <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3" data-tour="list">
+        <div class="app-list-cards" data-tour="list">
             @forelse($items as $item)
             <div class="app-card app-list-card app-card-hover flex flex-col gap-3">
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
                         <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $item->sku }}</span>
-                        <div class="mt-0.5 font-semibold text-neutral-800 dark:text-neutral-200 truncate">{{ $item->brand }} {{ $item->model }}</div>
+                        <x-cell :value="$item->brand.' '.$item->model" class="mt-0.5 font-semibold text-neutral-800 dark:text-neutral-200" />
                     </div>
                     <div class="text-right shrink-0 font-mono font-bold text-neutral-900 dark:text-white"><x-money :value="$item->listed_price" /></div>
                 </div>

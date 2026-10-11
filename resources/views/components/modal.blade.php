@@ -25,7 +25,7 @@
 @endphp
 
 <template x-teleport="body">
-    <div {{ $attributes->merge(['class' => 'fixed inset-0 z-50 overflow-y-auto bg-black/30 dark:bg-black/50 backdrop-blur-[2px] app-modal-backdrop']) }}
+    <div {{ $attributes->merge(['class' => 'fixed inset-0 z-50 overflow-y-auto bg-black/30 dark:bg-black/50 lg:backdrop-blur-[2px] app-modal-backdrop']) }}
          @if($showExpr) x-effect="({{ $showExpr }}) ? window.appScrollLock?.lock() : window.appScrollLock?.unlock()" @endif>
         <div class="app-modal-dialog flex min-h-[100dvh] items-center justify-center p-4">
             <div class="app-modal-panel bg-white dark:bg-[#1C1C1E] border border-neutral-200 dark:border-neutral-800 rounded-3xl w-full {{ $maxWidth }} p-6 shadow-2xl max-h-[85dvh] overflow-y-auto app-sheet"

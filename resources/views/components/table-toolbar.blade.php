@@ -13,10 +13,11 @@
     $currentSort = $sortCol ? $sortCol.'~'.$sortDir : '~';
     $activeFilters = collect($filters)->filter(fn ($f) => ! empty($f['selected']));
     $hasActive = $search || $sortCol || $activeFilters->isNotEmpty();
+    $hasOptions = count($filters) || count($sorts);
 @endphp
 
-{{-- Single-row toolbar: search + Filters (popover) + Sort + actions. Keeping
-     the filters in a popover means the row never needs to scroll or wrap. --}}
+{{-- Single-row toolbar: search + Options popover (filters + sort) + actions.
+     Everything else lives in the popover so the row never scrolls or wraps. --}}
 <div class="app-card p-3 lg:p-4">
     <form method="GET" action="{{ $action }}"
           x-data="{ sortSel: '{{ $currentSort }}', filtersOpen: false }"
@@ -34,7 +35,7 @@
                    class="app-input app-input-sm pl-9">
         </div>
 
-        @if(count($filters))
+        @if($hasOptions)
             <div class="relative shrink-0">
                 <button type="button" @click="filtersOpen = !filtersOpen" data-tour="filters"
                         class="app-btn app-btn-secondary app-btn-sm flex items-center gap-1.5">
@@ -58,17 +59,20 @@
                             </select>
                         </div>
                     @endforeach
+
+                    @if(count($sorts))
+                        <div>
+                            <label class="app-label">Sort</label>
+                            <select x-model="sortSel" class="app-select app-input-sm">
+                                <option value="~">Default</option>
+                                @foreach($sorts as $s)
+                                    <option value="{{ $s['column'] }}~{{ $s['direction'] ?? 'desc' }}">{{ $s['label'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
                 </div>
             </div>
-        @endif
-
-        @if(count($sorts))
-            <select x-model="sortSel" class="app-select app-input-sm !w-auto shrink-0" title="Sort">
-                <option value="~">Sort: Default</option>
-                @foreach($sorts as $s)
-                    <option value="{{ $s['column'] }}~{{ $s['direction'] ?? 'desc' }}">{{ $s['label'] }}</option>
-                @endforeach
-            </select>
         @endif
 
         <button type="submit" class="app-btn app-btn-primary app-btn-sm shrink-0">Apply</button>
