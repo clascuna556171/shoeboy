@@ -3,8 +3,8 @@
      x-cloak
      @keydown.escape.window="$store.lazyModal.close()"
      x-effect="$store.lazyModal.open ? window.appScrollLock?.lock() : window.appScrollLock?.unlock()"
-     class="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 bg-black/30 dark:bg-black/50 backdrop-blur-[2px] app-modal-backdrop">
-    <div class="w-full bg-white dark:bg-[#1C1C1E] border border-neutral-200 dark:border-neutral-800 rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto app-sheet"
+     class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 dark:bg-black/50 backdrop-blur-[2px] app-modal-backdrop app-modal-dialog">
+    <div class="w-full bg-white dark:bg-[#1C1C1E] border border-neutral-200 dark:border-neutral-800 rounded-3xl p-6 shadow-2xl max-h-[85dvh] overflow-y-auto app-sheet"
          data-lazy-panel
          :class="{
              'max-w-sm': $store.lazyModal.size === 'sm',
@@ -12,8 +12,6 @@
              'max-w-lg': $store.lazyModal.size === 'lg'
          }"
          @click.outside="$store.lazyModal.close()">
-
-        <div class="mx-auto mb-4 h-1.5 w-12 rounded-full bg-neutral-300 dark:bg-neutral-700 sm:hidden"></div>
 
         <div class="flex items-center justify-between gap-3 pb-3 border-b border-neutral-200 dark:border-neutral-800">
             <div class="flex items-center gap-2.5 min-w-0">

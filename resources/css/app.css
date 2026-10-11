@@ -142,34 +142,39 @@ html { scrollbar-gutter: stable; }
     }
 
     /* ---- List layout engine -------------------------------------------
-       One standard: cards on phones (always), and on tablet/desktop either
-       cards or the table depending on the user's List layout setting
-       (html[data-list]). No per-page toggles. */
+       Automatic, not customizable: cards on phones, tables on tablet and
+       desktop. (Batches, Suppliers and Staff opt out with their own toggle
+       — see [data-view-panel] below.) */
     .app-list-cards { display: grid; gap: 1rem; }
     .app-list-table { display: none; }
     @media (min-width: 768px) {
-        html[data-list="table"] .app-list-cards { display: none; }
-        html[data-list="table"] .app-list-table { display: block; }
+        .app-list-cards { display: none; }
+        .app-list-table { display: block; }
     }
 
-    /* Card density preference (Settings → Card density). */
+    /* Per-page Cards/Table toggle (Batches, Suppliers, Staff only).
+       Phones always show cards; the toggle is desktop-only. */
+    @media (max-width: 767px) {
+        [data-view-panel="cards"] { display: grid !important; }
+        [data-view-panel="table"] { display: none !important; }
+        [data-view-toggle] { display: none !important; }
+    }
+
+    /* Card density preference (Settings → Card density, mobile only). */
     .app-list-card { padding: 1.25rem; }
     html[data-card-density="compact"] .app-list-cards { gap: 0.625rem; }
     html[data-card-density="compact"] .app-list-card { padding: 0.9rem 1rem; }
     html[data-card-density="compact"] .app-list-card-extra { display: none; }
 
-    /* ---- Bottom sheet (detail panels on phones) --------------------- */
+    /* ---- Dialog safe area (centered modals on phones) ---------------- */
     .app-sheet {
-        border-top-left-radius: 1.5rem;
-        border-top-right-radius: 1.5rem;
         padding-bottom: env(safe-area-inset-bottom);
     }
-    @media (min-width: 640px) {
-        .app-sheet {
-            border-radius: 1.5rem;
-            padding-bottom: 0;
-        }
-    }
+
+    /* When the on-screen keyboard is open (see modules/keyboard.js), pull
+       dialogs to the top so the focused field and buttons stay visible. */
+    html.kb-open .app-modal-dialog { align-items: flex-start !important; }
+    html.kb-open .app-modal-panel { max-height: calc(100dvh - var(--kb, 0px) - 1.5rem) !important; }
 
     /* ---- Truncation tooltip (see modules/tooltip.js) ------------------ */
     .app-tooltip {

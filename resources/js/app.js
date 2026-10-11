@@ -8,6 +8,7 @@ import registerLazyModal from './modules/lazy-modal.js';
 import registerProgress from './modules/progress.js';
 import registerScrollLock from './modules/scroll-lock.js';
 import registerLayout from './modules/layout.js';
+import registerKeyboard from './modules/keyboard.js';
 import registerTooltip from './modules/tooltip.js';
 import registerTour from './modules/tour.js';
 
@@ -23,6 +24,7 @@ window.Alpine = Alpine;
     registerProgress,
     registerScrollLock,
     registerLayout,
+    registerKeyboard,
     registerTooltip,
     registerTour,
 ].forEach((register) => register(Alpine));

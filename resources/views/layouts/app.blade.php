@@ -6,7 +6,6 @@
           darkMode: false,
           density: localStorage.getItem('shoeboy.density') || 'compact',
           navMode: localStorage.getItem('shoeboy.nav') || 'top',
-          listView: localStorage.getItem('shoeboy.view') || 'cards',
           cardDensity: localStorage.getItem('shoeboy.cardDensity') || 'comfortable',
           railCollapsed: localStorage.getItem('shoeboy.nav.collapsed') === '1',
           settingsOpen: false,
@@ -46,7 +45,6 @@
           },
           toggleTheme() { this.setTheme(this.darkMode ? 'light' : 'dark'); },
           setDensity(d) { this.density = d; localStorage.setItem('shoeboy.density', d); this.applyDensity(); },
-          setListView(v) { this.listView = v; localStorage.setItem('shoeboy.view', v); document.documentElement.setAttribute('data-list', v); },
           setCardDensity(d) { this.cardDensity = d; localStorage.setItem('shoeboy.cardDensity', d); document.documentElement.setAttribute('data-card-density', d); },
           applyDensity() { document.documentElement.setAttribute('data-density', this.density); },
           setNav(m) { this.navMode = m; localStorage.setItem('shoeboy.nav', m); this.applyNav(); },
@@ -58,7 +56,7 @@
       }">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ config('app.name', 'The Shoe Boy') }} - @yield('title', 'Order & Inventory System')</title>
@@ -71,7 +69,6 @@
             document.documentElement.setAttribute('data-density', localStorage.getItem('shoeboy.density') || 'compact');
             document.documentElement.setAttribute('data-nav', localStorage.getItem('shoeboy.nav') || 'top');
             document.documentElement.setAttribute('data-rail', localStorage.getItem('shoeboy.nav.collapsed') === '1' ? 'collapsed' : 'expanded');
-            document.documentElement.setAttribute('data-list', localStorage.getItem('shoeboy.view') || 'cards');
             document.documentElement.setAttribute('data-card-density', localStorage.getItem('shoeboy.cardDensity') || 'comfortable');
         })();
     </script>
@@ -494,10 +491,9 @@
     <div x-show="settingsOpen" x-cloak
          x-effect="settingsOpen ? window.appScrollLock?.lock() : window.appScrollLock?.unlock()"
          @keydown.escape.window="settingsOpen = false"
-         class="fixed inset-0 z-[110] flex items-end sm:items-center justify-center sm:p-4 bg-black/30 dark:bg-black/50 backdrop-blur-[2px] app-modal-backdrop">
-        <div class="app-modal-panel w-full max-w-md bg-white dark:bg-[#1C1C1E] rounded-t-3xl sm:rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 max-h-[90vh] overflow-y-auto app-sheet"
+         class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/30 dark:bg-black/50 backdrop-blur-[2px] app-modal-backdrop app-modal-dialog">
+        <div class="app-modal-panel w-full max-w-md bg-white dark:bg-[#1C1C1E] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 max-h-[85dvh] overflow-y-auto app-sheet"
              @click.outside="settingsOpen = false">
-            <div class="mx-auto mb-4 h-1.5 w-12 rounded-full bg-neutral-300 dark:bg-neutral-700 sm:hidden"></div>
             <div class="flex items-center justify-between">
                 <h3 class="font-bold text-base text-[#1D1D1F] dark:text-white">Settings</h3>
                 <button type="button" @click="settingsOpen = false" class="p-1.5 rounded-lg text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">
@@ -544,20 +540,8 @@
                 <p class="mt-1.5 text-[11px] text-neutral-500">The left rail can be collapsed from the menu header.</p>
             </div>
 
-            {{-- Default list layout (desktop) --}}
-            <div class="mt-6 hidden md:block">
-                <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">List layout</div>
-                <div class="mt-2 grid grid-cols-2 gap-2">
-                    <button type="button" @click="setListView('cards')"
-                            class="app-btn app-btn-sm" :class="listView === 'cards' ? 'app-btn-primary' : 'app-btn-secondary'">Cards</button>
-                    <button type="button" @click="setListView('table')"
-                            class="app-btn app-btn-sm" :class="listView === 'table' ? 'app-btn-primary' : 'app-btn-secondary'">Table</button>
-                </div>
-                <p class="mt-1.5 text-[11px] text-neutral-500">Applies to list pages on tablet and desktop. Phones always use cards.</p>
-            </div>
-
-            {{-- Card density (all devices) --}}
-            <div class="mt-6">
+            {{-- Card density (phones only — desktop cards are always comfortable) --}}
+            <div class="mt-6 md:hidden">
                 <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Card density</div>
                 <div class="mt-2 grid grid-cols-2 gap-2">
                     <button type="button" @click="setCardDensity('comfortable')"
@@ -576,10 +560,9 @@
          x-cloak
          x-effect="$store.dialog.open ? window.appScrollLock?.lock() : window.appScrollLock?.unlock()"
          @keydown.escape.window="$store.dialog.cancel()"
-         class="fixed inset-0 z-[110] flex items-end sm:items-center justify-center sm:p-4 bg-black/30 dark:bg-black/50 backdrop-blur-[2px] app-modal-backdrop">
-        <div class="app-modal-panel w-full max-w-sm bg-white dark:bg-[#1C1C1E] rounded-t-3xl sm:rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 max-h-[90vh] overflow-y-auto app-sheet"
+         class="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/30 dark:bg-black/50 backdrop-blur-[2px] app-modal-backdrop app-modal-dialog">
+        <div class="app-modal-panel w-full max-w-sm bg-white dark:bg-[#1C1C1E] rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 max-h-[85dvh] overflow-y-auto app-sheet"
              @click.outside="$store.dialog.cancel()">
-            <div class="mx-auto mb-4 h-1.5 w-12 rounded-full bg-neutral-300 dark:bg-neutral-700 sm:hidden"></div>
             <div class="flex items-start gap-3.5">
                 <span class="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
                       :class="{
