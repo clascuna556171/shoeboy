@@ -14,17 +14,17 @@
     $hasActive = $search || $sortCol || collect($filters)->contains(fn ($f) => ! empty($f['selected']));
 @endphp
 
-{{-- One-row toolbar: search, filters, sort and actions all stay on a single
-     scrollable line on phones (no wrapping into stacked rows). --}}
+{{-- One wrapped toolbar: search + filters + sort + actions. Wraps to a
+     second line only when there are several filters — never scrolls. --}}
 <div class="app-card p-3 lg:p-4">
     <form method="GET" action="{{ $action }}"
           x-data="{ sortSel: '{{ $currentSort }}' }"
           @submit="const p = sortSel.split('~'); $refs.sortEl.value = p[0] || ''; $refs.dirEl.value = p[1] || 'desc';"
-          class="flex flex-nowrap items-center gap-2 overflow-x-auto">
+          class="flex flex-wrap items-center gap-2">
         <input type="hidden" name="sort" x-ref="sortEl" value="{{ $sortCol }}">
         <input type="hidden" name="direction" x-ref="dirEl" value="{{ $sortDir }}">
 
-        <div class="relative flex-1 min-w-[9rem]">
+        <div class="relative flex-1 min-w-[8rem]">
             <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-500">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </span>

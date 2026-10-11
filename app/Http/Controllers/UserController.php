@@ -32,7 +32,14 @@ class UserController extends Controller
             $query->where('role', $role);
         }
 
-        $this->applySort($query, ['name', 'email', 'role', 'orders_count', 'verified_payments_count', 'created_at'], 'created_at', 'desc');
+        if ($request->query('sort')) {
+            $this->applySort($query, ['name', 'email', 'role', 'orders_count', 'verified_payments_count', 'created_at'], 'created_at', 'desc');
+        } else {
+            // Default: owners first, then staff, alphabetical within each group.
+            $query->reorder()
+                ->orderByRaw("CASE role WHEN 'owner' THEN 0 ELSE 1 END")
+                ->orderBy('name');
+        }
         $users = $query->get();
 
         return view('staff.index', compact('users', 'search', 'role'));

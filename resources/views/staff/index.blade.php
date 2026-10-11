@@ -55,7 +55,7 @@
     {{-- Cards (phones always; desktop when view = cards) --}}
     <div x-show="view === 'cards'" data-view-panel="cards" data-tour="list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         @foreach($users as $user)
-        <div class="app-card app-list-card flex flex-col gap-3">
+        <div class="app-card app-list-card app-card-hover flex flex-col gap-3">
             <div class="flex items-start gap-3">
                 <span class="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 flex items-center justify-center shrink-0 text-sm font-bold">
                     {{ strtoupper(substr($user->name, 0, 1)) }}
@@ -97,7 +97,7 @@
                                   data-confirm-label="{{ $user->is_active ? 'Deactivate' : 'Reactivate' }}">{{ $user->is_active ? 'Deactivate' : 'Reactivate' }}</x-action-btn>
                 </form>
                 @else
-                <span class="text-[11px] text-neutral-500 italic">Current session</span>
+                <span class="app-btn app-btn-sm app-btn-secondary pointer-events-none opacity-60">Current session</span>
                 @endif
             </div>
         </div>
@@ -172,7 +172,7 @@
                                                   data-confirm-label="{{ $user->is_active ? 'Deactivate' : 'Reactivate' }}">{{ $user->is_active ? 'Deactivate' : 'Reactivate' }}</x-action-btn>
                                 </form>
                                 @else
-                                <span class="text-[11px] text-neutral-500 italic">Current Session</span>
+                                <span class="app-btn app-btn-sm app-btn-secondary pointer-events-none opacity-60">Current session</span>
                                 @endif
                             </div>
                         </td>

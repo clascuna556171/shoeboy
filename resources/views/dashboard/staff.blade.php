@@ -781,18 +781,18 @@
     {{-- Tab 3: Triage Table --}}
     <div x-show="activeTab === 'triage'" data-tab-panel="triage" class="space-y-6">
         <div data-tour="triage-table" class="bg-white dark:bg-[#1C1C1E] border border-neutral-200/80 dark:border-neutral-800 rounded-3xl p-5 shadow-sm space-y-4">
-            <div class="flex items-center justify-between pb-3 border-b border-neutral-200/80 dark:border-neutral-800">
+            <div class="flex flex-col gap-3 pb-3 border-b border-neutral-200/80 dark:border-neutral-800 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h3 class="font-bold text-base text-[#1D1D1F] dark:text-white">{{ $activeBatch?->batch_code ?? 'All Batches' }} Triage Worklist</h3>
                     <p class="text-xs text-neutral-500">Move each pair through <strong>Washing &rarr; Under repair &rarr; Ready</strong>. Only <strong>Ready</strong> pairs can be sold.</p>
                 </div>
-                <div class="flex flex-wrap items-center justify-end gap-2">
-                    <div class="relative">
+                <div class="flex w-full flex-col gap-2 md:w-auto md:items-end">
+                    <div class="relative w-full md:w-56">
                         <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-neutral-500">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         </span>
                         <input type="text" x-model="triageSearch" placeholder="Search SKU, brand, model..."
-                               class="app-input app-input-sm !w-56 pl-9">
+                               class="app-input app-input-sm pl-9 w-full">
                     </div>
                     <div class="flex flex-wrap items-center gap-1.5">
                         <button type="button" @click="triageStatus = 'all'"
@@ -834,7 +834,7 @@
             {{-- Cards (phones + desktop when List layout = cards) --}}
             <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3">
                 <template x-for="item in triageItems" :key="item.id">
-                    <div class="app-card app-list-card flex flex-col gap-3">
+                    <div class="app-card app-list-card app-card-hover flex flex-col gap-3">
                         <div class="flex items-start justify-between gap-3">
                             <div class="min-w-0">
                                 <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]" x-text="item.sku"></span>

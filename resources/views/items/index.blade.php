@@ -13,7 +13,7 @@
                 <h1 class="text-xl md:text-2xl font-bold tracking-tight text-[#1D1D1F] dark:text-white mt-0.5">Footwear Inventory Units</h1>
                 </div>
         </div>
-        <div class="flex flex-nowrap items-center gap-2 overflow-x-auto max-w-full">
+        <div class="flex w-full flex-col items-start gap-3 md:w-auto md:flex-row md:items-center">
             <x-header-counts class="mr-1" :counts="[
                 ['label' => 'Available', 'value' => $availableCount, 'tone' => 'emerald'],
                 ['label' => 'Reserved', 'value' => $reservedCount, 'tone' => 'amber'],
@@ -45,7 +45,7 @@
     {{-- Cards (phones + desktop when List layout = cards) --}}
     <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3" data-tour="list">
         @forelse($items as $item)
-        <div class="app-card app-list-card flex flex-col gap-3">
+        <div class="app-card app-list-card app-card-hover flex flex-col gap-3">
             <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
                     <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $item->sku }}</span>
@@ -125,9 +125,9 @@
                     <tr class="app-row hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30">
                         <td class="py-3.5 px-4 font-mono font-bold text-[#0071E3] dark:text-[#0A84FF] whitespace-nowrap">{{ $item->sku }}</td>
                         <td class="py-3.5 px-4"><x-cell :value="$item->brand.' '.$item->model" class="font-semibold text-neutral-800 dark:text-neutral-200" /></td>
-                        <td class="py-3.5 px-4 font-mono text-neutral-600 dark:text-neutral-300">{{ $item->size }}</td>
+                        <td class="py-3.5 px-4 font-mono text-neutral-600 dark:text-neutral-300 whitespace-nowrap">{{ $item->size }}</td>
                         <td class="py-3.5 px-4 text-neutral-600 dark:text-neutral-300">{{ $item->condition }}</td>
-                        <td class="py-3.5 px-4 text-neutral-500">{{ $item->price_tier }}</td>
+                        <td class="py-3.5 px-4 text-neutral-500 whitespace-nowrap">{{ $item->price_tier }}</td>
                         <td class="py-3.5 px-4 text-right font-mono font-bold text-neutral-900 dark:text-white"><x-money :value="$item->listed_price" /></td>
                         <td class="py-3.5 px-4 text-center">
                             <x-status-badge kind="item" :value="$item->status" />
@@ -194,11 +194,6 @@
             </table>
         </div>
 
-        @if($items->hasPages())
-        <div class="px-4 py-3 border-t border-neutral-100 dark:border-neutral-800">
-            {{ $items->links() }}
-        </div>
-        @endif
     </div>
 
     {{-- Add pair modal (pick a batch) --}}

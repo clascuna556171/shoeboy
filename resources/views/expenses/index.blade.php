@@ -14,7 +14,7 @@
                 </div>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex w-full flex-col items-start gap-3 md:w-auto md:flex-row md:items-center">
             <div class="text-right">
                 <div class="text-[11px] uppercase tracking-wider text-neutral-500 font-medium">Total Outlay</div>
                 <div class="font-mono font-bold text-xl text-rose-600 dark:text-rose-400">₱{{ number_format($totalExpenses, 2) }}</div>
@@ -44,7 +44,7 @@
     {{-- Cards (phones + desktop when List layout = cards) --}}
     <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3" data-tour="list">
         @forelse($expenses as $exp)
-        <div class="app-card app-list-card flex flex-col gap-3">
+        <div class="app-card app-list-card app-card-hover flex flex-col gap-3">
             <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
                     <x-cell :value="$exp->description" class="font-semibold text-neutral-800 dark:text-neutral-200" />
@@ -134,11 +134,6 @@
             </table>
         </div>
 
-        @if($expenses->hasPages())
-        <div class="px-4 py-3 border-t border-neutral-100 dark:border-neutral-800">
-            {{ $expenses->links() }}
-        </div>
-        @endif
     </div>
 
     {{-- Modal --}}

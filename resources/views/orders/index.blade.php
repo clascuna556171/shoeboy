@@ -38,7 +38,7 @@
     {{-- Cards (phones + desktop when List layout = cards) --}}
     <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3" data-tour="list">
         @forelse($orders as $ord)
-        <div class="app-card app-list-card flex flex-col gap-3">
+        <div class="app-card app-list-card app-card-hover flex flex-col gap-3">
             <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
                     <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $ord->order_number }}</span>
@@ -103,12 +103,12 @@
                         @if($isFocused) data-scroll-to @endif
                         class="app-row hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30 {{ $isFocused ? 'ring-2 ring-inset ring-[#0071E3] bg-[#0071E3]/5 dark:bg-[#0A84FF]/10' : '' }}">
                         <td class="py-3.5 px-4">
-                            <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF] block">{{ $ord->order_number }}</span>
-                            <span class="text-xs text-neutral-500 font-mono">{{ $ord->date_awarded->format('M d, Y H:i') }}</span>
+                            <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF] block whitespace-nowrap">{{ $ord->order_number }}</span>
+                            <span class="text-xs text-neutral-500 font-mono whitespace-nowrap">{{ $ord->date_awarded->format('M d, Y H:i') }}</span>
                             <x-status-badge kind="channel" :value="$ord->order_type" class="mt-1" />
                         </td>
                         <td class="py-3.5 px-4">
-                            <div class="flex items-center gap-2">
+                            <div class="flex flex-wrap items-center gap-2">
                                 <span class="badge badge-neutral">{{ $ord->items->count() }} {{ $ord->items->count() === 1 ? 'pair' : 'pairs' }}</span>
                                 <button type="button" data-panel-url="{{ route('panels.show', ['type' => 'order', 'id' => $ord->id]) }}"
                                         class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] text-[11px] font-semibold text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
@@ -162,13 +162,7 @@
             </table>
         </div>
 
-        @if($orders->hasPages())
-        <div class="px-4 py-3 border-t border-neutral-100 dark:border-neutral-800">
-            {{ $orders->links() }}
-        </div>
-        @endif
     </div>
 
 </div>
-
 @endsection

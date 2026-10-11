@@ -127,7 +127,7 @@
         <div x-show="reportTab === 'batches'">
             <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3 p-4">
                 @foreach($batchReports as $b)
-                <div class="app-card app-list-card flex flex-col gap-2.5">
+                <div class="app-card app-list-card app-card-hover flex flex-col gap-2.5">
                     <div class="flex items-start justify-between gap-3">
                         <div class="min-w-0">
                             <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $b['batch_code'] }}</span>
@@ -196,7 +196,7 @@
         <div x-show="reportTab === 'sessions'" x-cloak>
             <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3 p-4">
                 @forelse($sessionReports as $s)
-                <div class="app-card app-list-card flex flex-col gap-2.5">
+                <div class="app-card app-list-card app-card-hover flex flex-col gap-2.5">
                     <div class="flex items-start justify-between gap-3">
                         <span class="font-mono font-bold text-neutral-800 dark:text-neutral-200">{{ $s['date'] }}</span>
                         <div class="text-right shrink-0 font-mono font-bold text-emerald-600 dark:text-emerald-400">+₱{{ number_format($s['net_profit'], 2) }}</div>
@@ -257,7 +257,7 @@
         <div x-show="reportTab === 'tiers'" x-cloak>
             <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3 p-4">
                 @foreach($tierReports as $t)
-                <div class="app-card app-list-card flex flex-col gap-2.5">
+                <div class="app-card app-list-card app-card-hover flex flex-col gap-2.5">
                     <div class="flex items-start justify-between gap-3">
                         <span class="font-semibold text-neutral-800 dark:text-neutral-200">{{ $t['tier'] }}</span>
                         <div class="text-right shrink-0 font-mono font-bold text-emerald-600 dark:text-emerald-400">+₱{{ number_format($t['net_profit'], 2) }}</div>
@@ -306,7 +306,7 @@
         <div x-show="reportTab === 'sales'" x-cloak>
             <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3 p-4">
                 @forelse($salesLedger as $s)
-                <div class="app-card app-list-card flex flex-col gap-2.5">
+                <div class="app-card app-list-card app-card-hover flex flex-col gap-2.5">
                     <div class="flex items-start justify-between gap-3">
                         <div class="min-w-0">
                             <span class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]">{{ $s['order_number'] }}</span>
@@ -408,7 +408,7 @@
         <div x-show="reportTab === 'expenses'" x-cloak>
             <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3 p-4">
                 @forelse($expenseLedger as $e)
-                <div class="app-card app-list-card flex flex-col gap-2.5">
+                <div class="app-card app-list-card app-card-hover flex flex-col gap-2.5">
                     <div class="flex items-start justify-between gap-3">
                         <x-cell :value="$e['description']" class="font-semibold text-neutral-800 dark:text-neutral-200" />
                         <div class="text-right shrink-0 font-mono font-bold text-rose-600 dark:text-rose-400">−₱{{ number_format($e['amount'], 2) }}</div>

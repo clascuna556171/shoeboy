@@ -38,7 +38,7 @@
     {{-- Cards (phones + desktop when List layout = cards) --}}
     <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3" data-tour="list">
         @forelse($logs as $log)
-        <div class="app-card app-list-card flex flex-col gap-3">
+        <div class="app-card app-list-card app-card-hover flex flex-col gap-3">
             <div class="flex items-center justify-between gap-2">
                 <span class="badge {{ $log->category_badge_class }}">{{ $log->category }}</span>
                 <span class="font-mono text-[11px] text-neutral-500">{{ $log->created_at->format('M d, g:i A') }}</span>
@@ -125,12 +125,6 @@
                 </tbody>
             </table>
         </div>
-
-        @if($logs->hasPages())
-        <div class="px-4 py-3 border-t border-neutral-100 dark:border-neutral-800">
-            {{ $logs->links() }}
-        </div>
-        @endif
 
     </div>
 

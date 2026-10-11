@@ -28,7 +28,7 @@
 
 
         {{-- Header Actions --}}
-        <div class="flex flex-nowrap items-center gap-2 shrink-0 overflow-x-auto max-w-full">
+        <div class="flex flex-wrap items-center gap-2 shrink-0">
 
             <a href="{{ route('reports.index') }}"
                title="Open financial and profitability reports"
@@ -560,7 +560,7 @@
         {{-- Cards (phones + desktop when List layout = cards) --}}
         <div class="app-list-cards md:grid-cols-2 xl:grid-cols-3 p-5 lg:p-6 pt-0">
             @foreach($batchSummaries as $batch)
-            <div class="app-card app-list-card flex flex-col gap-3">
+            <div class="app-card app-list-card app-card-hover flex flex-col gap-3">
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
                         <a href="{{ route('batches.show', $batch['batch_id']) }}" class="font-mono font-bold text-[#0071E3] dark:text-[#0A84FF] hover:underline">{{ $batch['batch_code'] }}</a>

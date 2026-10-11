@@ -44,7 +44,7 @@
                 status: @js($del->status),
                 get changed() { return this.method !== this.orig.method || this.tracking !== this.orig.tracking || this.status !== this.orig.status; }
             }"
-            class="app-card app-list-card flex flex-col gap-3"
+            class="app-card app-list-card app-card-hover flex flex-col gap-3"
             :class="changed ? 'ring-2 ring-amber-300 dark:ring-amber-800' : ''">
             <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
@@ -243,11 +243,6 @@
             </table>
         </div>
 
-        @if($deliveries->hasPages())
-        <div class="px-4 py-3 border-t border-neutral-100 dark:border-neutral-800">
-            {{ $deliveries->links() }}
-        </div>
-        @endif
     </div>
 
 </div>
