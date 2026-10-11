@@ -78,9 +78,6 @@
         <div class="col-span-full app-card"><div class="app-empty"><span class="text-xs font-medium">No expenses recorded yet.</span></div></div>
         @endforelse
     </div>
-    @if($expenses->hasPages())
-    <div>{{ $expenses->links() }}</div>
-    @endif
 
     {{-- Table (desktop, List layout = table) --}}
     <div class="app-card app-list-table" data-tour="list">
@@ -135,6 +132,10 @@
         </div>
 
     </div>
+
+    @if($expenses->hasPages())
+    <div>{{ $expenses->links() }}</div>
+    @endif
 
     {{-- Modal --}}
     <x-modal title="Record Shop Expense" accent="rose" close="showExpenseModal = false"

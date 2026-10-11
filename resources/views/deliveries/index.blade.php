@@ -115,9 +115,6 @@
         <div class="col-span-full app-card"><div class="app-empty"><span class="text-xs font-medium">No deliveries found.</span></div></div>
         @endforelse
     </div>
-    @if($deliveries->hasPages())
-    <div>{{ $deliveries->links() }}</div>
-    @endif
 
     {{-- Table (desktop, List layout = table) --}}
     <div class="app-card app-list-table" data-tour="list">
@@ -247,6 +244,10 @@
         </div>
 
     </div>
+
+    @if($deliveries->hasPages())
+    <div>{{ $deliveries->links() }}</div>
+    @endif
 
 </div>
 @endsection

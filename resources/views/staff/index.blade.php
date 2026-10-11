@@ -44,8 +44,8 @@
         @foreach($users as $user)
         <div class="app-card app-list-card app-card-hover flex flex-col gap-3">
             <div class="flex items-start gap-3">
-                <span class="w-10 h-10 rounded-full bg-neutral-700 text-white dark:bg-neutral-600 dark:text-neutral-100 flex items-center justify-center shrink-0 text-sm font-bold">
-                    {{ strtoupper(substr($user->name, 0, 1)) }}
+                <span class="w-10 h-10 rounded-full bg-neutral-700 text-white dark:bg-neutral-600 dark:text-neutral-100 flex items-center justify-center shrink-0 text-[11px] font-bold">
+                    {{ $user->initials }}
                 </span>
                 <div class="min-w-0 flex-1">
                     <x-cell :value="$user->name" class="font-semibold text-neutral-800 dark:text-neutral-200" />
@@ -117,7 +117,7 @@
                         <td class="py-3.5 px-4">
                             <div class="flex items-center gap-3">
                                 <span class="w-8 h-8 rounded-full bg-neutral-700 text-white dark:bg-neutral-600 dark:text-neutral-100 flex items-center justify-center shrink-0 text-[11px] font-bold">
-                                    {{ strtoupper(substr($user->name, 0, 1)) }}
+                                    {{ $user->initials }}
                                 </span>
                                 <div>
                                     <div class="font-semibold text-neutral-800 dark:text-neutral-200">{{ $user->name }}</div>

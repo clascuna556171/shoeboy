@@ -86,6 +86,13 @@
                     </div>
                 </div>
 
+                {{-- Desktop: computed net balance --}}
+                <div class="mt-4 hidden xl:flex items-center justify-end gap-2 border-t border-neutral-100 dark:border-neutral-800 pt-3">
+                    <span class="font-mono text-lg text-neutral-500 dark:text-neutral-400">=</span>
+                    <span class="text-xs font-medium uppercase tracking-wider text-neutral-500">Net Operating Balance</span>
+                    <span class="font-mono text-lg font-bold {{ $netPositive ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400' }}">{{ $net < 0 ? '−' : '' }}₱{{ number_format(abs($net), 2) }}</span>
+                </div>
+
                 {{-- Mobile/tablet: aligned compact equation --}}
                 <div class="mt-4 xl:hidden divide-y divide-neutral-100 dark:divide-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
                     <div class="flex items-center gap-2.5 px-3 py-2.5">
@@ -187,7 +194,7 @@
                             <td class="py-3.5 px-4 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">+₱{{ number_format($b['order_profit_sum'], 2) }}</td>
                             <td class="py-3.5 px-4 text-right font-mono text-rose-500"><x-money :value="$b['batch_expenses']" /></td>
                             <td class="py-3.5 px-4 text-right font-mono font-bold {{ $b['net_proceeds'] >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-neutral-500' }}">
-                                {{ $b['net_proceeds'] >= 0 ? '+' : '' }}₱{{ number_format($b['net_proceeds'], 2) }}
+                                {{ $b['net_proceeds'] >= 0 ? '+' : '−' }}₱{{ number_format(abs($b['net_proceeds']), 2) }}
                             </td>
                         </tr>
                         @endforeach
@@ -198,9 +205,11 @@
                             <td colspan="3" class="py-3 px-4 text-right text-xs font-semibold uppercase tracking-wider text-neutral-500">Totals</td>
                             <td class="py-3 px-4 text-right font-mono text-neutral-600 dark:text-neutral-400"><x-money :value="collect($batchReports)->sum('total_cost')" /></td>
                             <td class="py-3 px-4 text-right font-mono font-bold text-[#0071E3] dark:text-[#0A84FF]"><x-money :value="collect($batchReports)->sum('realized_revenue')" /></td>
-                            <td class="py-3 px-4 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">+₱{{ number_format(collect($batchReports)->sum('order_profit_sum'), 2) }}</td>
+                            @php($profitTotal = collect($batchReports)->sum('order_profit_sum'))
+                            <td class="py-3 px-4 text-right font-mono font-bold {{ $profitTotal >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500' }}">{{ $profitTotal >= 0 ? '+' : '−' }}₱{{ number_format(abs($profitTotal), 2) }}</td>
                             <td class="py-3 px-4 text-right font-mono text-rose-500"><x-money :value="collect($batchReports)->sum('batch_expenses')" /></td>
-                            <td class="py-3 px-4 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">+₱{{ number_format(collect($batchReports)->sum('net_proceeds'), 2) }}</td>
+                            @php($netTotal = collect($batchReports)->sum('net_proceeds'))
+                            <td class="py-3 px-4 text-right font-mono font-bold {{ $netTotal >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-neutral-500' }}">{{ $netTotal >= 0 ? '+' : '−' }}₱{{ number_format(abs($netTotal), 2) }}</td>
                         </tr>
                     </tfoot>
                     @endif

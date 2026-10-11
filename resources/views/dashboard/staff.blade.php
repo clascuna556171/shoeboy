@@ -794,36 +794,36 @@
                         <input type="text" x-model="triageSearch" placeholder="Search SKU, brand, model..."
                                class="app-input app-input-sm pl-9 w-full">
                     </div>
-                    <div class="flex flex-nowrap items-center gap-1">
+                    <div class="flex w-full flex-nowrap items-center gap-1">
                         <button type="button" @click="triageStatus = 'all'"
-                                class="app-btn app-btn-sm !px-2.5 whitespace-nowrap shrink-0"
+                                class="app-btn app-btn-sm flex-1 justify-center !px-1.5 text-[11px] whitespace-nowrap"
                                 :class="triageStatus === 'all' ? 'app-btn-primary' : 'app-btn-secondary'">
                             All
-                            <span class="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-mono leading-none"
+                            <span class="ml-0.5 rounded-full px-1 py-0.5 text-[10px] font-mono leading-none"
                                   :class="triageStatus === 'all' ? 'bg-white/20 text-white' : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'"
                                   x-text="shoes.length"></span>
                         </button>
                         <button type="button" @click="triageStatus = 'washing'"
-                                class="app-btn app-btn-sm !px-2.5 whitespace-nowrap shrink-0"
+                                class="app-btn app-btn-sm flex-1 justify-center !px-1.5 text-[11px] whitespace-nowrap"
                                 :class="triageStatus === 'washing' ? 'app-btn-primary' : 'app-btn-secondary'">
                             Washing
-                            <span class="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-mono leading-none"
+                            <span class="ml-0.5 rounded-full px-1 py-0.5 text-[10px] font-mono leading-none"
                                   :class="triageStatus === 'washing' ? 'bg-white/20 text-white' : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'"
                                   x-text="countByTriage('washing')"></span>
                         </button>
                         <button type="button" @click="triageStatus = 'under_repair'"
-                                class="app-btn app-btn-sm !px-2.5 whitespace-nowrap shrink-0"
+                                class="app-btn app-btn-sm flex-1 justify-center !px-1.5 text-[11px] whitespace-nowrap"
                                 :class="triageStatus === 'under_repair' ? 'app-btn-primary' : 'app-btn-secondary'">
                             Repair
-                            <span class="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-mono leading-none"
+                            <span class="ml-0.5 rounded-full px-1 py-0.5 text-[10px] font-mono leading-none"
                                   :class="triageStatus === 'under_repair' ? 'bg-white/20 text-white' : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'"
                                   x-text="countByTriage('under_repair')"></span>
                         </button>
                         <button type="button" @click="triageStatus = 'available'"
-                                class="app-btn app-btn-sm !px-2.5 whitespace-nowrap shrink-0"
+                                class="app-btn app-btn-sm flex-1 justify-center !px-1.5 text-[11px] whitespace-nowrap"
                                 :class="triageStatus === 'available' ? 'app-btn-primary' : 'app-btn-secondary'">
                             Ready
-                            <span class="ml-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-mono leading-none"
+                            <span class="ml-0.5 rounded-full px-1 py-0.5 text-[10px] font-mono leading-none"
                                   :class="triageStatus === 'available' ? 'bg-white/20 text-white' : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300'"
                                   x-text="countByTriage('available')"></span>
                         </button>

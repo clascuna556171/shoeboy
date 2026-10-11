@@ -77,9 +77,6 @@
         <div class="col-span-full app-card"><div class="app-empty"><span class="text-xs font-medium">No orders found.</span></div></div>
         @endforelse
     </div>
-    @if($orders->hasPages())
-    <div>{{ $orders->links() }}</div>
-    @endif
 
     {{-- Table (desktop, List layout = table) --}}
     <div class="app-card app-list-table" data-tour="list">
@@ -163,6 +160,10 @@
         </div>
 
     </div>
+
+    @if($orders->hasPages())
+    <div>{{ $orders->links() }}</div>
+    @endif
 
 </div>
 @endsection

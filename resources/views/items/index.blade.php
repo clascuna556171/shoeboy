@@ -99,9 +99,6 @@
         <div class="col-span-full app-card"><div class="app-empty"><span class="text-xs font-medium">No inventory items match the current filters.</span></div></div>
         @endforelse
     </div>
-    @if($items->hasPages())
-    <div>{{ $items->links() }}</div>
-    @endif
 
     {{-- Table (desktop, List layout = table) --}}
     <div class="app-card app-list-table" data-tour="list">
@@ -195,6 +192,10 @@
         </div>
 
     </div>
+
+    @if($items->hasPages())
+    <div>{{ $items->links() }}</div>
+    @endif
 
     {{-- Add pair modal (pick a batch) --}}
     <x-modal title="Add Pair to Inventory" accent="emerald" size="lg" close="showAddItem = false"
