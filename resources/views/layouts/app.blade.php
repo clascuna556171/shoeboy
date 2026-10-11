@@ -6,7 +6,8 @@
           darkMode: false,
           density: localStorage.getItem('shoeboy.density') || 'compact',
           navMode: localStorage.getItem('shoeboy.nav') || 'top',
-          cardDensity: localStorage.getItem('shoeboy.cardDensity') || 'comfortable',
+          listView: localStorage.getItem('shoeboy.view') || 'auto',
+          cardDensity: localStorage.getItem('shoeboy.cardDensity') || 'compact',
           railCollapsed: localStorage.getItem('shoeboy.nav.collapsed') === '1',
           settingsOpen: false,
           mobileNav: false,
@@ -46,6 +47,7 @@
           toggleTheme() { this.setTheme(this.darkMode ? 'light' : 'dark'); },
           setDensity(d) { this.density = d; localStorage.setItem('shoeboy.density', d); this.applyDensity(); },
           setCardDensity(d) { this.cardDensity = d; localStorage.setItem('shoeboy.cardDensity', d); document.documentElement.setAttribute('data-card-density', d); },
+          setListView(v) { this.listView = v; localStorage.setItem('shoeboy.view', v); document.documentElement.setAttribute('data-list', v); },
           applyDensity() { document.documentElement.setAttribute('data-density', this.density); },
           setNav(m) { this.navMode = m; localStorage.setItem('shoeboy.nav', m); this.applyNav(); },
           applyNav() {
@@ -69,7 +71,8 @@
             document.documentElement.setAttribute('data-density', localStorage.getItem('shoeboy.density') || 'compact');
             document.documentElement.setAttribute('data-nav', localStorage.getItem('shoeboy.nav') || 'top');
             document.documentElement.setAttribute('data-rail', localStorage.getItem('shoeboy.nav.collapsed') === '1' ? 'collapsed' : 'expanded');
-            document.documentElement.setAttribute('data-card-density', localStorage.getItem('shoeboy.cardDensity') || 'comfortable');
+            document.documentElement.setAttribute('data-list', localStorage.getItem('shoeboy.view') || 'auto');
+            document.documentElement.setAttribute('data-card-density', localStorage.getItem('shoeboy.cardDensity') || 'compact');
         })();
     </script>
 
@@ -234,15 +237,6 @@
         <div class="max-w-[1720px] mx-auto flex items-center justify-between gap-4">
 
             <div class="flex items-center gap-2 sm:gap-3">
-                @auth
-                <button type="button"
-                        @click="mobileNav = !mobileNav"
-                        title="Menu"
-                        class="xl:hidden p-2 -ml-1 rounded-xl text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors">
-                    <svg x-show="!mobileNav" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                    <svg x-show="mobileNav" x-cloak class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-                @endauth
                 <a href="{{ route('dashboard') }}" class="flex items-center gap-3 group">
                     <img src="{{ asset('logo.png') }}" alt="The Shoe Boy" class="w-9 h-9 rounded-xl object-cover shadow-sm border border-neutral-200 dark:border-neutral-700 shrink-0 group-hover:scale-105 transition-transform">
                     <div class="flex items-center gap-2">
@@ -270,6 +264,14 @@
                 <div data-header-usermenu class="pl-2 border-l border-neutral-200 dark:border-neutral-800">
                     <x-user-menu variant="header" :show-identity="false" />
                 </div>
+
+                <button type="button"
+                        @click="mobileNav = !mobileNav"
+                        title="Menu"
+                        class="xl:hidden p-2 rounded-xl text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200/60 dark:hover:bg-neutral-800 transition-colors">
+                    <svg x-show="!mobileNav" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    <svg x-show="mobileNav" x-cloak class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
                 @else
                 <a href="{{ route('login') }}" class="px-3.5 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-[#1C1C1E] hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 text-xs font-semibold shadow-sm transition-all">
                     Sign In
@@ -286,16 +288,16 @@
                  x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
                  x-transition:leave="transition-opacity ease-in duration-150"
                  x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-                 @click="mobileNav = false"
+                 @click="if (!document.documentElement.classList.contains('tour-open')) mobileNav = false"
                  class="absolute inset-0 bg-black/40"></div>
 
             <aside x-show="mobileNav"
                    x-transition:enter="transition ease-out duration-200"
-                   x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
+                   x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
                    x-transition:leave="transition ease-in duration-150"
-                   x-transition:leave-start="translate-x-0" x-transition:leave-end="-translate-x-full"
-                   class="absolute left-0 top-0 bottom-0 w-[86vw] max-w-xs bg-white dark:bg-[#1C1C1E] border-r border-neutral-200 dark:border-neutral-800 shadow-2xl flex flex-col"
-                   @click.outside="mobileNav = false">
+                   x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full"
+                   class="absolute right-0 top-0 bottom-0 w-[86vw] max-w-xs bg-white dark:bg-[#1C1C1E] border-l border-neutral-200 dark:border-neutral-800 shadow-2xl flex flex-col"
+                   @click.outside="if (!document.documentElement.classList.contains('tour-open')) mobileNav = false">
 
                 <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-neutral-100 dark:border-neutral-800">
                     <div class="flex items-center gap-2.5 min-w-0">
@@ -532,6 +534,20 @@
                             class="app-btn app-btn-sm" :class="cardDensity === 'compact' ? 'app-btn-primary' : 'app-btn-secondary'">Compact</button>
                 </div>
                 <p class="mt-1.5 text-[11px] text-neutral-500">Controls list-card padding and how much detail each card shows.</p>
+            </div>
+
+            {{-- List style (phones only) — override the responsive cards/tables default --}}
+            <div class="mt-6 md:hidden">
+                <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">List style</div>
+                <div class="mt-2 grid grid-cols-3 gap-2">
+                    <button type="button" @click="setListView('auto')"
+                            class="app-btn app-btn-sm" :class="listView === 'auto' ? 'app-btn-primary' : 'app-btn-secondary'">Auto</button>
+                    <button type="button" @click="setListView('cards')"
+                            class="app-btn app-btn-sm" :class="listView === 'cards' ? 'app-btn-primary' : 'app-btn-secondary'">Cards</button>
+                    <button type="button" @click="setListView('table')"
+                            class="app-btn app-btn-sm" :class="listView === 'table' ? 'app-btn-primary' : 'app-btn-secondary'">Table</button>
+                </div>
+                <p class="mt-1.5 text-[11px] text-neutral-500">Auto uses cards on phones and tables on larger screens. Choose Table if you prefer the dense layout.</p>
             </div>
         </div>
     </div>

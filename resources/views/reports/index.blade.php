@@ -47,7 +47,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div class="rounded-3xl p-5 border shadow-sm {{ $netPositive ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200/70 dark:border-emerald-900/50' : 'bg-amber-50/60 dark:bg-amber-950/20 border-amber-200/70 dark:border-amber-900/50' }}">
             <div class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Net Operating Balance</div>
-            <div class="mt-1 text-5xl font-bold font-mono tracking-tight {{ $netPositive ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300' }}">
+            <div class="mt-1 text-3xl sm:text-5xl font-bold font-mono tracking-tight tabular-nums whitespace-nowrap {{ $netPositive ? 'text-emerald-700 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300' }}">
                 {{ $net < 0 ? '−' : '' }}₱{{ number_format(abs($net), 2) }}
             </div>
             <p class="text-xs text-neutral-500 mt-1">Gross profit minus store expenses.</p>

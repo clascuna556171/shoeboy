@@ -166,9 +166,9 @@
                             </p>
 
                             <div class="mt-3
-                                        text-5xl sm:text-5xl
+                                        text-3xl sm:text-5xl
                                         font-bold tracking-tight
-                                        font-mono
+                                        font-mono tabular-nums whitespace-nowrap
                                         {{ $netPositive
                                             ? 'text-emerald-600 dark:text-emerald-400'
                                             : 'text-amber-600 dark:text-amber-400' }}">
@@ -560,7 +560,7 @@
 
         {{-- Mobile totals (the table carries its own tfoot) --}}
         <div class="md:hidden flex flex-wrap items-center justify-between gap-3 px-5 lg:px-6 pb-2 text-xs">
-            <span class="font-semibold uppercase tracking-wider text-neutral-500">Totals</span>
+                <span class="font-semibold uppercase tracking-wider text-neutral-500">All batches</span>
             <span class="flex items-center gap-4">
                 <span class="text-neutral-500">Sales <strong class="font-mono text-neutral-900 dark:text-white"><x-money :value="$totalSales" /></strong></span>
                 <span class="text-neutral-500">Profit <strong class="font-mono text-emerald-600 dark:text-emerald-400">+₱{{ number_format($totalProfit, 2) }}</strong></span>
@@ -760,7 +760,7 @@
                             class="px-5 py-4 text-right
                                    text-[11px] font-semibold uppercase tracking-wide
                                    text-neutral-500">
-                            Totals
+                            All batches
                         </td>
 
                         <td class="px-5 py-4 text-right

@@ -225,12 +225,12 @@
             <h1 class="text-xl md:text-2xl font-bold tracking-tight text-[#1D1D1F] dark:text-white mt-1">Multi-Channel Order & Claim Console</h1>
         </div>
 
-        <div data-tour="tabs" class="flex flex-nowrap items-center bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl border border-neutral-200/70 dark:border-neutral-700 overflow-x-auto max-w-full">
+        <div data-tour="tabs" class="flex w-full md:w-auto flex-nowrap items-center gap-0.5 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl border border-neutral-200/70 dark:border-neutral-700">
             <button type="button"
                     @click="setTab('claims')"
                     :class="activeTab === 'claims' ? 'bg-white dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-white font-semibold shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'"
-                    class="px-4 py-2 rounded-lg text-sm transition-all flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                    class="flex-1 md:flex-none justify-center px-2 md:px-4 py-2 rounded-lg text-xs md:text-sm transition-all flex items-center gap-1.5 whitespace-nowrap">
+                <svg class="hidden sm:block w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
                 <span>Live Claims</span>
                 <template x-if="claimCart.length > 0">
                     <span class="px-1.5 py-0.5 rounded-full text-[11px] font-mono bg-neutral-900 text-white dark:bg-white dark:text-neutral-900" x-text="claimCart.length"></span>
@@ -240,9 +240,9 @@
             <button type="button"
                     @click="setTab('pos')"
                     :class="activeTab === 'pos' ? 'bg-white dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-white font-semibold shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'"
-                    class="px-4 py-2 rounded-lg text-sm transition-all flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                <span>Walk-in POS</span>
+                    class="flex-1 md:flex-none justify-center px-2 md:px-4 py-2 rounded-lg text-xs md:text-sm transition-all flex items-center gap-1.5 whitespace-nowrap">
+                <svg class="hidden sm:block w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                <span>POS</span>
                 <template x-if="posCart.length > 0">
                     <span class="px-1.5 py-0.5 rounded-full text-[11px] font-mono bg-neutral-900 text-white dark:bg-white dark:text-neutral-900" x-text="posCart.length"></span>
                 </template>
@@ -251,9 +251,9 @@
             <button type="button"
                     @click="setTab('triage')"
                     :class="activeTab === 'triage' ? 'bg-white dark:bg-[#2C2C2E] text-[#1D1D1F] dark:text-white font-semibold shadow-sm' : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200'"
-                    class="px-4 py-2 rounded-lg text-sm transition-all flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                <span>Triage Table</span>
+                    class="flex-1 md:flex-none justify-center px-2 md:px-4 py-2 rounded-lg text-xs md:text-sm transition-all flex items-center gap-1.5 whitespace-nowrap">
+                <svg class="hidden sm:block w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                <span>Triage</span>
             </button>
         </div>
         </div>
@@ -265,12 +265,12 @@
                 <span class="w-5 h-5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 ring-1 ring-inset ring-neutral-200 dark:ring-neutral-700 text-[11px] font-bold flex items-center justify-center">1</span>
                 Search or scan a shoe short code
             </span>
-            <span class="text-neutral-300 dark:text-neutral-600">→</span>
+            <span class="hidden md:inline text-neutral-300 dark:text-neutral-600">→</span>
             <span class="flex items-center gap-2 text-neutral-600 dark:text-neutral-300">
                 <span class="w-5 h-5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 ring-1 ring-inset ring-neutral-200 dark:ring-neutral-700 text-[11px] font-bold flex items-center justify-center">2</span>
                 Add the pairs to the claim ticket
             </span>
-            <span class="text-neutral-300 dark:text-neutral-600">→</span>
+            <span class="hidden md:inline text-neutral-300 dark:text-neutral-600">→</span>
             <span class="flex items-center gap-2 text-neutral-600 dark:text-neutral-300">
                 <span class="w-5 h-5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 ring-1 ring-inset ring-neutral-200 dark:ring-neutral-700 text-[11px] font-bold flex items-center justify-center">3</span>
                 Enter buyer details &amp; lock the reservation
@@ -284,12 +284,12 @@
                 <span class="w-5 h-5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 ring-1 ring-inset ring-neutral-200 dark:ring-neutral-700 text-[11px] font-bold flex items-center justify-center">1</span>
                 Pick pairs from the catalog
             </span>
-            <span class="text-neutral-300 dark:text-neutral-600">→</span>
+            <span class="hidden md:inline text-neutral-300 dark:text-neutral-600">→</span>
             <span class="flex items-center gap-2 text-neutral-600 dark:text-neutral-300">
                 <span class="w-5 h-5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 ring-1 ring-inset ring-neutral-200 dark:ring-neutral-700 text-[11px] font-bold flex items-center justify-center">2</span>
                 Review the ticket &amp; discounts
             </span>
-            <span class="text-neutral-300 dark:text-neutral-600">→</span>
+            <span class="hidden md:inline text-neutral-300 dark:text-neutral-600">→</span>
             <span class="flex items-center gap-2 text-neutral-600 dark:text-neutral-300">
                 <span class="w-5 h-5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 ring-1 ring-inset ring-neutral-200 dark:ring-neutral-700 text-[11px] font-bold flex items-center justify-center">3</span>
                 Take payment &amp; complete the sale

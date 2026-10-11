@@ -254,6 +254,8 @@ export default function registerTour() {
         if (!list.length) return;
         steps = list;
         index = 0;
+        // Mark the tour active so the drawer can't be dismissed by outside taps.
+        document.documentElement.classList.add('tour-open');
         root.style.display = 'block';
         tip.style.visibility = 'hidden';
         showStep();
@@ -261,6 +263,7 @@ export default function registerTour() {
 
     function end() {
         if (root) root.style.display = 'none';
+        document.documentElement.classList.remove('tour-open');
         // Close the mobile drawer if a nav step opened it.
         window.dispatchEvent(new CustomEvent('tour:nav', { detail: { open: false } }));
         steps = [];

@@ -44,7 +44,7 @@
         @foreach($users as $user)
         <div class="app-card app-list-card app-card-hover flex flex-col gap-3">
             <div class="flex items-start gap-3">
-                <span class="w-10 h-10 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 flex items-center justify-center shrink-0 text-sm font-bold">
+                <span class="w-10 h-10 rounded-full bg-neutral-700 text-white dark:bg-neutral-600 dark:text-neutral-100 flex items-center justify-center shrink-0 text-sm font-bold">
                     {{ strtoupper(substr($user->name, 0, 1)) }}
                 </span>
                 <div class="min-w-0 flex-1">
@@ -116,7 +116,7 @@
                     <tr class="app-row hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30">
                         <td class="py-3.5 px-4">
                             <div class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 flex items-center justify-center shrink-0 text-[11px] font-bold">
+                                <span class="w-8 h-8 rounded-full bg-neutral-700 text-white dark:bg-neutral-600 dark:text-neutral-100 flex items-center justify-center shrink-0 text-[11px] font-bold">
                                     {{ strtoupper(substr($user->name, 0, 1)) }}
                                 </span>
                                 <div>
